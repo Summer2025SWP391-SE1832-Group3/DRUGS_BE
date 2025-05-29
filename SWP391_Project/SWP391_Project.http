@@ -1,0 +1,6 @@
+@SWP391_Project_HostAddress = http://localhost:5176
+
+GET {{SWP391_Project_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
