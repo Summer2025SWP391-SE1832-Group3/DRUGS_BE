@@ -1,7 +1,8 @@
-﻿using DataAccessLayer.Dto;
+﻿using DataAccessLayer.Dto.Account;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +15,17 @@ namespace DataAccessLayer.Repository
     
     {
         private readonly UserManager<ApplicationUser> _userManager;
-
-        public UserRepository(UserManager<ApplicationUser> userManager) {
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        public UserRepository(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager) {
             _userManager = userManager;
+            _signInManager = signInManager;
         }
+
+        public Task<bool> CheckPasswordAsync(ApplicationUser user, string password)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<IdentityResult> CreateUserAsyn(RegisterDto model)
         {
             if (string.IsNullOrEmpty(model.UserName) || string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Password))
@@ -38,24 +46,30 @@ namespace DataAccessLayer.Repository
             {
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (!result.Succeeded) {
-                    return IdentityResult.Failed();
+                    return IdentityResult.Failed(result.Errors.ToArray());
                 }
                 var addrole = await _userManager.AddToRoleAsync(user, "Member");
                 if (!addrole.Succeeded)
                 {
-                    return IdentityResult.Failed();
+                    return IdentityResult.Failed(addrole.Errors.ToArray());
                 }
-                    return result;
+                    return result;  
             }
             catch(Exception ex)
             {
-                return IdentityResult.Failed(new IdentityError { Description = "An unexpected error occurred." });
+                Console.WriteLine($"Exception: {ex.Message}");
+                return IdentityResult.Failed(new IdentityError { Description = $"An unexpected error occurred: {ex.Message}" });
             }
         }
 
-        public Task<ApplicationUser> GetUserByEmail(string email)
+        public async Task<ApplicationUser> GetUserByUserName(string username)
         {
-            throw new NotImplementedException();
+            return await _userManager.Users.FirstOrDefaultAsync(u=>u.UserName==username);
+        }
+
+        public async Task<bool> CheckPassword(ApplicationUser user, string password)
+        {
+            return await _userManager.CheckPasswordAsync(user, password);
         }
     }
 }

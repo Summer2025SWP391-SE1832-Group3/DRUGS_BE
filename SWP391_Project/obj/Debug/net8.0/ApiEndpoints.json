@@ -1,6 +1,22 @@
 [
   {
     "ContainingType": "SWP391_Project.Controllers.AccountController",
+    "Method": "Login",
+    "RelativePath": "api/Account/login",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "loginDto",
+        "Type": "DataAccessLayer.Dto.Account.LoginDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SWP391_Project.Controllers.AccountController",
     "Method": "Register",
     "RelativePath": "api/Account/register",
     "HttpMethod": "POST",
@@ -8,8 +24,8 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "model",
-        "Type": "DataAccessLayer.Dto.RegisterDto",
+        "Name": "registerDto",
+        "Type": "DataAccessLayer.Dto.Account.RegisterDto",
         "IsRequired": true
       }
     ],

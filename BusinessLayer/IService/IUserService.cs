@@ -1,5 +1,4 @@
-﻿using DataAccessLayer.Dto;
-using DataAccessLayer.Model;
+﻿using DataAccessLayer.Dto.Account;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;

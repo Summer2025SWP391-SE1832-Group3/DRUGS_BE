@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccessLayer.Dto
+namespace DataAccessLayer.Dto.Account
 {
     public class RegisterDto
     {

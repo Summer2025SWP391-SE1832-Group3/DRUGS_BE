@@ -1,4 +1,4 @@
-﻿using DataAccessLayer.Dto;
+﻿using DataAccessLayer.Dto.Account;
 using DataAccessLayer.Model;
 using Microsoft.AspNetCore.Identity;
 using System;
@@ -12,6 +12,8 @@ namespace DataAccessLayer.IRepository
     public interface IUserRepository
     {
         public  Task<IdentityResult> CreateUserAsyn(RegisterDto model);
-        public  Task<ApplicationUser> GetUserByEmail(string email);
+        public  Task<ApplicationUser> GetUserByUserName(string username);
+        public Task<bool> CheckPassword(ApplicationUser user,string password);
+
     }
 }

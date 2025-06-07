@@ -19,6 +19,7 @@ namespace DataAccessLayer.Data
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
+            base.OnModelCreating(builder);
             var roles = new List<IdentityRole>{
                 new IdentityRole{Name="Admin",NormalizedName="ADMIN"},
                 new IdentityRole{Name="Staff", NormalizedName="STAFF"},
@@ -26,7 +27,7 @@ namespace DataAccessLayer.Data
                 new IdentityRole{Name="Consultant", NormalizedName="CONSULTANT"},
                 new IdentityRole{Name="Member", NormalizedName="MEMBER"},
             };
-            base.OnModelCreating(builder);
+            builder.Entity<IdentityRole>().HasData(roles);
         }
     }
 }
