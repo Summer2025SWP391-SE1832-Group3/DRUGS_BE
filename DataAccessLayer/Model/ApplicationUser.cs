@@ -17,5 +17,8 @@ namespace DataAccessLayer.Model
         public string Gender { get; set; } = null!;
         [PersonalData]
         public DateTime CreatedAt { get; set; } 
+        public ICollection<Blog> BlogsPosted { get; set; }
+        public ICollection<Blog> BlogsApproved { get; set; }
+        public ICollection<Comment> Comments { get; set; }
     }
 }
