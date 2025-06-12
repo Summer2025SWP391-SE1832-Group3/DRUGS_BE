@@ -10,11 +10,17 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+builder.Services.AddControllers()
+    // this option show enum as string for easily testing
+    .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
+builder.Services
+       .AddControllers()
+       .AddJsonOptions(c => c.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -57,11 +63,11 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(option=>
 {
-    option.Password.RequiredLength = 12;
+    option.Password.RequiredLength = 8;
     option.Password.RequireDigit = true;
     option.Password.RequireLowercase = true;
     option.Password.RequireUppercase = true;
-    option.Password.RequireNonAlphanumeric = true;
+    option.Password.RequireNonAlphanumeric = false;
 
     //option.SignIn.RequireConfirmedEmail = true;
     //option.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultEmailProvider;
@@ -93,6 +99,12 @@ builder.Services.AddAuthentication(option =>
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IBlogRepository, BlogRepository>();
+builder.Services.AddScoped<IBlogService, BlogService>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.
@@ -104,7 +116,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
-
+app.UseCors();
 app.UseAuthorization();
 
 app.MapControllers();

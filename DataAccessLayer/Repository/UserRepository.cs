@@ -21,12 +21,7 @@ namespace DataAccessLayer.Repository
             _signInManager = signInManager;
         }
 
-        public Task<bool> CheckPasswordAsync(ApplicationUser user, string password)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<IdentityResult> CreateUserAsyn(RegisterDto model)
+        public async Task<IdentityResult> CreateUserAsyn(RegisterDto model,string currentUserId, string role)
         {
             if (string.IsNullOrEmpty(model.UserName) || string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Password))
             {
@@ -48,12 +43,12 @@ namespace DataAccessLayer.Repository
                 if (!result.Succeeded) {
                     return IdentityResult.Failed(result.Errors.ToArray());
                 }
-                var addrole = await _userManager.AddToRoleAsync(user, "Member");
-                if (!addrole.Succeeded)
-                {
-                    return IdentityResult.Failed(addrole.Errors.ToArray());
+                string roleToAssign = "Member";
+                if(currentUserId!=null && await _userManager.IsInRoleAsync(await _userManager.FindByIdAsync(currentUserId), "Admin")){
+                    roleToAssign = role;
                 }
-                    return result;  
+                await _userManager.AddToRoleAsync(user, roleToAssign);
+                return result;
             }
             catch(Exception ex)
             {
@@ -62,7 +57,7 @@ namespace DataAccessLayer.Repository
             }
         }
 
-        public async Task<ApplicationUser> GetUserByUserName(string username)
+        public async Task<ApplicationUser?> GetUserByUserName(string username)
         {
             return await _userManager.Users.FirstOrDefaultAsync(u=>u.UserName==username);
         }

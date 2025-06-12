@@ -161,3 +161,4 @@ D:\SWP391\SWP391\SWP391_Project\bin\Debug\net8.0\Microsoft.Extensions.WebEncoder
 D:\SWP391\SWP391\SWP391_Project\bin\Debug\net8.0\System.Security.Cryptography.Pkcs.dll
 D:\SWP391\SWP391\SWP391_Project\bin\Debug\net8.0\System.Security.Cryptography.Xml.dll
 D:\SWP391\SWP391\SWP391_Project\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Security.Cryptography.Pkcs.dll
+D:\SWP391\SWP391\SWP391_Project\bin\Debug\net8.0\SWP391_Project.staticwebassets.runtime.json

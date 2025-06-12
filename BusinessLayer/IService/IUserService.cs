@@ -10,7 +10,7 @@ namespace BusinessLayer.IService
 {
     public interface IUserService
     {
-         public Task<IdentityResult> RegisterAsync(RegisterDto res);
+         public Task<IdentityResult> RegisterAsync(RegisterDto res,string currentUserIdm,string role);
          public Task<string> LoginAsync(LoginDto login);
 
     }

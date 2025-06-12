@@ -1,11 +1,19 @@
 {
   "Version": 1,
-  "Hash": "Kd4/MRxivdvKkjTFSGpx5zLgMEA4KiesPMvkRnsKtmw=",
+  "Hash": "2QNeFQP+2wyxDTaA4H+Syy+IO4OWEWZ6cE+FQ5SEEd4=",
   "Source": "SWP391_Project",
   "BasePath": "_content/SWP391_Project",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "SWP391_Project\\wwwroot",
+      "Source": "SWP391_Project",
+      "ContentRoot": "D:\\SWP391\\SWP391\\SWP391_Project\\wwwroot\\",
+      "BasePath": "_content/SWP391_Project",
+      "Pattern": "**"
+    }
+  ],
   "Assets": []
 }

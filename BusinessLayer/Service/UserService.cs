@@ -41,10 +41,30 @@ namespace BusinessLayer.Service
         }
 
 
-        public async Task<IdentityResult> RegisterAsync(RegisterDto res)
+        public async Task<IdentityResult> RegisterAsync(RegisterDto res, string currentUserId, string role = "Member")
         {
-            var result =await _userRepository.CreateUserAsyn(res);
-            return result;
+                var existingEmail = await _userManager.FindByEmailAsync(res.Email);
+                if (existingEmail != null)
+                {
+                    return IdentityResult.Failed(new IdentityError
+                    {
+                        Code = "EmailAlreadyExists",
+                        Description = "Email is already taken"
+                    });
+                }
+
+                var existingUserName = await _userManager.FindByNameAsync(res.UserName);
+                if (existingUserName != null)
+                {
+                    return IdentityResult.Failed(new IdentityError
+                    {
+                        Code = "UserNameAlreadyExists",
+                        Description = "UserName is already taken"
+                    });
+                }
+
+                var result =await _userRepository.CreateUserAsyn(res,currentUserId,role);
+                return result;
         }
     }
 }
