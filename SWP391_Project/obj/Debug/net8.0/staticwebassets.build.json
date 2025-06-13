@@ -1,0 +1,19 @@
+{
+  "Version": 1,
+  "Hash": "lxnZsHrFzlQvMeDqQbtAcaCgb5QZeclf+R+fc3S6ozc=",
+  "Source": "SWP391_Project",
+  "BasePath": "_content/SWP391_Project",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "SWP391_Project\\wwwroot",
+      "Source": "SWP391_Project",
+      "ContentRoot": "D:\\SWP391\\DRUGS_BE-khanhtrung\\DRUGS_BE-khanhtrung\\SWP391_Project\\wwwroot\\",
+      "BasePath": "_content/SWP391_Project",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": []
+}
