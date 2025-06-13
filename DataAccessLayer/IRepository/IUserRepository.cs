@@ -15,5 +15,10 @@ namespace DataAccessLayer.IRepository
         public  Task<ApplicationUser?> GetUserByUserName(string username);
         public Task<bool> CheckPassword(ApplicationUser user,string password);
 
+        // --- ADMIN MANAGEMENT METHODS ---
+        Task<IdentityResult> AdminCreateUserAsync(RegisterDto model, string role);
+        Task<IdentityResult> AdminUpdateUserAsync(string userId, RegisterDto updateDto, string? newRole = null);
+        Task<IdentityResult> AdminDeleteUserAsync(string userId);
+        Task<List<ApplicationUser>> AdminSearchUsersAsync(string? email, string? username, string? role);
     }
 }

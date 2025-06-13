@@ -10,6 +10,7 @@ namespace SWP391_Project.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [ApiExplorerSettings(IgnoreApi = false)] 
     public class AccountController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -107,6 +108,58 @@ namespace SWP391_Project.Controllers
                     );
             }
             return BadRequest("Invalid data");
+        }
+
+        // --- ADMIN ACCOUNT MANAGEMENT ---
+
+        [HttpPost("admin/create")]
+        [Authorize(Roles = "Admin")]
+        [ApiExplorerSettings(IgnoreApi = false)] 
+        public async Task<IActionResult> AdminCreate([FromBody] RegisterDto dto, [FromQuery] string role)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var result = await _userService.AdminCreateUserAsync(dto, role);
+            if (result.Succeeded) return Ok(new { message = "User created successfully" });
+            return StatusCode(500, result.Errors);
+        }
+
+        [HttpPut("admin/update/{userId}")]
+        [Authorize(Roles = "Admin")]
+        [ApiExplorerSettings(IgnoreApi = false)] 
+        public async Task<IActionResult> AdminUpdate(string userId, [FromBody] RegisterDto dto, [FromQuery] string? newRole)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var result = await _userService.AdminUpdateUserAsync(userId, dto, newRole);
+            if (result.Succeeded) return Ok(new { message = "User updated successfully" });
+            return StatusCode(500, result.Errors);
+        }
+
+        [HttpDelete("admin/delete/{userId}")]
+        [Authorize(Roles = "Admin")]
+        [ApiExplorerSettings(IgnoreApi = false)] 
+        public async Task<IActionResult> AdminDelete(string userId)
+        {
+            var result = await _userService.AdminDeleteUserAsync(userId);
+            if (result.Succeeded) return Ok(new { message = "User deleted successfully" });
+            return StatusCode(500, result.Errors);
+        }
+
+        [HttpGet("admin/search")]
+        [Authorize(Roles = "Admin")]
+        [ApiExplorerSettings(IgnoreApi = false)]
+        public async Task<IActionResult> AdminSearch([FromQuery] string? email, [FromQuery] string? username, [FromQuery] string? role)
+        {
+            var users = await _userService.AdminSearchUsersAsync(email, username, role);
+            return Ok(users.Select(u => new {
+                u.Id,
+                u.UserName,
+                u.Email,
+                u.FullName,
+                u.Gender,
+                u.DateOfBirth,
+                u.PhoneNumber,
+                u.CreatedAt
+            }));
         }
     }
 }
