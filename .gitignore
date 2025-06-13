@@ -32,3 +32,4 @@ msbuild.wrn
 
 # Visual Studio 2015
 .vs/
+/SWP391_Project/SWP391_Project.csproj
