@@ -73,22 +73,6 @@ namespace BusinessLayer.Service
             return result;
         }
 
-        public async Task<IdentityResult> AdminCreateUserAsync(RegisterDto dto, string role)
-        {
-            var user = new ApplicationUser
-            {
-                UserName = dto.Email,
-                Email = dto.Email,
-                PhoneNumber = dto.PhoneNumber
-            };
-
-            var result = await _userManager.CreateAsync(user, dto.Password);
-            if (result.Succeeded && !string.IsNullOrEmpty(role))
-            {
-                await _userManager.AddToRoleAsync(user, role);
-            }
-            return result;
-        }
 
         public async Task<IdentityResult> AdminUpdateUserAsync(string userId, RegisterDto dto, string role)
         {

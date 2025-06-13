@@ -48,7 +48,7 @@ namespace SWP391_Project.Controllers
             }
         }
 
-        [HttpPost("createAccount")]
+        [HttpPost("admin/createAccount")]
         [Authorize(Roles ="Admin")]
         public async Task<IActionResult> CreateAccount([FromBody]RegisterDto dto,[FromQuery]string role)
         {
@@ -76,7 +76,6 @@ namespace SWP391_Project.Controllers
                 }
                 if (result.Errors.Any())
                 {
-                    // Duyệt tất cả các lỗi và trả về thông báo phù hợp
                     var errorMessages = result.Errors.Select(e => e.Description).ToList();
                     return StatusCode(500, new { Errors = errorMessages });
                 }
@@ -111,18 +110,6 @@ namespace SWP391_Project.Controllers
         }
 
         // --- ADMIN ACCOUNT MANAGEMENT ---
-
-        [HttpPost("admin/create")]
-        [Authorize(Roles = "Admin")]
-        [ApiExplorerSettings(IgnoreApi = false)] 
-        public async Task<IActionResult> AdminCreate([FromBody] RegisterDto dto, [FromQuery] string role)
-        {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-            var result = await _userService.AdminCreateUserAsync(dto, role);
-            if (result.Succeeded) return Ok(new { message = "User created successfully" });
-            return StatusCode(500, result.Errors);
-        }
-
         [HttpPut("admin/update/{userId}")]
         [Authorize(Roles = "Admin")]
         [ApiExplorerSettings(IgnoreApi = false)] 

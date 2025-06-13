@@ -68,27 +68,6 @@ namespace DataAccessLayer.Repository
         }
 
         // --- ADMIN MANAGEMENT METHODS ---
-        public async Task<IdentityResult> AdminCreateUserAsync(RegisterDto model, string role)
-        {
-            if (string.IsNullOrEmpty(model.UserName) || string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Password))
-                return IdentityResult.Failed(new IdentityError { Description = "Some fields are empty." });
-
-            var user = new ApplicationUser
-            {
-                UserName = model.UserName,
-                Email = model.Email,
-                FullName = model.FullName,
-                DateOfBirth = model.DateOfBirth,
-                Gender = model.Gender,
-                CreatedAt = DateTime.Now,
-                PhoneNumber = model.PhoneNumber,
-            };
-            var result = await _userManager.CreateAsync(user, model.Password);
-            if (!result.Succeeded) return result;
-            await _userManager.AddToRoleAsync(user, role);
-            return result;
-        }
-
         public async Task<IdentityResult> AdminUpdateUserAsync(string userId, RegisterDto updateDto, string? newRole = null)
         {
             var user = await _userManager.FindByIdAsync(userId);
