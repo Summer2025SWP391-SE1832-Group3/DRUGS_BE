@@ -3,6 +3,7 @@ using BusinessLayer.IService;
 using DataAccessLayer.Dto.BlogPost;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
+using DataAccessLayer.Repository;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,11 +15,13 @@ namespace BusinessLayer.Service
     public class BlogService : IBlogService
     {
         private readonly IBlogRepository _blogRepository;
+        private readonly IBlogImageRepository _blogImageRepository;
         private readonly IMapper _mapper;
 
-        public BlogService(IBlogRepository blogRepository,IMapper mapper)
+        public BlogService(IBlogRepository blogRepository,IMapper mapper,IBlogImageRepository blogImageRepository)
         {
             _blogRepository = blogRepository;
+            _blogImageRepository = blogImageRepository;
             _mapper = mapper;
         }
 
@@ -76,13 +79,10 @@ namespace BusinessLayer.Service
             {
                 return false;
             }
-            Blog log = new Blog
-            {
-                
-                Content = dto.Content,
-                Category = dto.Category,
-                Title = dto.Title,
-            };
+            blog.Content = dto.Content;
+            blog.Category = dto.Category;
+            blog.Title = dto.Title;
+          
             return await _blogRepository.UpdateAsync(blog);
         }
 
@@ -95,5 +95,9 @@ namespace BusinessLayer.Service
             return await _blogRepository.ApproveAsync(blogId, managerId);
         }
 
+        public async Task AddBlogImageAsync(BlogImage blogImage)
+        {
+           await _blogImageRepository.AddAsync(blogImage);
+        }
     }
 }

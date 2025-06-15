@@ -22,5 +22,7 @@ namespace BusinessLayer.IService
 
         Task<bool> ApproveAsync(int blogId,string managerId);
         Task<bool> RejectAsync(int blogId, string managerId);
+
+        Task AddBlogImageAsync(BlogImage blogImage);
     }
 }

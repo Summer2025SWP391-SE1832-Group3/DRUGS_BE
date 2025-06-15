@@ -1,5 +1,6 @@
 ﻿using BusinessLayer.IService;
 using DataAccessLayer.Dto.BlogPost;
+using DataAccessLayer.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -12,22 +13,58 @@ namespace SWP391_Project.Controllers
     public class BlogController : ControllerBase
     {
         private readonly IBlogService _blogService;
+        private readonly IWebHostEnvironment _environment;
 
-        public BlogController(IBlogService blogService) {
+        public BlogController(IBlogService blogService,IWebHostEnvironment environment) {
             _blogService = blogService;
+            _environment = environment;
         }
 
         [HttpPost]
         [Authorize(Roles ="Staff")]
-        public async Task<IActionResult> Create([FromBody] BlogCreateDto dto)
+        public async Task<IActionResult> Create([FromForm] BlogCreateDto dto,[FromForm] List<IFormFile> images)
         {
             var staffId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var blog= await _blogService.CreateAsync(dto, staffId);
-            return Ok(blog);
+            if (blog == null) return BadRequest(new { message = "Failed to create blog." });
+            if(images!=null && images.Count > 0)
+            {
+                var blogImages = new List<BlogImage>();
+                foreach(var imageFile in images)
+                {
+                    if (imageFile.Length > 0)
+                    {
+                        var filePath = Path.Combine(_environment.WebRootPath, "uploads", Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName));
+                        var directory = Path.GetDirectoryName(filePath);
+                        if (!Directory.Exists(directory))
+                        {
+                            Directory.CreateDirectory(directory);
+                        }
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await imageFile.CopyToAsync(fileStream);
+                        }
+
+                        var blogImage = new BlogImage
+                        {
+                            ImageUrl = "/upload/" + Path.GetFileName(filePath),
+                            BlogId = blog.BlogId
+                        };
+                        blogImages.Add(blogImage);
+                    }
+                }
+                foreach(var blogImage in blogImages)
+                {
+                    await _blogService.AddBlogImageAsync(blogImage);
+                }
+            }
+            var blogWithImages=await _blogService.GetByIdAsync(blog.BlogId);
+            return Ok(blogWithImages);
         }
 
         [HttpPut("{id:int}")]
-        //[Authorize(Roles = "Staff,Manager")]
+        [Authorize(Roles = "Staff,Manager")]
         public async Task<IActionResult> Update(int id, BlogUpdateDto dto)
         {
             var staffId = User.FindFirstValue(ClaimTypes.NameIdentifier);
