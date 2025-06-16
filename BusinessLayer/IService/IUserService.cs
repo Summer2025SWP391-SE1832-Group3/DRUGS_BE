@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DataAccessLayer.Model; 
+using BusinessLayer.Dto.Common;
 
 namespace BusinessLayer.IService
 {
@@ -15,8 +16,11 @@ namespace BusinessLayer.IService
         Task<IdentityResult> RegisterAsync(RegisterDto res, string currentUserIdm, string role);
         Task<IdentityResult> CreateAccountAsync(CreateAccountDto res,string role);
         Task<string> LoginAsync(LoginDto login);
-        Task<IdentityResult> AdminUpdateUserAsync(string userId, RegisterDto dto, string role);
         Task<IdentityResult> AdminDeleteUserAsync(string userId);
-        Task<List<ApplicationUser>> AdminSearchUsersAsync(string? email, string? phone, string? role); 
+        Task<bool> IsAdmin(string userId);
+        Task<IEnumerable<ApplicationUser>> AdminSearchUsersAsync(string? email, string? username, string? role);
+
+        Task<IdentityResult> UpdateUserProfileAsync(string userId, UserProfileUpdateDto dto);
+
     } 
 } 
