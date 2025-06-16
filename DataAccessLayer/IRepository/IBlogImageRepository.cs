@@ -10,5 +10,8 @@ namespace DataAccessLayer.IRepository
     public interface IBlogImageRepository
     {
         Task AddAsync(BlogImage blogImage);
+        Task<List<BlogImage>> GetByBlogIdAsync(int blogId);
+        Task DeleteAsync(int blogImageId);
+
     }
 }

@@ -24,5 +24,11 @@ namespace BusinessLayer.IService
         Task<bool> RejectAsync(int blogId, string managerId);
 
         Task AddBlogImageAsync(BlogImage blogImage);
+        Task<List<BlogImage>> GetImagesByBlogIdAsync(int blogId);
+
+        Task DeleteBLogImage(int blogImageId);
+        Task<List<BlogViewDto>> GetBlogByUserIdAsync(string userId);
+        Task<List<BlogViewDto>> GetBlogByStatus(string status);
+
     }
 }

@@ -99,5 +99,37 @@ namespace BusinessLayer.Service
         {
            await _blogImageRepository.AddAsync(blogImage);
         }
+
+        public async Task<List<BlogImage>> GetImagesByBlogIdAsync(int blogId)
+        {
+            return await _blogImageRepository.GetByBlogIdAsync(blogId);
+        }
+
+        public async Task DeleteBLogImage(int blogImageId)
+        {
+           await _blogImageRepository.DeleteAsync(blogImageId);
+        }
+
+        public async Task<List<BlogViewDto>> GetBlogByUserIdAsync(string userId)
+        {
+
+            var blogs = await _blogRepository.GetByUserIdAsync(userId);
+            return _mapper.Map<List<BlogViewDto>>(blogs);
+        }
+
+        public async Task<List<BlogViewDto>> GetBlogByStatus(string status)
+        {
+            BlogStatus blogStatus;
+            if(!Enum.TryParse(status,true,out blogStatus))
+            {
+                return null;
+            }
+            var blogs= await _blogRepository.GetBlogByStatus(blogStatus);
+            if(blogs == null || blogs.Count == 0)
+            {
+                return new List<BlogViewDto>();
+            }
+            return _mapper.Map<List<BlogViewDto>>(blogs);
+        }
     }
 }

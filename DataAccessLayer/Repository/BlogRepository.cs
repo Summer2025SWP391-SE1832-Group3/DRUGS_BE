@@ -115,5 +115,25 @@ namespace DataAccessLayer.Repository
                .Include(b => b.BlogImages)
                .FirstOrDefaultAsync(b => b.BlogId == id);
         }
+
+        public async Task<List<Blog>> GetByUserIdAsync(string userId)
+        {
+            return await _context.Blogs
+                 .Where(b => b.PostedById.Equals(userId))
+                 .Include(b=>b.PostedBy)
+                 .Include(b => b.BlogImages)
+                 .OrderByDescending(b => b.PostedAt)
+                 .ToListAsync();
+        }
+
+        public async Task<List<Blog>> GetBlogByStatus(BlogStatus blogStatus)
+        {
+            return await _context.Blogs
+                .Where(b=>b.Status==blogStatus)
+                .Include(b => b.PostedBy)
+                .Include(b => b.BlogImages)
+                .OrderByDescending(b => b.PostedAt)
+                .ToListAsync(); ;
+        }
     }
 }
