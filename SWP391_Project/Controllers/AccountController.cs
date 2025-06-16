@@ -14,10 +14,12 @@ namespace SWP391_Project.Controllers
     public class AccountController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly ILogger<AccountController> _logger;
 
-        public AccountController(IUserService userService)
+        public AccountController(IUserService userService, ILogger<AccountController> logger)
         {
             _userService = userService;
+            _logger = logger;
         }
 
         [HttpPost("register")]
@@ -40,11 +42,12 @@ namespace SWP391_Project.Controllers
                         }
                         );
                 }
-                else return StatusCode(500, result.Errors);
+                return StatusCode(500, result.Errors);
             }
             catch(Exception ex)
             {
-                return StatusCode(500,ex.Message);
+                _logger.LogError(ex, "Error during user registration");
+                return StatusCode(500, "An error occurred during registration");
             }
         }
 
@@ -91,8 +94,12 @@ namespace SWP391_Project.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto loginDto)
         {
-            if (ModelState.IsValid)
+            try
             {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
                 var token = await _userService.LoginAsync(loginDto);
                 if (token == null)
                 {
@@ -104,9 +111,13 @@ namespace SWP391_Project.Controllers
                         UserName=loginDto.UserName,
                         Token=token,
                     }
-                    );
+                );
             }
-            return BadRequest("Invalid data");
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during user login");
+                return StatusCode(500, "An error occurred during login");
+            }
         }
 
         // --- ADMIN ACCOUNT MANAGEMENT ---
@@ -116,9 +127,25 @@ namespace SWP391_Project.Controllers
         public async Task<IActionResult> AdminUpdate(string userId, [FromBody] RegisterDto dto, [FromQuery] string? newRole)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            var result = await _userService.AdminUpdateUserAsync(userId, dto, newRole);
-            if (result.Succeeded) return Ok(new { message = "User updated successfully" });
-            return StatusCode(500, result.Errors);
+       
+            var profileDto = new UserProfileUpdateDto
+            {
+                FullName = dto.FullName,
+                PhoneNumber = dto.PhoneNumber,
+                DateOfBirth = dto.DateOfBirth,
+                Gender = dto.Gender
+            };
+
+            
+            var result = await _userService.UpdateUserProfileAsync(userId, profileDto);
+            if (!result.Succeeded) return StatusCode(500, result.Errors);
+
+            if (!string.IsNullOrEmpty(newRole))
+            {
+
+            }
+
+            return Ok(new { message = "User updated successfully" });
         }
 
         [HttpDelete("admin/delete/{userId}")]
@@ -126,27 +153,89 @@ namespace SWP391_Project.Controllers
         [ApiExplorerSettings(IgnoreApi = false)] 
         public async Task<IActionResult> AdminDelete(string userId)
         {
-            var result = await _userService.AdminDeleteUserAsync(userId);
-            if (result.Succeeded) return Ok(new { message = "User deleted successfully" });
-            return StatusCode(500, result.Errors);
+            try
+            {
+                
+                if (await _userService.IsAdmin(userId))
+                {
+                    return BadRequest(new { message = "Cannot delete admin account" });
+                }
+
+                var result = await _userService.AdminDeleteUserAsync(userId);
+                if (result.Succeeded)
+                {
+                    return Ok(new { message = "User deactivated successfully" });
+                }
+                return StatusCode(500, result.Errors);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting user {UserId}", userId);
+                return StatusCode(500, "An error occurred while deleting user");
+            }
         }
 
         [HttpGet("admin/search")]
         [Authorize(Roles = "Admin")]
-        [ApiExplorerSettings(IgnoreApi = false)]
-        public async Task<IActionResult> AdminSearch([FromQuery] string? email, [FromQuery] string? username, [FromQuery] string? role)
+        public async Task<IActionResult> AdminSearch(
+            [FromQuery] string? email,
+            [FromQuery] string? username,
+            [FromQuery] string? role)
         {
-            var users = await _userService.AdminSearchUsersAsync(email, username, role);
-            return Ok(users.Select(u => new {
-                u.Id,
-                u.UserName,
-                u.Email,
-                u.FullName,
-                u.Gender,
-                u.DateOfBirth,
-                u.PhoneNumber,
-                u.CreatedAt
-            }));
+            try
+            {
+                var users = await _userService.AdminSearchUsersAsync(email, username, role);
+                return Ok(users.Select(u => new
+                {
+                    u.Id,
+                    u.UserName,
+                    u.Email,
+                    u.FullName,
+                    u.Gender,
+                    u.DateOfBirth,
+                    u.PhoneNumber,
+                    u.CreatedAt
+                }));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during user search");
+                return StatusCode(500, "An error occurred while searching users");
+            }
+        }
+
+        // --- USER PROFILE MANAGEMENT (FOR ALL ROLES) ---
+        [HttpPut("profile")]
+        [Authorize]
+        public async Task<IActionResult> UpdateProfile([FromBody] UserProfileUpdateDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { 
+                        message = "Invalid input data", 
+                        errors = ModelState.Values
+                            .SelectMany(v => v.Errors)
+                            .Select(e => e.ErrorMessage) 
+                    });
+                }
+
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var result = await _userService.UpdateUserProfileAsync(userId, dto);
+                
+                if (result.Succeeded)
+                {
+                    return Ok(new { message = "Profile updated successfully" });
+                }
+                return StatusCode(500, result.Errors);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating profile for user {UserId}", 
+                    User.FindFirstValue(ClaimTypes.NameIdentifier));
+                return StatusCode(500, "An error occurred while updating profile");
+            }
         }
     }
 }

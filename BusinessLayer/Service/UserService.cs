@@ -1,9 +1,10 @@
-﻿using BusinessLayer.IService;
+using BusinessLayer.IService;
 using DataAccessLayer.Dto.Account;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
 using DataAccessLayer.Repository;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,40 +19,49 @@ namespace BusinessLayer.Service
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ITokenService _tokenService;
+        private readonly ILogger<UserService> _logger;
 
         public UserService(
             IUserRepository userRepository,
             SignInManager<ApplicationUser> signInManager,
             UserManager<ApplicationUser> userManager,
-            ITokenService tokenService)
+            ITokenService tokenService,
+            ILogger<UserService> logger)
         {
             _userRepository = userRepository;
             _signInManager = signInManager;
             _userManager = userManager;
             _tokenService = tokenService;
+            _logger = logger;
         }
 
-        public async Task<string> LoginAsync(LoginDto login)
+        public async Task<string?> LoginAsync(LoginDto loginDto)
         {
-            var user = await _userRepository.GetUserByUserName(login.UserName);
+            _logger.LogInformation("Attempting login for user: {UserName}", loginDto.UserName);
+            var user = await _userRepository.GetUserByUserName(loginDto.UserName);
             if (user == null)
             {
+                _logger.LogWarning("Login failed: User not found - {UserName}", loginDto.UserName);
                 return null;
             }
-            var validPassword = await _userRepository.CheckPassword(user, login.Password);
+            var validPassword = await _userRepository.CheckPassword(user, loginDto.Password);
             if (!validPassword)
             {
+                _logger.LogWarning("Login failed: Invalid password for user - {UserName}", loginDto.UserName);
                 return null;
             }
+            _logger.LogInformation("Login successful for user: {UserName}", loginDto.UserName);
             return await _tokenService.CreateToken(user);
         }
 
-
-        public async Task<IdentityResult> RegisterAsync(RegisterDto res, string currentUserId, string role = "Member")
+        public async Task<IdentityResult> RegisterAsync(RegisterDto registerDto, string? role, string defaultRole)
         {
-            var existingEmail = await _userManager.FindByEmailAsync(res.Email);
+            _logger.LogInformation("Attempting to register new user: {Email}", registerDto.Email);
+            
+            var existingEmail = await _userManager.FindByEmailAsync(registerDto.Email);
             if (existingEmail != null)
             {
+                _logger.LogWarning("Registration failed: Email already exists - {Email}", registerDto.Email);
                 return IdentityResult.Failed(new IdentityError
                 {
                     Code = "EmailAlreadyExists",
@@ -59,9 +69,10 @@ namespace BusinessLayer.Service
                 });
             }
 
-            var existingUserName = await _userManager.FindByNameAsync(res.UserName);
+            var existingUserName = await _userManager.FindByNameAsync(registerDto.UserName);
             if (existingUserName != null)
             {
+                _logger.LogWarning("Registration failed: Username already exists - {UserName}", registerDto.UserName);
                 return IdentityResult.Failed(new IdentityError
                 {
                     Code = "UserNameAlreadyExists",
@@ -69,39 +80,64 @@ namespace BusinessLayer.Service
                 });
             }
 
-            var result = await _userRepository.CreateUserAsyn(res, currentUserId, role);
-            return result;
-        }
-
-
-        public async Task<IdentityResult> AdminUpdateUserAsync(string userId, RegisterDto dto, string role)
-        {
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null) return IdentityResult.Failed(new IdentityError { Description = "User not found" });
-
-            user.Email = dto.Email;
-            user.UserName = dto.Email;
-            user.PhoneNumber = dto.PhoneNumber;
-
-            var result = await _userManager.UpdateAsync(user);
-            if (result.Succeeded && !string.IsNullOrEmpty(role))
+            var result = await _userRepository.CreateUserAsyn(registerDto, role ?? defaultRole, defaultRole);
+            if (result.Succeeded)
             {
-                var roles = await _userManager.GetRolesAsync(user);
-                await _userManager.RemoveFromRolesAsync(user, roles);
-                await _userManager.AddToRoleAsync(user, role);
+                _logger.LogInformation("User registered successfully: {Email}", registerDto.Email);
+            }
+            else
+            {
+                _logger.LogError("Registration failed for user {Email}: {Errors}", 
+                    registerDto.Email, 
+                    string.Join(", ", result.Errors.Select(e => e.Description)));
             }
             return result;
         }
 
         public async Task<IdentityResult> AdminDeleteUserAsync(string userId)
         {
+            _logger.LogInformation("Admin attempting to delete user: {UserId}", userId);
+            
             var user = await _userManager.FindByIdAsync(userId);
-            if (user == null) return IdentityResult.Failed(new IdentityError { Description = "User not found" });
-            return await _userManager.DeleteAsync(user);
+            if (user == null)
+            {
+                _logger.LogWarning("Delete failed: User not found - {UserId}", userId);
+                return IdentityResult.Failed(new IdentityError { Description = "User not found" });
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("User deleted successfully: {UserId}", userId);
+            }
+            else
+            {
+                _logger.LogError("Delete failed for user {UserId}: {Errors}", 
+                    userId, 
+                    string.Join(", ", result.Errors.Select(e => e.Description)));
+            }
+            return result;
         }
 
-        public async Task<List<ApplicationUser>> AdminSearchUsersAsync(string? username, string? email, string? role)
+        public async Task<bool> IsAdmin(string userId)
         {
+            _logger.LogInformation("Checking if user is admin: {UserId}", userId);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning("User not found: {UserId}", userId);
+                return false;
+            }
+            var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+            _logger.LogInformation("User {UserId} is admin: {IsAdmin}", userId, isAdmin);
+            return isAdmin;
+        }
+
+        public async Task<IEnumerable<ApplicationUser>> AdminSearchUsersAsync(string? email, string? username, string? role)
+        {
+            _logger.LogInformation("Admin searching users with filters - Username: {Username}, Email: {Email}, Role: {Role}", 
+                username, email, role);
+
             var users = _userManager.Users.AsQueryable();
 
             if (!string.IsNullOrEmpty(email))
@@ -120,10 +156,55 @@ namespace BusinessLayer.Service
                     if (await _userManager.IsInRoleAsync(user, role))
                         usersInRole.Add(user);
                 }
+                _logger.LogInformation("Found {Count} users matching search criteria", usersInRole.Count);
                 return usersInRole;
             }
 
+            _logger.LogInformation("Found {Count} users matching search criteria", userList.Count);
             return userList;
         }
+
+        public async Task<IdentityResult> UpdateUserProfileAsync(string userId, UserProfileUpdateDto dto)
+        {
+            _logger.LogInformation("Updating profile for user: {UserId}", userId);
+            
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning("Update failed: User not found - {UserId}", userId);
+                return IdentityResult.Failed(new IdentityError { Description = "User not found" });
+            }
+
+            user.FullName = dto.FullName;
+            user.PhoneNumber = dto.PhoneNumber;
+            user.DateOfBirth = dto.DateOfBirth;
+            user.Gender = dto.Gender;
+
+            if (!string.IsNullOrEmpty(dto.NewPassword))
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var result = await _userManager.ResetPasswordAsync(user, token, dto.NewPassword);
+                if (!result.Succeeded)
+                {
+                    _logger.LogError("Password update failed for user {UserId}: {Errors}", 
+                        userId, 
+                        string.Join(", ", result.Errors.Select(e => e.Description)));
+                    return result;
+                }
+            }
+
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (updateResult.Succeeded)
+            {
+                _logger.LogInformation("Profile updated successfully for user: {UserId}", userId);
+            }
+            else
+            {
+                _logger.LogError("Profile update failed for user {UserId}: {Errors}", 
+                    userId, 
+                    string.Join(", ", updateResult.Errors.Select(e => e.Description)));
+            }
+            return updateResult;
+        }
     }
-}
+} 
