@@ -4,6 +4,7 @@ using DataAccessLayer.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Client;
 using System.Reflection.Metadata;
 using System.Security.Claims;
 
@@ -168,7 +169,7 @@ namespace SWP391_Project.Controllers
         }
 
         [HttpGet("{userId}")]
-        [Authorize(Roles = "Staff,Admin,Manager")]
+        [Authorize(Roles = "Staff,Manager")]
         public async Task<IActionResult> GetByUserId(string userId)
         {
             var curentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -213,14 +214,45 @@ namespace SWP391_Project.Controllers
 
         }
 
-        [HttpGet("GetStatus")]
-        [Authorize(Roles = "Manager,Admin")]
+        [HttpGet("GetByStatus")]
+        [Authorize(Roles = "Manager")]
         public async Task<IActionResult> GetBlogByStatus(string status)
         {
             var blogs = await _blogService.GetBlogByStatus(status);
             if(blogs == null || blogs.Count == 0)
             {
                 return NotFound(new { message = "No blogs found with the specified status." });
+            }
+            return Ok(blogs);
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchBlogByTitle(string search)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var role=User.FindFirstValue(ClaimTypes.Role);
+            if(string.IsNullOrEmpty(search))
+            {
+                return BadRequest(new { message = "Search term cannot be empty." });
+            }
+            List<BlogViewDto> blogs=null;
+
+            if (role == "Staff")
+            {
+                blogs = await _blogService.SearchBlogByTitle(search, userId,null);
+            }
+            else if (role=="Manager")
+            {
+                blogs = await _blogService.SearchBlogByTitle(search, null,null);
+            }
+            else
+            {
+                blogs = await _blogService.SearchBlogByTitle(search, null,BlogStatus.Approved.ToString());
+
+            }
+            if (blogs == null || blogs.Count == 0)
+            {
+                return NotFound(new { message = "No blogs found matching the search criteria." });
             }
             return Ok(blogs);
         }

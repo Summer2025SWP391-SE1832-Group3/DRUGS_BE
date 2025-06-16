@@ -50,7 +50,7 @@ namespace SWP391_Project.Controllers
 
         [HttpPost("admin/createAccount")]
         [Authorize(Roles ="Admin")]
-        public async Task<IActionResult> CreateAccount([FromBody]RegisterDto dto,[FromQuery]string role)
+        public async Task<IActionResult> CreateAccount([FromBody]CreateAccountDto dto,[FromQuery]string role)
         {
             try
             {
@@ -62,17 +62,14 @@ namespace SWP391_Project.Controllers
                 {
                     return BadRequest("Invalid role!!");
                 }
-                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _userService.RegisterAsync(dto, currentUserId, role);
+                var result = await _userService.CreateAccountAsync(dto, role);
                 if (result.Succeeded)
                 {
-                    return Ok(
-                        new NewUserDto
-                        {
-                            UserName = dto.UserName,
-                            Email = dto.Email,
-                        }
-                    );
+                    return Ok(new
+                    {
+                        UserName = dto.UserName,
+                        Role = role
+                    });
                 }
                 if (result.Errors.Any())
                 {

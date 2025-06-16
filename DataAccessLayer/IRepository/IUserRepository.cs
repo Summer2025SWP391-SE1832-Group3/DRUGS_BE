@@ -11,7 +11,8 @@ namespace DataAccessLayer.IRepository
 {
     public interface IUserRepository
     {
-        public  Task<IdentityResult> CreateUserAsyn(RegisterDto model,string currentUserId,string role);
+        public  Task<IdentityResult> RegisterAsyn(RegisterDto model,string currentUserId,string role);
+        public Task<IdentityResult> CreateAsync(CreateAccountDto model, string role);
         public  Task<ApplicationUser?> GetUserByUserName(string username);
         public Task<bool> CheckPassword(ApplicationUser user,string password);
 

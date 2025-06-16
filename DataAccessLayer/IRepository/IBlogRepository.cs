@@ -19,5 +19,6 @@ namespace DataAccessLayer.IRepository
         Task<bool> RejectAsync(int blogId, string managerId);
         Task<List<Blog>> GetByUserIdAsync(string userId);
         Task<List<Blog>> GetBlogByStatus(BlogStatus blogStatus);
+        Task<List<Blog>> SearchAsync(string search, string userId,string status);
     }
 }

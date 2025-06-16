@@ -29,6 +29,7 @@ namespace BusinessLayer.IService
         Task DeleteBLogImage(int blogImageId);
         Task<List<BlogViewDto>> GetBlogByUserIdAsync(string userId);
         Task<List<BlogViewDto>> GetBlogByStatus(string status);
+        Task<List<BlogViewDto>> SearchBlogByTitle(string search, string userId, string status);
 
     }
 }

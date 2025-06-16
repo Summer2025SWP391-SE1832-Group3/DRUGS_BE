@@ -20,8 +20,27 @@ namespace DataAccessLayer.Repository
             _userManager = userManager;
             _signInManager = signInManager;
         }
+        public async Task<IdentityResult> CreateAsync(CreateAccountDto model, string role)
+        {
+            if (string.IsNullOrEmpty(model.UserName)||string.IsNullOrEmpty(model.Password))
+            {
+                return IdentityResult.Failed(new IdentityError { Description = "Some fields are empty." });
+            }
+            var user = new ApplicationUser
+            {
+                UserName = model.UserName,
+                CreatedAt = DateTime.Now,
+            };
+            var result = await _userManager.CreateAsync(user, model.Password);
+            if (!result.Succeeded)
+            {
+                return IdentityResult.Failed(result.Errors.ToArray());
+            }
+            await _userManager.AddToRoleAsync(user, role);
+            return result;
+        }
 
-        public async Task<IdentityResult> CreateUserAsyn(RegisterDto model,string currentUserId, string role)
+        public async Task<IdentityResult> RegisterAsyn(RegisterDto model,string currentUserId, string role)
         {
             if (string.IsNullOrEmpty(model.UserName) || string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Password))
             {
@@ -120,5 +139,7 @@ namespace DataAccessLayer.Repository
             }
             return users;
         }
+
+
     }
 }

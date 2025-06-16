@@ -131,5 +131,15 @@ namespace BusinessLayer.Service
             }
             return _mapper.Map<List<BlogViewDto>>(blogs);
         }
+
+        public async Task<List<BlogViewDto>> SearchBlogByTitle(string search, string? userId=null, string? status=null)
+        {
+            var blogs =await _blogRepository.SearchAsync(search, userId, status);
+            if(blogs==null || blogs.Count == 0)
+            {
+                return new List<BlogViewDto>();
+            }
+            return  _mapper.Map<List<BlogViewDto>>(blogs);
+        }
     }
 }

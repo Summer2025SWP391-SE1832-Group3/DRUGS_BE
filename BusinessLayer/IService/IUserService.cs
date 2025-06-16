@@ -13,6 +13,7 @@ namespace BusinessLayer.IService
     public interface IUserService
     {
         Task<IdentityResult> RegisterAsync(RegisterDto res, string currentUserIdm, string role);
+        Task<IdentityResult> CreateAccountAsync(CreateAccountDto res,string role);
         Task<string> LoginAsync(LoginDto login);
         Task<IdentityResult> AdminUpdateUserAsync(string userId, RegisterDto dto, string role);
         Task<IdentityResult> AdminDeleteUserAsync(string userId);

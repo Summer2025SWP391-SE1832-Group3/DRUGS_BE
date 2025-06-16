@@ -46,7 +46,21 @@ namespace BusinessLayer.Service
             return await _tokenService.CreateToken(user);
         }
 
+        public async Task<IdentityResult> CreateAccountAsync(CreateAccountDto res, string role)
+        {
+            var existingUserName = await _userManager.FindByNameAsync(res.UserName);
+            if (existingUserName != null)
+            {
+                return IdentityResult.Failed(new IdentityError
+                {
+                    Code = "UserNameAlreadyExists",
+                    Description = "UserName is already taken"
+                });
+            }
 
+            var result = await _userRepository.CreateAsync(res, role);
+            return result; ;
+        }
         public async Task<IdentityResult> RegisterAsync(RegisterDto res, string currentUserId, string role = "Member")
         {
             var existingEmail = await _userManager.FindByEmailAsync(res.Email);
@@ -69,7 +83,7 @@ namespace BusinessLayer.Service
                 });
             }
 
-            var result = await _userRepository.CreateUserAsyn(res, currentUserId, role);
+            var result = await _userRepository.RegisterAsyn(res, currentUserId, role);
             return result;
         }
 
@@ -125,5 +139,7 @@ namespace BusinessLayer.Service
 
             return userList;
         }
+
+      
     }
 }
