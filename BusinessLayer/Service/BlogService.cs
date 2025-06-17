@@ -138,6 +138,7 @@ namespace BusinessLayer.Service
             if(blogs==null || blogs.Count == 0)
             {
                 return new List<BlogViewDto>();
+
             }
             return  _mapper.Map<List<BlogViewDto>>(blogs);
         }

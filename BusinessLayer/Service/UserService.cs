@@ -105,17 +105,24 @@ namespace BusinessLayer.Service
                 _logger.LogWarning("Delete failed: User not found - {UserId}", userId);
                 return IdentityResult.Failed(new IdentityError { Description = "User not found" });
             }
-
-            var result = await _userManager.DeleteAsync(user);
-            if (result.Succeeded)
+            else
             {
-                _logger.LogInformation("User deleted successfully: {UserId}", userId);
+                _logger.LogInformation("User found: {UserId}", userId);
+            }
+            var result = await _userManager.DeleteAsync(user);
+            if (result == null)
+            {
+                _logger.LogError("DeleteAsync returned null for user {UserId}", userId);
+            }
+            else if (!result.Succeeded)
+            {
+                _logger.LogError("Delete failed for user {UserId}: {Errors}",
+                    userId,
+                    string.Join(", ", result.Errors.Select(e => e.Description)));
             }
             else
             {
-                _logger.LogError("Delete failed for user {UserId}: {Errors}", 
-                    userId, 
-                    string.Join(", ", result.Errors.Select(e => e.Description)));
+                _logger.LogInformation("User deleted successfully: {UserId}", userId);
             }
             return result;
         }

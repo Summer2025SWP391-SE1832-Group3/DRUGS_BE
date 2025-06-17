@@ -143,7 +143,7 @@ namespace SWP391_Project.Controllers
             });
         }
 
-        [HttpGet("{blogId:int}")]
+        [HttpGet("{id:int}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetDetail(int id)
         {
@@ -151,7 +151,7 @@ namespace SWP391_Project.Controllers
             if (blog == null) return NotFound();
             return Ok(blog);
         }
-
+            
         [HttpGet("approvedBlogs")]
         [AllowAnonymous]
         public async Task<IActionResult> GetAllApproved()
@@ -227,13 +227,13 @@ namespace SWP391_Project.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> SearchBlogByTitle(string search)
+        public async Task<IActionResult> SearchBlogByTitle(string? search)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var role=User.FindFirstValue(ClaimTypes.Role);
             if(string.IsNullOrEmpty(search))
             {
-                return BadRequest(new { message = "Search term cannot be empty." });
+                search = "";
             }
             List<BlogViewDto> blogs=null;
 
