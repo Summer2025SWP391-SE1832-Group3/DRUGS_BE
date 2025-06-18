@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Linq;
 
 namespace SWP391_Project.Controllers
 {
@@ -235,6 +236,108 @@ namespace SWP391_Project.Controllers
                 _logger.LogError(ex, "Error updating profile for user {UserId}", 
                     User.FindFirstValue(ClaimTypes.NameIdentifier));
                 return StatusCode(500, "An error occurred while updating profile");
+            }
+        }
+
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { 
+                        message = "Invalid input data", 
+                        errors = ModelState.Values
+                            .SelectMany(v => v.Errors)
+                            .Select(e => e.ErrorMessage) 
+                    });
+                }
+
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var result = await _userService.ChangePasswordAsync(userId, dto);
+                
+                if (result.Succeeded)
+                {
+                    return Ok(new { message = "Password changed successfully" });
+                }
+                return BadRequest(new { 
+                    message = "Failed to change password", 
+                    errors = result.Errors.Select(e => e.Description) 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error changing password for user {UserId}", 
+                    User.FindFirstValue(ClaimTypes.NameIdentifier));
+                return StatusCode(500, "An error occurred while changing password");
+            }
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { 
+                        message = "Invalid input data", 
+                        errors = ModelState.Values
+                            .SelectMany(v => v.Errors)
+                            .Select(e => e.ErrorMessage) 
+                    });
+                }
+
+                var result = await _userService.ForgotPasswordAsync(dto);
+                
+                if (result.Succeeded)
+                {
+                    return Ok(new { message = "If the email exists, a password reset link has been sent" });
+                }
+                return BadRequest(new { 
+                    message = "Failed to process forgot password request", 
+                    errors = result.Errors.Select(e => e.Description) 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing forgot password request for email {Email}", dto.Email);
+                return StatusCode(500, "An error occurred while processing forgot password request");
+            }
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { 
+                        message = "Invalid input data", 
+                        errors = ModelState.Values
+                            .SelectMany(v => v.Errors)
+                            .Select(e => e.ErrorMessage) 
+                    });
+                }
+
+                var result = await _userService.ResetPasswordAsync(dto);
+                
+                if (result.Succeeded)
+                {
+                    return Ok(new { message = "Password reset successfully" });
+                }
+                return BadRequest(new { 
+                    message = "Failed to reset password", 
+                    errors = result.Errors.Select(e => e.Description) 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resetting password for email {Email}", dto.Email);
+                return StatusCode(500, "An error occurred while resetting password");
             }
         }
     }
