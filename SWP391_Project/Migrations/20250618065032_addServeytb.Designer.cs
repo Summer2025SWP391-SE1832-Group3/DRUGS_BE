@@ -4,6 +4,7 @@ using DataAccessLayer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SWP391_Project.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250618065032_addServeytb")]
+    partial class addServeytb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -228,16 +231,14 @@ namespace SWP391_Project.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("SurveyType")
+                    b.Property<string>("SurveyType")
+                        .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("SurveyId");
 
-                    b.ToTable("Surveys");
+                    b.ToTable("Survey");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.SurveyAnswer", b =>
@@ -253,7 +254,7 @@ namespace SWP391_Project.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<bool?>("IsCorrect")
+                    b.Property<bool>("IsCorrect")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
@@ -261,14 +262,14 @@ namespace SWP391_Project.Migrations
                     b.Property<int>("QuestionId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("Score")
+                    b.Property<int>("Score")
                         .HasColumnType("int");
 
                     b.HasKey("AnswerId");
 
                     b.HasIndex("QuestionId");
 
-                    b.ToTable("SurveyAnswers");
+                    b.ToTable("SurveyAnswer");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.SurveyAnswerResult", b =>
@@ -290,7 +291,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("AnswerId");
 
-                    b.ToTable("SurveyAnswerResults");
+                    b.ToTable("SurveyAnswerResult");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.SurveyQuestion", b =>
@@ -300,6 +301,11 @@ namespace SWP391_Project.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QuestionId"));
+
+                    b.Property<string>("AnswerType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("QuestionText")
                         .IsRequired()
@@ -313,7 +319,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("SurveyId");
 
-                    b.ToTable("SurveyQuestions");
+                    b.ToTable("SurveyQuestion");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.SurveyResult", b =>
@@ -348,7 +354,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SurveyResults");
+                    b.ToTable("SurveyResult");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -380,31 +386,31 @@ namespace SWP391_Project.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "de7b42dd-0173-4140-9375-4bec97adee01",
+                            Id = "a90666a9-a398-4069-84f7-36a8344e37c0",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "ea57fa1f-bbdd-40ed-bbee-4b95d31e76a7",
+                            Id = "eb14a7c0-e94b-452e-b8fc-9518d22e7926",
                             Name = "Staff",
                             NormalizedName = "STAFF"
                         },
                         new
                         {
-                            Id = "2f54d6cc-c976-4e67-9c11-27a40d06b017",
+                            Id = "f45bfa7b-4483-44ea-82c6-37e5f3ce3e2e",
                             Name = "Manager",
                             NormalizedName = "MANAGER"
                         },
                         new
                         {
-                            Id = "70ebfbb8-4ab4-4aa5-aeb5-3d3e4e78471b",
+                            Id = "14fbacb5-7c51-46e8-957d-0613f449fc31",
                             Name = "Consultant",
                             NormalizedName = "CONSULTANT"
                         },
                         new
                         {
-                            Id = "29fedd3e-3be3-4af0-9402-ba95b1e7a522",
+                            Id = "45989231-af64-46b4-9c62-e49d275e5e2a",
                             Name = "Member",
                             NormalizedName = "MEMBER"
                         });

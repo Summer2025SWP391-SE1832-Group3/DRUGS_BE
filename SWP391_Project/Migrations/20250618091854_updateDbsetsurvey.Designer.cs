@@ -4,6 +4,7 @@ using DataAccessLayer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SWP391_Project.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250618091854_updateDbsetsurvey")]
+    partial class updateDbsetsurvey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -228,12 +231,10 @@ namespace SWP391_Project.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("SurveyType")
+                    b.Property<string>("SurveyType")
+                        .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("SurveyId");
 
@@ -253,7 +254,7 @@ namespace SWP391_Project.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<bool?>("IsCorrect")
+                    b.Property<bool>("IsCorrect")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
@@ -261,7 +262,7 @@ namespace SWP391_Project.Migrations
                     b.Property<int>("QuestionId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("Score")
+                    b.Property<int>("Score")
                         .HasColumnType("int");
 
                     b.HasKey("AnswerId");
@@ -300,6 +301,11 @@ namespace SWP391_Project.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QuestionId"));
+
+                    b.Property<string>("AnswerType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("QuestionText")
                         .IsRequired()
@@ -380,31 +386,31 @@ namespace SWP391_Project.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "de7b42dd-0173-4140-9375-4bec97adee01",
+                            Id = "ee7fc57f-584b-45b3-9d3a-e53d4b1c21ad",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "ea57fa1f-bbdd-40ed-bbee-4b95d31e76a7",
+                            Id = "8fab023b-cfdf-4666-8952-a5c24f87f1d5",
                             Name = "Staff",
                             NormalizedName = "STAFF"
                         },
                         new
                         {
-                            Id = "2f54d6cc-c976-4e67-9c11-27a40d06b017",
+                            Id = "deb450bd-4828-487b-af6a-ce7cbcfcaac7",
                             Name = "Manager",
                             NormalizedName = "MANAGER"
                         },
                         new
                         {
-                            Id = "70ebfbb8-4ab4-4aa5-aeb5-3d3e4e78471b",
+                            Id = "68f8c696-639a-402f-963b-8829258758db",
                             Name = "Consultant",
                             NormalizedName = "CONSULTANT"
                         },
                         new
                         {
-                            Id = "29fedd3e-3be3-4af0-9402-ba95b1e7a522",
+                            Id = "b569a31b-c898-4bdf-932b-353f0418eaaf",
                             Name = "Member",
                             NormalizedName = "MEMBER"
                         });
