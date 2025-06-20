@@ -11,7 +11,7 @@ namespace DataAccessLayer.Dto.Survey
     public class SurveyAnswerViewDto
     {
         public int AnswerId { get; set; }
-        public string AnswerText { get; set; }
+        public string AnswerText { get; set; } = null!;
         public int? Score { get; set; }
         public bool? IsCorrect { get; set; }
     }

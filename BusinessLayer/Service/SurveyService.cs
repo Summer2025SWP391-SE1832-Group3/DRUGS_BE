@@ -40,11 +40,7 @@ namespace BusinessLayer.Service
         //    return await _repository.CreateAsync(survey);
         //}
 
-        public async Task<SurveyResult> CreateSurveyResultAsync(SurveyResultDto dto)
-        {
-            var result=_mapper.Map<SurveyResult>(dto);
-            return await _repository.CreateSurveyResultAsync(result);
-        }
+
 
         public async Task<bool> DeleteAnswerAsync(int answerId)
         {
@@ -159,5 +155,55 @@ namespace BusinessLayer.Service
             }
             return createdSurvey;
         }
+
+
+        public async Task<int> CalculatorScore(SurveyAnswerDto surveyAnswerDto, int surveyId)
+        {
+            var survey = await _repository.GetByIdAsync(surveyId);
+            int totalScore = 0;
+            int totalCorrect = 0;
+            if(survey== null) return 0; 
+            if (survey.SurveyType == SurveyType.AddictionSurvey)
+            {
+                foreach(var answer in surveyAnswerDto.Answers)
+                {
+                    var question=survey.SurveyQuestions.FirstOrDefault(q=>q.QuestionId== answer.QuestionId);
+                    var selectedAnswer=question?.SurveyAnswers.FirstOrDefault(a=>a.AnswerId== answer.AnswerId);
+                    if (selectedAnswer != null && selectedAnswer.Score!=null)
+                    {
+                        totalScore +=(int)selectedAnswer.Score;
+                    }   
+                }
+
+            }
+            else if (survey.SurveyType == SurveyType.CourseTest)
+            {
+                foreach (var answer in surveyAnswerDto.Answers)
+                {
+                    var question = survey.SurveyQuestions.FirstOrDefault(q => q.QuestionId == answer.QuestionId);
+                    var selectedAnswer = question?.SurveyAnswers.FirstOrDefault(a => a.AnswerId == answer.AnswerId);
+                    if(selectedAnswer!=null && selectedAnswer.IsCorrect==true)
+                    {
+                        totalCorrect++;
+                    }
+                }
+                totalScore = totalCorrect;
+            }
+            return totalScore;
+
+        }
+
+        public Task<SurveyResult> CreateSurveyResultAsync(int surveyId, List<SurveyAnswerDto> surveyAnswerDto, string userId, int totalScore)
+        {
+            throw new NotImplementedException();
+        }
+        //tạo surveyresult
+        //public async Task<SurveyResult> CreateSurveyResultAsync(int surveyId, List<SurveyAnswerDto> surveyAnswerDto,string userId,int totalScore)
+        //{
+        //    var result = _mapper.Map<SurveyResult>();
+        //    return await _repository.CreateSurveyResultAsync(result);
+        //}
+
+
     }
 }

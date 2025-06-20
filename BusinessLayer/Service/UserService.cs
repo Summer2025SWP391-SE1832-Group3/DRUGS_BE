@@ -91,7 +91,7 @@ namespace BusinessLayer.Service
                 });
             }
 
-            var result = await _userRepository.RegisterAsyn(res, currentUserId, role);
+            var result = await _userRepository.RegisterAsync(res, currentUserId, role);
             return result;
         }
 

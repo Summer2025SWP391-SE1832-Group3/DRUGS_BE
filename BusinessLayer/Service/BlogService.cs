@@ -72,9 +72,9 @@ namespace BusinessLayer.Service
             }
             return _mapper.Map<BlogViewDto>(blog);
         }
-        public async Task<bool> UpdateAsync(BlogUpdateDto dto, string staffId,bool isManager)
+        public async Task<bool> UpdateAsync(int blogId,BlogUpdateDto dto, string staffId,bool isManager)
         {
-            var blog = await _blogRepository.GetByIdAsync(dto.BlogId);
+            var blog = await _blogRepository.GetByIdAsync(blogId);
             if (blog == null || (blog.PostedById != staffId && !isManager))
             {
                 return false;

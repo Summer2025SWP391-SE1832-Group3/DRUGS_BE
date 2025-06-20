@@ -11,7 +11,7 @@ namespace DataAccessLayer.Dto.Survey
     public class SurveyQuestionViewDto
     {
         public int QuestionId { get; set; }
-        public string QuestionText { get; set; }
+        public string QuestionText { get; set; } = null!;
 
         public List<SurveyAnswerViewDto> SurveyAnswers { get; set; } = new List<SurveyAnswerViewDto>();
     }

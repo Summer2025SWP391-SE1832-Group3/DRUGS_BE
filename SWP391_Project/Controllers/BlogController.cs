@@ -66,17 +66,13 @@ namespace SWP391_Project.Controllers
             return Ok(blogWithImages);
         }
 
-        [HttpPut("{id:int}")]
+        [HttpPut("{blogId:int}")]
         [Authorize(Roles = "Staff,Manager")]
-        public async Task<IActionResult> Update(int id, [FromForm] BlogUpdateDto dto, [FromForm] List<IFormFile> images)
+        public async Task<IActionResult> Update(int blogId, [FromForm] BlogUpdateDto dto, [FromForm] List<IFormFile> images)
         {
             var staffId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var isManager = User.IsInRole("Manager");
-            if (id != dto.BlogId)
-            {
-                return BadRequest(new { message = "ID in URL and data do not match." });
-            }
-            var result = await _blogService.UpdateAsync(dto, staffId, isManager);
+            var result = await _blogService.UpdateAsync(blogId,dto, staffId, isManager);
             if (!result)
             {
                 return Forbid();
@@ -100,7 +96,7 @@ namespace SWP391_Project.Controllers
                         }
                         var blogImage = new BlogImage
                         {
-                            BlogId = dto.BlogId,
+                            BlogId = blogId,
                             ImageUrl = "/uploads/" + Path.GetFileName(filePath)
                         };
                         uploadImage.Add(blogImage);
@@ -111,7 +107,7 @@ namespace SWP391_Project.Controllers
                     await _blogService.AddBlogImageAsync(blogImage);
                 }
 
-                var blogImages = await _blogService.GetImagesByBlogIdAsync(dto.BlogId);
+                var blogImages = await _blogService.GetImagesByBlogIdAsync(blogId);
                 foreach (var oldImage in blogImages)
                 {
                     if (!uploadImage.Any(i => i.ImageUrl == oldImage.ImageUrl))
@@ -125,7 +121,7 @@ namespace SWP391_Project.Controllers
                     }
                 }
             }
-            var blogWithImages = await _blogService.GetByIdAsync(dto.BlogId);
+            var blogWithImages = await _blogService.GetByIdAsync(blogId);
             return Ok(blogWithImages);
         }
 

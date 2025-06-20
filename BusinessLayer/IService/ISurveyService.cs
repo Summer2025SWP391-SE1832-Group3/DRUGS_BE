@@ -26,8 +26,9 @@ namespace BusinessLayer.IService
         Task<bool> UpdateQuestionAsync(SurveyQuestionUpdateDto dto);
         Task<bool> DeleteQuestionAsync(int questionId);
 
-        Task<SurveyResult> CreateSurveyResultAsync(SurveyResultDto dto);
-        Task<List<SurveyAnswerResultDto>> GetSurveyAnswerResultAsync(int surveyResultId);
         Task<Survey> CreateSurveyWithQuestionAndAnswerAsync(SurveyCreateWithQuesAndAnsDto dto);
+        Task<SurveyResult> CreateSurveyResultAsync(int surveyId,List<SurveyAnswerDto> surveyAnswerDto, string userId, int totalScore);
+        Task<int> CalculatorScore(SurveyAnswerDto surveyAnswerDto, int surveyId);
+        Task<List<SurveyAnswerResultDto>> GetSurveyAnswerResultAsync(int surveyResultId);
     }
 }

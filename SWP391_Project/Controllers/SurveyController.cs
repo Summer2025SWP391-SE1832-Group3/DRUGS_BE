@@ -38,5 +38,25 @@ namespace SWP391_Project.Controllers
             });
         }
 
+        [HttpGet("{surveyId:int}")]
+        public async Task<IActionResult> GetSurveyById(int surveyId)
+        {
+            var survey = await _surveyService.GetSurveyByIdAsync(surveyId);
+            if (survey == null)
+            {
+                return NotFound("Survey not found.");
+            }
+            return Ok(survey);
+        }
+
+        [HttpGet("all_survey")]
+        public async Task<IActionResult> GetAllSurveys()
+        {
+            var surveys = await _surveyService.GetAllSurveyAsync();
+            return Ok(surveys);
+        }
+
+        //[HttpPost()]
+
     }
 }
