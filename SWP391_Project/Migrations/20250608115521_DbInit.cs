@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SWP391_Project.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class DbInit : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -54,23 +54,6 @@ namespace SWP391_Project.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Courses",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Level = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Courses", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -264,11 +247,11 @@ namespace SWP391_Project.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "5717ed32-08f0-475d-9049-f1ca858c406a", null, "Manager", "MANAGER" },
-                    { "8460f543-af59-426f-9ae6-21ca9437368b", null, "Staff", "STAFF" },
-                    { "97197d10-2586-43a2-b0c6-bef90fbad871", null, "Member", "MEMBER" },
-                    { "d249e22f-f495-4bab-b2dd-fcf9522bda1b", null, "Consultant", "CONSULTANT" },
-                    { "e7e622e3-43de-476e-9730-f30624e9a9a4", null, "Admin", "ADMIN" }
+                    { "26307330-d382-4eef-9999-620c52b5480b", null, "Admin", "ADMIN" },
+                    { "7e4e512a-c360-41f4-9434-6cf7d5bf7d2e", null, "Consultant", "CONSULTANT" },
+                    { "8e1d4156-4bf6-40f8-9e6a-ac9217fa8291", null, "Manager", "MANAGER" },
+                    { "996fa61d-8876-4ccf-8ca3-dbb63a60c9bc", null, "Staff", "STAFF" },
+                    { "a2290784-0ccf-4e51-ba7e-1280b1d1b75d", null, "Member", "MEMBER" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -359,9 +342,6 @@ namespace SWP391_Project.Migrations
 
             migrationBuilder.DropTable(
                 name: "Comments");
-
-            migrationBuilder.DropTable(
-                name: "Courses");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
