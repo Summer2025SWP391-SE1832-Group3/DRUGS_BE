@@ -106,7 +106,7 @@ builder.Services.AddScoped<IBlogService, BlogService>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
+builder.Services.AddScoped<IConsultantService, ConsultantService>();
 
 var app = builder.Build();
 
@@ -126,5 +126,4 @@ app.UseCors();
 app.UseAuthorization();
 
 app.MapControllers();
-
 app.Run();

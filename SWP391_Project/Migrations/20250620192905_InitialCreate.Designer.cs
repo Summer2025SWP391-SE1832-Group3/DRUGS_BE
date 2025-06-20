@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SWP391_Project.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20250608115521_DbInit")]
-    partial class DbInit
+    [Migration("20250620192905_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -208,6 +208,37 @@ namespace SWP391_Project.Migrations
                     b.ToTable("Comments");
                 });
 
+            modelBuilder.Entity("DataAccessLayer.Model.Course", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Courses");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -237,31 +268,31 @@ namespace SWP391_Project.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "26307330-d382-4eef-9999-620c52b5480b",
+                            Id = "e7e622e3-43de-476e-9730-f30624e9a9a4",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "996fa61d-8876-4ccf-8ca3-dbb63a60c9bc",
+                            Id = "8460f543-af59-426f-9ae6-21ca9437368b",
                             Name = "Staff",
                             NormalizedName = "STAFF"
                         },
                         new
                         {
-                            Id = "8e1d4156-4bf6-40f8-9e6a-ac9217fa8291",
+                            Id = "5717ed32-08f0-475d-9049-f1ca858c406a",
                             Name = "Manager",
                             NormalizedName = "MANAGER"
                         },
                         new
                         {
-                            Id = "7e4e512a-c360-41f4-9434-6cf7d5bf7d2e",
+                            Id = "d249e22f-f495-4bab-b2dd-fcf9522bda1b",
                             Name = "Consultant",
                             NormalizedName = "CONSULTANT"
                         },
                         new
                         {
-                            Id = "a2290784-0ccf-4e51-ba7e-1280b1d1b75d",
+                            Id = "97197d10-2586-43a2-b0c6-bef90fbad871",
                             Name = "Member",
                             NormalizedName = "MEMBER"
                         });

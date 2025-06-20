@@ -83,7 +83,7 @@ namespace BusinessLayer.Service
                 });
             }
 
-            var result = await _userRepository.CreateUserAsyn(registerDto, role ?? defaultRole, defaultRole);
+            var result = await _userRepository.CreateUserAsyn(registerDto, role, defaultRole);
             if (result.Succeeded)
             {
                 _logger.LogInformation("User registered successfully: {Email}", registerDto.Email);

@@ -18,8 +18,8 @@ namespace DataAccessLayer.Data
         }
         public DbSet<Blog> Blogs { get; set; }
         public DbSet<Comment> Comments { get; set; }
-
         public DbSet<BlogImage> BlogImages { get; set; }
+        public DbSet<Course> Courses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
