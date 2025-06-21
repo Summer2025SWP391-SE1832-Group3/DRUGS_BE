@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
+using SWP391_Project.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -104,10 +105,16 @@ builder.Services.AddScoped<IBlogService, BlogService>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IBlogImageRepository, BlogImageRepository>();
+builder.Services.AddScoped<ISurveyService, SurveyService>();
+builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 
 var app = builder.Build();
+
+// Add request/response logging middleware
+app.UseMiddleware<RequestResponseLoggingMiddleware>();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -119,7 +126,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseCors();
 app.UseAuthorization();
-
+app.UseStaticFiles();
 app.MapControllers();
 
 app.Run();

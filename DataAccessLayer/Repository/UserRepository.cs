@@ -40,7 +40,7 @@ namespace DataAccessLayer.Repository
             return result;
         }
 
-        public async Task<IdentityResult> RegisterAsyn(RegisterDto model,string currentUserId, string role)
+        public async Task<IdentityResult> RegisterAsync(RegisterDto model,string currentUserId, string role)
         {
             if (string.IsNullOrEmpty(model.UserName) || string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Password))
             {

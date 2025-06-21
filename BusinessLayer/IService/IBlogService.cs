@@ -16,7 +16,7 @@ namespace BusinessLayer.IService
 
 
         Task<BlogViewDto> GetByIdAsync(int id);
-        Task<bool> UpdateAsync(BlogUpdateDto dto, string staffId,bool isManager);
+        Task<bool> UpdateAsync(int blogId,BlogUpdateDto dto, string staffId,bool isManager);
 
         Task<bool> DeleteAsync(int blogId,string staffId,bool isManager);
 

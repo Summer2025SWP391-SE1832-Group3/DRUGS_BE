@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using DataAccessLayer.Dto.BlogPost;
+using DataAccessLayer.Dto.Survey;
 using DataAccessLayer.Model;
 using System;
 using System.Collections.Generic;
@@ -32,6 +33,20 @@ namespace BusinessLayer.Helpers
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.UserName));
             CreateMap<CommentUpdateDto, Comment>();
             CreateMap<CommentCreateDto, Comment>();
+
+            CreateMap<Survey, SurveyViewDto>();
+            CreateMap<SurveyQuestion, SurveyQuestionViewDto>();
+            CreateMap<SurveyAnswer, SurveyAnswerViewDto>();
+
+            //CreateMap<SurveyCreateDto, Survey>().ReverseMap();
+            CreateMap<SurveyUpdateDto, Survey>().ReverseMap();
+            CreateMap<SurveyAnswerCreateDto, SurveyAnswer>().ReverseMap();
+            CreateMap<SurveyAnswerUpdateDto, SurveyAnswer>().ReverseMap();
+            CreateMap<SurveyQuestionCreateDto, SurveyQuestion>().ReverseMap();
+            CreateMap<SurveyQuestionUpdateDto, SurveyQuestion>().ReverseMap();
+
+            CreateMap<SurveyResultDto, SurveyResult>();
+            CreateMap<SurveyAnswerResultDto, SurveyAnswerResult>();
         }
     }
 }

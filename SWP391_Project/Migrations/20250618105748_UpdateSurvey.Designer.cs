@@ -4,6 +4,7 @@ using DataAccessLayer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SWP391_Project.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250618105748_UpdateSurvey")]
+    partial class UpdateSurvey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -253,7 +256,7 @@ namespace SWP391_Project.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<bool?>("IsCorrect")
+                    b.Property<bool>("IsCorrect")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
@@ -262,6 +265,7 @@ namespace SWP391_Project.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("Score")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.HasKey("AnswerId");
@@ -300,6 +304,11 @@ namespace SWP391_Project.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QuestionId"));
+
+                    b.Property<string>("AnswerType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("QuestionText")
                         .IsRequired()
@@ -380,31 +389,31 @@ namespace SWP391_Project.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "de7b42dd-0173-4140-9375-4bec97adee01",
+                            Id = "4f8708b1-5856-4f59-9daf-5ab2c5f6ea9c",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "ea57fa1f-bbdd-40ed-bbee-4b95d31e76a7",
+                            Id = "2bddc71a-70f6-429a-8ed0-20efad7c9c3a",
                             Name = "Staff",
                             NormalizedName = "STAFF"
                         },
                         new
                         {
-                            Id = "2f54d6cc-c976-4e67-9c11-27a40d06b017",
+                            Id = "0c6bf5c0-52a7-4cb2-ab7b-eeb590c8f80d",
                             Name = "Manager",
                             NormalizedName = "MANAGER"
                         },
                         new
                         {
-                            Id = "70ebfbb8-4ab4-4aa5-aeb5-3d3e4e78471b",
+                            Id = "ca9cb786-c61f-4f84-bd10-9568b04d9153",
                             Name = "Consultant",
                             NormalizedName = "CONSULTANT"
                         },
                         new
                         {
-                            Id = "29fedd3e-3be3-4af0-9402-ba95b1e7a522",
+                            Id = "a8fe6c0c-23ee-4f75-b8ea-e254b454aa98",
                             Name = "Member",
                             NormalizedName = "MEMBER"
                         });
