@@ -58,18 +58,35 @@ namespace SWP391_Project.Controllers
         {
             try
             {
+                _logger.LogInformation("Admin attempting to create account. Role: {Role}", role);
+                _logger.LogInformation("Current user: {UserName}, User ID: {UserId}", 
+                    User.Identity?.Name, 
+                    User.FindFirstValue(ClaimTypes.NameIdentifier));
+                
+                // Log user roles
+                var userRoles = User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value);
+                _logger.LogInformation("Current user roles: {Roles}", string.Join(", ", userRoles));
+                
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("Model state is invalid: {Errors}", 
+                        string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
                     return BadRequest(ModelState);
                 }
+                
                 if (!new[] { "Manager", "Staff", "Consultant" }.Contains(role))
                 {
+                    _logger.LogWarning("Invalid role requested: {Role}", role);
                     return BadRequest("Invalid role!!");
                 }
+                
                 var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                _logger.LogInformation("Creating account with currentUserId: {CurrentUserId}, Role: {Role}", currentUserId, role);
+                
                 var result = await _userService.RegisterAsync(dto, currentUserId, role);
                 if (result.Succeeded)
                 {
+                    _logger.LogInformation("Account created successfully: {UserName}, Role: {Role}", dto.UserName, role);
                     return Ok(
                         new NewUserDto
                         {
@@ -78,9 +95,11 @@ namespace SWP391_Project.Controllers
                         }
                     );
                 }
+                
                 if (result.Errors.Any())
                 {
                     var errorMessages = result.Errors.Select(e => e.Description).ToList();
+                    _logger.LogError("Failed to create account: {Errors}", string.Join(", ", errorMessages));
                     return StatusCode(500, new { Errors = errorMessages });
                 }
 
@@ -88,6 +107,7 @@ namespace SWP391_Project.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Unexpected error during account creation");
                 return StatusCode(500, new { Message = "An unexpected error occurred", ErrorDetails = ex.Message });
             }
         }

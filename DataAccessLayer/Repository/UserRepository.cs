@@ -16,20 +16,26 @@ namespace DataAccessLayer.Repository
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        public UserRepository(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager) {
+        private readonly RoleManager<IdentityRole> _roleManager;
+        
+        public UserRepository(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<IdentityRole> roleManager) {
             _userManager = userManager;
             _signInManager = signInManager;
+            _roleManager = roleManager;
         }
 
         public async Task<IdentityResult> CreateUserAsyn(RegisterDto model,string currentUserId, string role)
         {
             // Log toàn bộ dữ liệu đầu vào
             Console.WriteLine($"[DEBUG] RegisterDto: UserName={model.UserName}, Email={model.Email}, FullName={model.FullName}, Password={model.Password}, DateOfBirth={model.DateOfBirth}, Gender={model.Gender}, PhoneNumber={model.PhoneNumber}");
+            Console.WriteLine($"[DEBUG] CurrentUserId: {currentUserId}, Role: {role}");
+            
             if (string.IsNullOrEmpty(model.UserName) || string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Password))
             {
                 Console.WriteLine("[DEBUG] Một số trường bắt buộc bị thiếu!");
                 return IdentityResult.Failed(new IdentityError { Description = "Some fields are empty." });
             }
+            
             var user = new ApplicationUser
             {
                 UserName = model.UserName,
@@ -40,6 +46,7 @@ namespace DataAccessLayer.Repository
                 CreatedAt = DateTime.Now,
                 PhoneNumber = model.PhoneNumber,
             };
+            
             try
             {
                 var result = await _userManager.CreateAsync(user, model.Password);
@@ -51,40 +58,73 @@ namespace DataAccessLayer.Repository
                     }
                     return IdentityResult.Failed(result.Errors.ToArray());
                 }
+                
                 var createdUser = await _userManager.FindByNameAsync(model.UserName);
                 if (createdUser == null)
                 {
                     Console.WriteLine($"[DEBUG] User creation failed: user is null after creation. Username: {model.UserName}");
                     return IdentityResult.Failed(new IdentityError { Description = $"User creation failed (user is null after creation, username: {model.UserName})." });
                 }
-                string roleToAssign = null;
-                if(currentUserId!=null && await _userManager.IsInRoleAsync(await _userManager.FindByIdAsync(currentUserId), "Admin")){
-                    roleToAssign = role;
-                } else {
-                    roleToAssign = "Member";
-                }
-                if (!string.IsNullOrEmpty(roleToAssign))
+                
+                // Fix logic gán role
+                string roleToAssign = "Member"; // Default role
+                
+                // Nếu có currentUserId và role được chỉ định
+                if (!string.IsNullOrEmpty(currentUserId) && !string.IsNullOrEmpty(role))
                 {
-                    var roleManager = (RoleManager<IdentityRole>)_userManager.GetType().GetProperty("RoleManager", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(_userManager);
-                    bool roleExists = false;
-                    if (roleManager != null)
+                    var currentUser = await _userManager.FindByIdAsync(currentUserId);
+                    if (currentUser != null)
                     {
-                        roleExists = await roleManager.RoleExistsAsync(roleToAssign);
+                        var isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
+                        Console.WriteLine($"[DEBUG] Current user {currentUser.UserName} is Admin: {isAdmin}");
+                        
+                        if (isAdmin)
+                        {
+                            roleToAssign = role;
+                            Console.WriteLine($"[DEBUG] Admin user creating account with role: {roleToAssign}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[DEBUG] Current user is not Admin, using default role: {roleToAssign}");
+                        }
                     }
                     else
                     {
-                        roleExists = true;
+                        Console.WriteLine($"[DEBUG] Current user not found, using default role: {roleToAssign}");
                     }
-                    if (!roleExists)
+                }
+                else
+                {
+                    Console.WriteLine($"[DEBUG] No currentUserId or role specified, using default role: {roleToAssign}");
+                }
+                
+                // Gán role cho user
+                if (!string.IsNullOrEmpty(roleToAssign))
+                {
+                    var roleExists = await _roleManager.RoleExistsAsync(roleToAssign);
+                    
+                    if (roleExists)
+                    {
+                        var roleResult = await _userManager.AddToRoleAsync(createdUser, roleToAssign);
+                        if (roleResult.Succeeded)
+                        {
+                            Console.WriteLine($"[DEBUG] User '{model.UserName}' đã được tạo và gán role '{roleToAssign}' thành công.");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[DEBUG] Failed to assign role '{roleToAssign}' to user '{model.UserName}':");
+                            foreach (var err in roleResult.Errors)
+                            {
+                                Console.WriteLine($"[DEBUG] Role Error: {err.Code} - {err.Description}");
+                            }
+                        }
+                    }
+                    else
                     {
                         Console.WriteLine($"[DEBUG] Role '{roleToAssign}' does not exist in database. Không gán role cho user!");
                     }
-                    else
-                    {
-                        await _userManager.AddToRoleAsync(createdUser, roleToAssign);
-                        Console.WriteLine($"[DEBUG] User '{model.UserName}' đã được tạo và gán role '{roleToAssign}' thành công.");
-                    }
                 }
+                
                 return result;
             }
             catch(Exception ex)
