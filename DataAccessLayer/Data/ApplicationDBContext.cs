@@ -152,6 +152,11 @@ namespace DataAccessLayer.Data
                     .WithMany(sr => sr.SurveyAnswerResults)
                     .HasForeignKey(ar => ar.SurveyResultId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(ar => ar.SurveyQuestion)
+                    .WithMany(sq => sq.SurveyAnswerResults)
+                    .HasForeignKey(ar => ar.QuestionId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

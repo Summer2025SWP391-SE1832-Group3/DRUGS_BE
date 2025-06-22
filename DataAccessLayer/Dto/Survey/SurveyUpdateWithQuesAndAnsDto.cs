@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DataAccessLayer.Dto.Survey
 {
-    public class SurveyUpdateDto
+    public class SurveyUpdateWithQuesAndAnsDto
     {
         [Required]
         public int SurveyId { get; set; }
@@ -17,6 +17,6 @@ namespace DataAccessLayer.Dto.Survey
         public string SurveyName { get; set; } = null!;
         [MaxLength(1000)]
         public string? Description { get; set; }
-        public bool? IsActive { get; set; }
+        public List<SurveyQuestionUpdateDto> Questions { get; set; } = new List<SurveyQuestionUpdateDto>();
     }
 }

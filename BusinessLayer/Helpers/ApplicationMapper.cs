@@ -39,7 +39,7 @@ namespace BusinessLayer.Helpers
             CreateMap<SurveyAnswer, SurveyAnswerViewDto>();
 
             //CreateMap<SurveyCreateDto, Survey>().ReverseMap();
-            CreateMap<SurveyUpdateDto, Survey>().ReverseMap();
+            CreateMap<SurveyUpdateWithQuesAndAnsDto, Survey>().ReverseMap();
             CreateMap<SurveyAnswerCreateDto, SurveyAnswer>().ReverseMap();
             CreateMap<SurveyAnswerUpdateDto, SurveyAnswer>().ReverseMap();
             CreateMap<SurveyQuestionCreateDto, SurveyQuestion>().ReverseMap();

@@ -22,26 +22,6 @@ namespace BusinessLayer.Service
             _repository = repository;
         }
 
-        //public async Task<SurveyAnswer> CreateAnswerAsync(SurveyAnswerCreateDto dto)
-        //{
-        //    var answer=_mapper.Map<SurveyAnswer>(dto);
-        //    return await _repository.CreateAnswerAsync(answer);
-        //}
-
-        //public async Task<SurveyQuestion> CreateQuestionAsync(SurveyQuestionCreateDto dto)
-        //{
-        //    var question=_mapper.Map<SurveyQuestion>(dto);
-        //    return await _repository.CreateQuestionAsync(question); 
-        //}
-
-        //public async Task<Survey> CreateSurveyAsync(SurveyCreateDto dto)
-        //{
-        //     var survey=_mapper.Map<Survey>(dto);
-        //    return await _repository.CreateAsync(survey);
-        //}
-
-
-
         public async Task<bool> DeleteAnswerAsync(int answerId)
         {
             return await _repository.DeleteAnswerAsync(answerId);
@@ -49,7 +29,11 @@ namespace BusinessLayer.Service
 
         public async Task<bool> DeleteSurveyAsync(int surveyId)
         {
-            return await _repository.DeleteAsync(surveyId);
+            var survey=await _repository.GetByIdAsync(surveyId);
+            if(survey==null) return false;
+            survey.IsActive = false;
+            survey.UpdatedAt= DateTime.Now;
+            return await _repository.DeleteAsync(survey);
         }
 
         public async Task<bool> DeleteQuestionAsync(int questionId)
@@ -84,35 +68,6 @@ namespace BusinessLayer.Service
             var survey=await _repository.GetByIdAsync(surveyId);
             if(survey == null) return null;
             return _mapper.Map<SurveyViewDto>(survey);
-        }
-
-        public async Task<bool> UpdateAnswerAsync(SurveyAnswerUpdateDto dto)
-        {
-            var answer = await _repository.GetAnswerByIdAsync(dto.QuestionId) ;
-            if (answer==null)
-            {
-                return false;
-            }
-            answer.AnswerText = dto.AnswerText;
-            answer.IsCorrect = dto.IsCorrect;
-            answer.Score = dto.Score;
-            return await _repository.UpdateAnswerAsync(answer);
-        }
-
-        public async Task<bool> UpdateSurveyAsync(SurveyUpdateDto dto)
-        {
-            var survey=await _repository.GetByIdAsync(dto.SurveyId);
-            if(survey == null) return false;
-            _mapper.Map(dto, survey);
-            return await _repository.UpdateAsync(survey);
-        }
-
-        public async Task<bool> UpdateQuestionAsync(SurveyQuestionUpdateDto dto)
-        {
-            var question=await _repository.GetQuestionByIdAsync(dto.QuestionId);
-            if(question == null) return false;
-            _mapper.Map(dto, question);
-            return await _repository.UpdateQuestionAsync(question);
         }
 
         public async Task<Survey> CreateSurveyWithQuestionAndAnswerAsync(SurveyCreateWithQuesAndAnsDto dto)
@@ -162,48 +117,114 @@ namespace BusinessLayer.Service
             var survey = await _repository.GetByIdAsync(surveyId);
             int totalScore = 0;
             int totalCorrect = 0;
-            if(survey== null) return 0; 
-            if (survey.SurveyType == SurveyType.AddictionSurvey)
+            if(survey== null) return 0;
+            foreach (var answer in surveyAnswerDto.Answers)
             {
-                foreach(var answer in surveyAnswerDto.Answers)
+                var question = survey.SurveyQuestions.FirstOrDefault(q => q.QuestionId == answer.QuestionId);
+                var selectedAnswer = question?.SurveyAnswers.FirstOrDefault(a => a.AnswerId == answer.AnswerId);
+                if (selectedAnswer != null)
                 {
-                    var question=survey.SurveyQuestions.FirstOrDefault(q=>q.QuestionId== answer.QuestionId);
-                    var selectedAnswer=question?.SurveyAnswers.FirstOrDefault(a=>a.AnswerId== answer.AnswerId);
-                    if (selectedAnswer != null && selectedAnswer.Score!=null)
+                    if (survey.SurveyType == SurveyType.AddictionSurvey)
                     {
-                        totalScore +=(int)selectedAnswer.Score;
-                    }   
-                }
-
-            }
-            else if (survey.SurveyType == SurveyType.CourseTest)
-            {
-                foreach (var answer in surveyAnswerDto.Answers)
-                {
-                    var question = survey.SurveyQuestions.FirstOrDefault(q => q.QuestionId == answer.QuestionId);
-                    var selectedAnswer = question?.SurveyAnswers.FirstOrDefault(a => a.AnswerId == answer.AnswerId);
-                    if(selectedAnswer!=null && selectedAnswer.IsCorrect==true)
+                        totalScore += (int)selectedAnswer.Score;
+                    }
+                    else if (survey.SurveyType == SurveyType.CourseTest)
                     {
-                        totalCorrect++;
+                        if (selectedAnswer.IsCorrect == true)
+                        {
+                            totalScore++;
+                        }
                     }
                 }
-                totalScore = totalCorrect;
             }
+
             return totalScore;
 
         }
 
-        public Task<SurveyResult> CreateSurveyResultAsync(int surveyId, List<SurveyAnswerDto> surveyAnswerDto, string userId, int totalScore)
-        {
-            throw new NotImplementedException();
-        }
         //tạo surveyresult
-        //public async Task<SurveyResult> CreateSurveyResultAsync(int surveyId, List<SurveyAnswerDto> surveyAnswerDto,string userId,int totalScore)
-        //{
-        //    var result = _mapper.Map<SurveyResult>();
-        //    return await _repository.CreateSurveyResultAsync(result);
-        //}
+        public async Task<SurveyResult?> CreateSurveyResultAsync(int surveyId, SurveyAnswerDto surveyAnswerDto, string userId, int totalScore)
+        {
+            var survey= await _repository.GetByIdAsync(surveyId);
+            if (survey == null) return null;
+            var surveyResult = new SurveyResult
+            {
+                UserId = userId,
+                SurveyId = surveyId,
+                TotalScore = totalScore,
+                TakeAt = DateTime.Now,
+            };
+            if (survey.SurveyType == SurveyType.AddictionSurvey)
+            {
+                if (totalScore < 10)
+                {
+                    surveyResult.Recommendation = "No risk of addiction";
+                }
+                else if (totalScore < 20)
+                {
+                    surveyResult.Recommendation = "At risk, should attend prevention course";
+                }
+                else
+                {
+                    surveyResult.Recommendation = "High risk, should seek professional counseling";
+                }
+            }
+            else if(survey.SurveyType == SurveyType.CourseTest)
+            {
+                if (totalScore >= 7)
+                {
+                    surveyResult.Recommendation = "Pass";
+                }
+                else
+                {
+                    surveyResult.Recommendation = "Fail";
+                }
+            }
+            var createdSurveyResult = await _repository.CreateSurveyResultAsync(surveyResult);
+            if (createdSurveyResult == null) return null;
+            foreach(var answerDto in surveyAnswerDto.Answers)
+            {
+                var surveyAnswerResult = new SurveyAnswerResult
+                {
+                    AnswerId = answerDto.AnswerId,
+                    SurveyResultId = createdSurveyResult.ResultId,
+                    QuestionId = answerDto.QuestionId
+                };
+                var CreatedAnswerResult = await _repository.CreateSurveyAnswerResultAsync(surveyAnswerResult);
+            }
+            return createdSurveyResult;
+        }
 
+        public async Task<bool> UpdateSurveyAsync(SurveyUpdateWithQuesAndAnsDto surveyUpdateDto, int surveyId)
+        {
+            var survey=await _repository.GetByIdAsync(surveyId);
+            if(survey==null) return false;
+            bool hasResult =survey.SurveyResults!=null && survey.SurveyResults.Any();
+            if (hasResult)
+            {
+                survey.Description = surveyUpdateDto.Description;
+                survey.SurveyName = surveyUpdateDto.SurveyName;
+                foreach (var questionDto in surveyUpdateDto.Questions)
+                {
+                    var question = survey.SurveyQuestions.FirstOrDefault(q=>q.QuestionId == questionDto.QuestionId);
+                    if (question != null)
+                    {
+                        question.QuestionText = questionDto.QuestionText;
+                        foreach (var answerDto in questionDto.AnswersDto)
+                        {
+                            var answer = question.SurveyAnswers.FirstOrDefault(a => a.AnswerId == answerDto.AnswerId);
+                            if (answer != null)
+                            {
+                                answer.AnswerText = answerDto.AnswerText;
+                                answer.IsCorrect = answerDto.IsCorrect;
+                                answer.Score = answerDto.Score;
+                            }
 
+                        }
+                    }
+                }
+            }
+            return await _repository.UpdateAsync(survey);
+        }
     }
 }

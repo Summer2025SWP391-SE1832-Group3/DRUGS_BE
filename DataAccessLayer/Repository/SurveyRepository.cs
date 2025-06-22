@@ -45,6 +45,13 @@ namespace DataAccessLayer.Repository
             return result;
         }
 
+        public async Task<SurveyAnswerResult> CreateSurveyAnswerResultAsync(SurveyAnswerResult result)
+        {
+            _context.SurveyAnswerResults.Add(result);
+             await _context.SaveChangesAsync();
+            return result;
+        }
+
         public async Task<bool> DeleteAnswerAsync(int answerId)
         {
             var answer = await _context.SurveyAnswers.FindAsync(answerId);
@@ -53,11 +60,8 @@ namespace DataAccessLayer.Repository
             return await _context.SaveChangesAsync()>0;
         }
 
-        public async Task<bool> DeleteAsync(int surveyId)
+        public async Task<bool> DeleteAsync(Survey survey)
         {
-            var survey=await _context.Surveys.FindAsync(surveyId);
-            if (survey == null) return false;
-            survey.IsActive = false;
             _context.Surveys.Update(survey);
             return await _context.SaveChangesAsync() > 0;
         }
@@ -134,5 +138,7 @@ namespace DataAccessLayer.Repository
             _context.SurveyQuestions.Update(question);
             return await _context.SaveChangesAsync() > 0;
         }
+
+
     }
 }

@@ -4,6 +4,7 @@ using DataAccessLayer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SWP391_Project.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250621074614_updateSurveyTable")]
+    partial class updateSurveyTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -377,31 +380,31 @@ namespace SWP391_Project.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "8c5754cc-b790-4234-bd6a-79f1f83416e6",
+                            Id = "68e3475f-4432-40c6-81a4-4a710aec9548",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "ad0b4374-8bdb-4f52-a76a-f98778bede99",
+                            Id = "0134986e-fe41-4bd2-8389-406acd3de4f6",
                             Name = "Staff",
                             NormalizedName = "STAFF"
                         },
                         new
                         {
-                            Id = "19221748-1694-4655-8648-4549a38cbac4",
+                            Id = "78e466c3-169a-4597-976c-7411cb755e6f",
                             Name = "Manager",
                             NormalizedName = "MANAGER"
                         },
                         new
                         {
-                            Id = "8e675ed4-c6b3-44d2-8e2b-ef8a0c06d110",
+                            Id = "621266df-5130-4c64-9050-564c2ab0770b",
                             Name = "Consultant",
                             NormalizedName = "CONSULTANT"
                         },
                         new
                         {
-                            Id = "b1a8b351-e0ef-4a82-ae99-549f6e6c2fac",
+                            Id = "72894d19-6693-4939-996e-923dbbe5336e",
                             Name = "Member",
                             NormalizedName = "MEMBER"
                         });
