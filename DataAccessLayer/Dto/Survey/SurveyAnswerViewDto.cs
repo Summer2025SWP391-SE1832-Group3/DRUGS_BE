@@ -12,7 +12,7 @@ namespace DataAccessLayer.Dto.Survey
     {
         public int AnswerId { get; set; }
         public string AnswerText { get; set; } = null!;
-        public int? Score { get; set; }
-        public bool? IsCorrect { get; set; }
+        //public int? Score { get; set; }
+        //public bool? IsCorrect { get; set; }
     }
 }

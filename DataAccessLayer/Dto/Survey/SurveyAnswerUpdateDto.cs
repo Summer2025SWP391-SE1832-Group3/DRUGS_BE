@@ -12,8 +12,6 @@ namespace DataAccessLayer.Dto.Survey
     {
         [Required]
         public int AnswerId { get; set; }
-        [Required]
-        public int QuestionId { get; set; }
         [Required, MaxLength(255)]  
         public string AnswerText { get; set; }
         public int? Score { get; set; }

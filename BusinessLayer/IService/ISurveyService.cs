@@ -10,24 +10,19 @@ namespace BusinessLayer.IService
 {
     public interface ISurveyService
     {
-        //Task<Survey> CreateSurveyAsync(SurveyCreateDto dto);
         Task<SurveyViewDto?> GetSurveyByIdAsync(int surveyId);
         Task<List<SurveyViewDto>> GetAllSurveyAsync();
-        Task<bool> UpdateSurveyAsync(SurveyUpdateDto dto);
         Task<bool> DeleteSurveyAsync(int surveyId);
 
-        //Task<SurveyAnswer> CreateAnswerAsync(SurveyAnswerCreateDto dto);
         Task<List<SurveyAnswer>> GetAllAnswersByQuestionIdAsync(int questionId);
-        Task<bool> UpdateAnswerAsync(SurveyAnswerUpdateDto dto);
         Task<bool> DeleteAnswerAsync(int answerId);
 
-        //Task<SurveyQuestion> CreateQuestionAsync(SurveyQuestionCreateDto dto);
         Task<List<SurveyQuestion>> GetAllQuestionsBySurveyIdAsync(int surveyId);
-        Task<bool> UpdateQuestionAsync(SurveyQuestionUpdateDto dto);
         Task<bool> DeleteQuestionAsync(int questionId);
 
         Task<Survey> CreateSurveyWithQuestionAndAnswerAsync(SurveyCreateWithQuesAndAnsDto dto);
-        Task<SurveyResult> CreateSurveyResultAsync(int surveyId,List<SurveyAnswerDto> surveyAnswerDto, string userId, int totalScore);
+        Task<bool> UpdateSurveyAsync(SurveyUpdateWithQuesAndAnsDto surveyUpdateDto, int surveyId);
+        Task<SurveyResult> CreateSurveyResultAsync(int surveyId,SurveyAnswerDto surveyAnswerDto, string userId, int totalScore);
         Task<int> CalculatorScore(SurveyAnswerDto surveyAnswerDto, int surveyId);
         Task<List<SurveyAnswerResultDto>> GetSurveyAnswerResultAsync(int surveyResultId);
     }

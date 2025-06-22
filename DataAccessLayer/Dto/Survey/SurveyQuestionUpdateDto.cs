@@ -12,9 +12,9 @@ namespace DataAccessLayer.Dto.Survey
     {
         [Required]
         public int QuestionId { get; set; }
-        //[Required, MaxLength(100)]  
-        //public string AnswerType { get; set; }
-        [Required, MaxLength(1000)]
+        [Required, MaxLength(250)]
         public string QuestionText { get; set; } = null!;
+        [Required]
+        public List<SurveyAnswerUpdateDto> AnswersDto { get; set; } = new List<SurveyAnswerUpdateDto>();
     }
 }
