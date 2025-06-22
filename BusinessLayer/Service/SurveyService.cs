@@ -204,6 +204,7 @@ namespace BusinessLayer.Service
             {
                 survey.Description = surveyUpdateDto.Description;
                 survey.SurveyName = surveyUpdateDto.SurveyName;
+                survey.UpdatedAt= DateTime.Now; 
                 foreach (var questionDto in surveyUpdateDto.Questions)
                 {
                     var question = survey.SurveyQuestions.FirstOrDefault(q=>q.QuestionId == questionDto.QuestionId);

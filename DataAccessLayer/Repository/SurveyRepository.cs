@@ -104,6 +104,7 @@ namespace DataAccessLayer.Repository
         public async Task<Survey?> GetByIdAsync(int surveyId)
         {
             return await _context.Surveys
+                .Include(s=>s.SurveyResults)
                 .Include(s => s.SurveyQuestions)
                 .ThenInclude(s => s.SurveyAnswers)
                 .FirstOrDefaultAsync(s => s.SurveyId == surveyId);
