@@ -11,8 +11,6 @@ namespace DataAccessLayer.Dto.Survey
     public class SurveyUpdateWithQuesAndAnsDto
     {
         [Required]
-        public int SurveyId { get; set; }
-        [Required]
         [MaxLength(100)]
         public string SurveyName { get; set; } = null!;
         [MaxLength(1000)]
