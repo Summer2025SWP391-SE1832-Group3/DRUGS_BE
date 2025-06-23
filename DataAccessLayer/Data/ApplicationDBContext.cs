@@ -146,7 +146,7 @@ namespace DataAccessLayer.Data
                 entity.HasOne(ar => ar.SurveyAnswer)
                     .WithMany(sa => sa.SurveyAnswerResults)
                     .HasForeignKey(ar => ar.AnswerId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(ar => ar.SurveyResult)
                     .WithMany(sr => sr.SurveyAnswerResults)
@@ -156,7 +156,7 @@ namespace DataAccessLayer.Data
                 entity.HasOne(ar => ar.SurveyQuestion)
                     .WithMany(sq => sq.SurveyAnswerResults)
                     .HasForeignKey(ar => ar.QuestionId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }

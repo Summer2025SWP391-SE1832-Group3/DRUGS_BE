@@ -10,6 +10,7 @@ namespace DataAccessLayer.Dto.Survey
     public class SurveyAnswerResultDto
     {
         public int AnswerId { get; set; }
+        public string AnswerText { get; set; }
         public bool? IsCorrect { get; set; }
         public int? Score { get; set; }
     }

@@ -109,6 +109,29 @@ namespace SWP391_Project.Controllers
             }
             return NotFound("Survey not found or could not be updated.");
         }
+
+        [HttpGet("{surveyId:int}/statistics")]
+        public async Task<IActionResult> GetSurveyStatistics(int surveyId)
+        {
+            var surveyStatistic = await _surveyService.GetSurveyStatisticAsync(surveyId);
+            if(surveyStatistic == null)
+            {
+                return NotFound("Survey not found.");
+            }
+            return Ok(surveyStatistic);
+
+        }
+
+        [HttpGet("{surveyId:int}/surveyResult")]
+        public async Task<IActionResult> GetUserSurveyResult(int surveyId, string userId)
+        {
+            var surveyResult = await _surveyService.GetUserSurveyResultAsync(surveyId, userId);
+            if (surveyResult == null)
+            {
+                return NotFound("Survey result not found.");
+            }
+            return Ok(surveyResult);
+        }
     }
 
 
