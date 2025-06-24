@@ -16,10 +16,10 @@ jobs:
       IMAGE_NAME: ${{ secrets.DOCKER_IMAGE_NAME }}
       DOCKER_PORT: ${{ secrets.DOCKER_PORT }}
       APP_PORT: ${{ secrets.APP_PORT }}
-      CONNECTIONSTRING: ${{ CONNECTIONSTRING }}
-      JWT_AUDIENCE: ${{ JWT_AUDIENCE }}
-      JWT_ISSUER: ${{ JWT_ISSUER }}
-      JWT_SECRET_KEY: ${{ JWT_SECRET_KEY }}
+      CONNECTIONSTRING: ${{ secrets.CONNECTIONSTRING }}
+      JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
+      JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+      JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
