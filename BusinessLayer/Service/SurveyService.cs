@@ -227,5 +227,67 @@ namespace BusinessLayer.Service
             }
             return await _repository.UpdateAsync(survey);
         }
+
+        public async Task<SurveyStatisticDto> GetSurveyStatisticAsync(int surveyId)
+        {
+            var survey=await _repository.GetByIdAsync(surveyId);
+            if (survey == null) return null;
+            var surveyResults = survey.SurveyResults;
+            var scores = surveyResults.Select(s => s.TotalScore).ToList();
+            var surveyStatistic = new SurveyStatisticDto
+            {
+                TotalSubmissions = surveyResults.Count,
+                TotalUsers=surveyResults.Select(s=>s.UserId).Distinct().Count(),
+                AverageScore = scores.Any()? scores.Average() : 0,
+                HighestScore = scores.Any()? scores.Max() : 0,
+                LowestScore = scores.Any() ? scores.Min() : 0,
+            };
+            if (survey.SurveyType == SurveyType.AddictionSurvey)
+            {
+                surveyStatistic.RiskLevel = new RiskLevelStatistic
+                {
+                    NoRisk = surveyResults.Count(s => s.TotalScore < 10),
+                    MildRisk = surveyResults.Count(s => s.TotalScore >= 10 && s.TotalScore < 20),
+                    HighRisk = surveyResults.Count(s => s.TotalScore >= 20)
+                };
+            }
+            else if(survey.SurveyType == SurveyType.CourseTest)
+            {
+                surveyStatistic.Pass = surveyResults.Count(s => s.Recommendation == "Pass");
+                surveyStatistic.Fail = surveyResults.Count(s => s.Recommendation == "Fail");
+            }
+            return surveyStatistic;
+
+        }
+
+        public async Task<List<SurveyResultDto>> GetUserSurveyResultAsync(int surveyId, string userId)
+        {
+            var surveyResults =await _repository.GetSurveyResultAsync(surveyId, userId);
+            if (surveyResults == null || !surveyResults.Any()) return new List<SurveyResultDto>();
+            var surveyResultDtos = surveyResults.Select(surveyResult => new SurveyResultDto
+            {
+                SurveyResultId = surveyResult.ResultId,
+                SurveyId = surveyResult.SurveyId,
+                SurveyName = surveyResult.Survey.SurveyName,
+                ExcutedBy = surveyResult.User.UserName,
+                SubmittedAt = surveyResult.TakeAt,
+                TotalScore = surveyResult.TotalScore,
+                Recommendation = surveyResult.Recommendation,
+                Questions = surveyResult.Survey.SurveyQuestions.Select(q => new SurveyQuestionResultDto
+                {
+                    QuestionId = q.QuestionId,
+                    QuestionText = q.QuestionText,
+                    Answers = q.SurveyAnswers.Select(a => new SurveyAnswerResultDto
+                    {
+                        AnswerId = a.AnswerId,
+                        AnswerText = a.AnswerText,
+                        IsCorrect = a.IsCorrect,
+                        Score = a.Score
+                    }).ToList()
+
+                }).ToList()
+            }).ToList();
+            return surveyResultDtos;
+        }
     }
 }

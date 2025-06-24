@@ -25,5 +25,7 @@ namespace BusinessLayer.IService
         Task<SurveyResult> CreateSurveyResultAsync(int surveyId,SurveyAnswerDto surveyAnswerDto, string userId, int totalScore);
         Task<int> CalculatorScore(SurveyAnswerDto surveyAnswerDto, int surveyId);
         Task<List<SurveyAnswerResultDto>> GetSurveyAnswerResultAsync(int surveyResultId);
+        Task<SurveyStatisticDto> GetSurveyStatisticAsync(int surveyId);
+        Task<List<SurveyResultDto>> GetUserSurveyResultAsync(int surveyId, string userId);
     }
 }

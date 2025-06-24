@@ -33,5 +33,7 @@ namespace DataAccessLayer.IRepository
         Task<SurveyAnswerResult> CreateSurveyAnswerResultAsync(SurveyAnswerResult result);
         Task<List<SurveyAnswerResult>> GetSurveyAnswerResultAsync(int surveyResultId);
 
+        Task<List<SurveyResult>?> GetSurveyResultAsync(int surveyId, string userId);
+
     }
 }

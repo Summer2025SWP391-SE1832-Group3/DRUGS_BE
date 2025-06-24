@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SWP391_Project.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20250618065032_addServeytb")]
-    partial class addServeytb
+    [Migration("20250622115639_InitDb")]
+    partial class InitDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -231,14 +231,15 @@ namespace SWP391_Project.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("SurveyType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<int>("SurveyType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("SurveyId");
 
-                    b.ToTable("Survey");
+                    b.ToTable("Surveys");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.SurveyAnswer", b =>
@@ -254,7 +255,7 @@ namespace SWP391_Project.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<bool>("IsCorrect")
+                    b.Property<bool?>("IsCorrect")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
@@ -262,14 +263,14 @@ namespace SWP391_Project.Migrations
                     b.Property<int>("QuestionId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Score")
+                    b.Property<int?>("Score")
                         .HasColumnType("int");
 
                     b.HasKey("AnswerId");
 
                     b.HasIndex("QuestionId");
 
-                    b.ToTable("SurveyAnswer");
+                    b.ToTable("SurveyAnswers");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.SurveyAnswerResult", b =>
@@ -280,18 +281,16 @@ namespace SWP391_Project.Migrations
                     b.Property<int>("AnswerId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("AnswerScore")
+                    b.Property<int>("QuestionId")
                         .HasColumnType("int");
-
-                    b.Property<string>("AnswerText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("SurveyResultId", "AnswerId");
 
                     b.HasIndex("AnswerId");
 
-                    b.ToTable("SurveyAnswerResult");
+                    b.HasIndex("QuestionId");
+
+                    b.ToTable("SurveyAnswerResults");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.SurveyQuestion", b =>
@@ -301,11 +300,6 @@ namespace SWP391_Project.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QuestionId"));
-
-                    b.Property<string>("AnswerType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("QuestionText")
                         .IsRequired()
@@ -319,7 +313,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("SurveyId");
 
-                    b.ToTable("SurveyQuestion");
+                    b.ToTable("SurveyQuestions");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.SurveyResult", b =>
@@ -354,7 +348,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SurveyResult");
+                    b.ToTable("SurveyResults");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -386,31 +380,31 @@ namespace SWP391_Project.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "a90666a9-a398-4069-84f7-36a8344e37c0",
+                            Id = "6b00cbc7-00d9-495e-a8e3-5b50911aacd6",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "eb14a7c0-e94b-452e-b8fc-9518d22e7926",
+                            Id = "f08347b1-80b6-4154-9fb4-130c311fd6e0",
                             Name = "Staff",
                             NormalizedName = "STAFF"
                         },
                         new
                         {
-                            Id = "f45bfa7b-4483-44ea-82c6-37e5f3ce3e2e",
+                            Id = "ebae9597-4fa3-44b5-b2e2-698ec683c8a4",
                             Name = "Manager",
                             NormalizedName = "MANAGER"
                         },
                         new
                         {
-                            Id = "14fbacb5-7c51-46e8-957d-0613f449fc31",
+                            Id = "c5b50def-d136-47bf-afd0-f63acf7c73fa",
                             Name = "Consultant",
                             NormalizedName = "CONSULTANT"
                         },
                         new
                         {
-                            Id = "45989231-af64-46b4-9c62-e49d275e5e2a",
+                            Id = "3b19ba85-1790-4597-a47d-120270459a64",
                             Name = "Member",
                             NormalizedName = "MEMBER"
                         });
@@ -586,7 +580,13 @@ namespace SWP391_Project.Migrations
                     b.HasOne("DataAccessLayer.Model.SurveyAnswer", "SurveyAnswer")
                         .WithMany("SurveyAnswerResults")
                         .HasForeignKey("AnswerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DataAccessLayer.Model.SurveyQuestion", "SurveyQuestion")
+                        .WithMany("SurveyAnswerResults")
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DataAccessLayer.Model.SurveyResult", "SurveyResult")
@@ -596,6 +596,8 @@ namespace SWP391_Project.Migrations
                         .IsRequired();
 
                     b.Navigation("SurveyAnswer");
+
+                    b.Navigation("SurveyQuestion");
 
                     b.Navigation("SurveyResult");
                 });
@@ -713,6 +715,8 @@ namespace SWP391_Project.Migrations
 
             modelBuilder.Entity("DataAccessLayer.Model.SurveyQuestion", b =>
                 {
+                    b.Navigation("SurveyAnswerResults");
+
                     b.Navigation("SurveyAnswers");
                 });
 

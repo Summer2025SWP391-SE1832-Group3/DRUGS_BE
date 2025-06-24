@@ -281,7 +281,7 @@ namespace SWP391_Project.Migrations
                     b.Property<int>("QuestionId")
                         .HasColumnType("int");
 
-                    b.HasKey("SurveyResultId", "AnswerId", "QuestionId");
+                    b.HasKey("SurveyResultId", "AnswerId");
 
                     b.HasIndex("AnswerId");
 
@@ -377,31 +377,31 @@ namespace SWP391_Project.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "8c5754cc-b790-4234-bd6a-79f1f83416e6",
+                            Id = "6b00cbc7-00d9-495e-a8e3-5b50911aacd6",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "ad0b4374-8bdb-4f52-a76a-f98778bede99",
+                            Id = "f08347b1-80b6-4154-9fb4-130c311fd6e0",
                             Name = "Staff",
                             NormalizedName = "STAFF"
                         },
                         new
                         {
-                            Id = "19221748-1694-4655-8648-4549a38cbac4",
+                            Id = "ebae9597-4fa3-44b5-b2e2-698ec683c8a4",
                             Name = "Manager",
                             NormalizedName = "MANAGER"
                         },
                         new
                         {
-                            Id = "8e675ed4-c6b3-44d2-8e2b-ef8a0c06d110",
+                            Id = "c5b50def-d136-47bf-afd0-f63acf7c73fa",
                             Name = "Consultant",
                             NormalizedName = "CONSULTANT"
                         },
                         new
                         {
-                            Id = "b1a8b351-e0ef-4a82-ae99-549f6e6c2fac",
+                            Id = "3b19ba85-1790-4597-a47d-120270459a64",
                             Name = "Member",
                             NormalizedName = "MEMBER"
                         });
@@ -577,13 +577,13 @@ namespace SWP391_Project.Migrations
                     b.HasOne("DataAccessLayer.Model.SurveyAnswer", "SurveyAnswer")
                         .WithMany("SurveyAnswerResults")
                         .HasForeignKey("AnswerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DataAccessLayer.Model.SurveyQuestion", "SurveyQuestion")
                         .WithMany("SurveyAnswerResults")
                         .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DataAccessLayer.Model.SurveyResult", "SurveyResult")

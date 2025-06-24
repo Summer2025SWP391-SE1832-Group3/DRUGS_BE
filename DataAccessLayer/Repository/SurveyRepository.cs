@@ -140,6 +140,17 @@ namespace DataAccessLayer.Repository
             return await _context.SaveChangesAsync() > 0;
         }
 
-
+        public async Task<List<SurveyResult>?> GetSurveyResultAsync(int surveyId, string userId)
+        {
+            return await _context.SurveyResults
+                 .Include(s => s.SurveyAnswerResults)
+                 .Include(s => s.Survey)
+                     .ThenInclude(s => s.SurveyQuestions)
+                         .ThenInclude(q => q.SurveyAnswers)
+                 .Include(s => s.User)
+                 .OrderByDescending(s => s.TakeAt)
+                 .ToListAsync();
+                //.FirstOrDefaultAsync(s=>s.SurveyId==surveyId && s.UserId==userId);
+        }
     }
 }
