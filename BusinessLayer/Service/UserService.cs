@@ -1,3 +1,4 @@
+using AutoMapper;
 using BusinessLayer.IService;
 using DataAccessLayer.Dto.Account;
 using DataAccessLayer.IRepository;
@@ -20,19 +21,22 @@ namespace BusinessLayer.Service
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ITokenService _tokenService;
         private readonly ILogger<UserService> _logger;
+        private readonly IMapper _mapper;
 
         public UserService(
             IUserRepository userRepository,
             SignInManager<ApplicationUser> signInManager,
             UserManager<ApplicationUser> userManager,
             ITokenService tokenService,
-            ILogger<UserService> logger)
+            ILogger<UserService> logger,
+            IMapper mapper)
         {
             _userRepository = userRepository;
             _signInManager = signInManager;
             _userManager = userManager;
             _tokenService = tokenService;
             _logger = logger;
+            _mapper = mapper;
         }
 
         public async Task<string?> LoginAsync(LoginDto loginDto)
@@ -213,6 +217,26 @@ namespace BusinessLayer.Service
                     string.Join(", ", updateResult.Errors.Select(e => e.Description)));
             }
             return updateResult;
+        }
+
+        public async Task<List<AccountViewDto>> GetAllNonAdminAccountsAsync()
+        {
+            var users = _userManager.Users.ToList();
+            var result = new List<AccountViewDto>();
+
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                var role = roles.FirstOrDefault();
+                if (role != "Admin")
+                {
+                    var dto = _mapper.Map<AccountViewDto>(user);
+                    dto.Role = role;
+                    result.Add(dto);
+                }
+            }
+
+            return result.OrderBy(r=>r.Role).ThenBy(r=>r.UserName).ToList();
         }
     }
 } 

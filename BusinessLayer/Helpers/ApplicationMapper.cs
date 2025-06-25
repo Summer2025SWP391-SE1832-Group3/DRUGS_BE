@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using DataAccessLayer.Dto.Account;
 using DataAccessLayer.Dto.BlogPost;
 using DataAccessLayer.Dto.Survey;
 using DataAccessLayer.Model;
@@ -15,6 +16,7 @@ namespace BusinessLayer.Helpers
     {
         public ApplicationMapper() 
         {
+            CreateMap<ApplicationUser, AccountViewDto>();
             CreateMap<Blog, BlogViewDto>()
                 .ForMember(dest => dest.PostedBy, opt => opt.MapFrom(src => src.PostedBy.UserName))
                 .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.Comments.Select(c => new CommentViewDto

@@ -117,6 +117,22 @@ namespace SWP391_Project.Controllers
             }
         }
 
+        [HttpGet("admin/all-account")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllNonAdminAccounts()
+        {
+            try
+            {
+                var accounts = await _userService.GetAllNonAdminAccountsAsync();
+                return Ok(accounts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching non-admin accounts");
+                return StatusCode(500, "An error occurred while retrieving accounts.");
+            }
+        }
+
         // --- ADMIN ACCOUNT MANAGEMENT ---
         [HttpPut("admin/update/{userId}")]
         [Authorize(Roles = "Admin")]

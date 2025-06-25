@@ -21,6 +21,7 @@ namespace BusinessLayer.IService
         Task<IEnumerable<ApplicationUser>> AdminSearchUsersAsync(string? email, string? username, string? role);
 
         Task<IdentityResult> UpdateUserProfileAsync(string userId, UserProfileUpdateDto dto);
+        Task<List<AccountViewDto>> GetAllNonAdminAccountsAsync();
 
     } 
 } 
