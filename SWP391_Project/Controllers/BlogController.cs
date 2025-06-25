@@ -37,7 +37,7 @@ namespace SWP391_Project.Controllers
                 {
                     if (imageFile.Length > 0)
                     {
-                        var filePath = Path.Combine(_environment.WebRootPath, "uploads", Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName));
+                        var filePath = Path.Combine(_environment.WebRootPath, "hotlink-ok", Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName));
                         var directory = Path.GetDirectoryName(filePath);
                         if (!Directory.Exists(directory))
                         {
@@ -51,7 +51,7 @@ namespace SWP391_Project.Controllers
 
                         var blogImage = new BlogImage
                         {
-                            ImageUrl = "/uploads/" + Path.GetFileName(filePath),
+                            ImageUrl = "/hotlink-ok/" + Path.GetFileName(filePath),
                             BlogId = blog.BlogId
                         };
                         blogImages.Add(blogImage);
@@ -84,7 +84,7 @@ namespace SWP391_Project.Controllers
                 {
                     if (imageFile.Length > 0)
                     {
-                        var filePath = Path.Combine(_environment.WebRootPath, "uploads", Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName));
+                        var filePath = Path.Combine(_environment.WebRootPath, "hotlink-ok", Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName));
                         var directory = Path.GetDirectoryName(filePath);
                         if (!Directory.Exists(directory))
                         {
@@ -97,7 +97,7 @@ namespace SWP391_Project.Controllers
                         var blogImage = new BlogImage
                         {
                             BlogId = blogId,
-                            ImageUrl = "/uploads/" + Path.GetFileName(filePath)
+                            ImageUrl = "/hotlink-ok/" + Path.GetFileName(filePath)
                         };
                         uploadImage.Add(blogImage);
                     }
