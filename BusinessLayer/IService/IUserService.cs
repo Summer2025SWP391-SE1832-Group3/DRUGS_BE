@@ -21,6 +21,8 @@ namespace BusinessLayer.IService
         Task<IEnumerable<ApplicationUser>> AdminSearchUsersAsync(string? email, string? username, string? role);
 
         Task<IdentityResult> UpdateUserProfileAsync(string userId, UserProfileUpdateDto dto);
-
+        Task<IdentityResult> ChangePasswordAsync(string userId, ChangePasswordDto dto);
+        Task<IdentityResult> ForgotPasswordAsync(ForgotPasswordDto dto);
+        Task<IdentityResult> ResetPasswordAsync(ResetPasswordDto dto);
     } 
 } 
