@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using DataAccessLayer.Data;
 
 namespace BusinessLayer.Service
 {
@@ -16,15 +18,18 @@ namespace BusinessLayer.Service
         private readonly IConsultationRepository _consultationRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<ConsultationService> _logger;
+        private readonly ApplicationDBContext _context;
 
         public ConsultationService(
             IConsultationRepository consultationRepository,
             UserManager<ApplicationUser> userManager,
-            ILogger<ConsultationService> logger)
+            ILogger<ConsultationService> logger,
+            ApplicationDBContext context)
         {
             _consultationRepository = consultationRepository;
             _userManager = userManager;
             _logger = logger;
+            _context = context;
         }
 
         // ConsultationRequest methods
@@ -42,6 +47,12 @@ namespace BusinessLayer.Service
             if (!await _userManager.IsInRoleAsync(consultant, "Consultant"))
             {
                 throw new InvalidOperationException("Selected user is not a consultant");
+            }
+
+            // Kiểm tra trùng lịch tư vấn
+            if (await IsConsultationRequestOverlappingAsync(dto.ConsultantId, dto.RequestedDate, dto.DurationMinutes))
+            {
+                throw new InvalidOperationException("The requested time overlaps with consultant's schedule or another consultation.");
             }
 
             var request = new ConsultationRequest
@@ -374,6 +385,33 @@ namespace BusinessLayer.Service
 
             var user = await _userManager.FindByIdAsync(currentUserId);
             return user != null && await _userManager.IsInRoleAsync(user, "Admin");
+        }
+
+        public async Task<bool> IsConsultationRequestOverlappingAsync(string consultantId, DateTime requestedDate, int durationMinutes)
+        {
+            // 1. Kiểm tra có nằm trong WorkingHour không
+            var workingHours = await _userManager.Users
+                .Where(u => u.Id == consultantId)
+                .SelectMany(u => u.WorkingHours)
+                .ToListAsync();
+            var dayOfWeek = requestedDate.DayOfWeek;
+            var startTime = requestedDate.TimeOfDay;
+            var endTime = startTime.Add(TimeSpan.FromMinutes(durationMinutes));
+            var validWorkingHour = workingHours.Any(wh => wh.DayOfWeek == dayOfWeek && startTime >= wh.StartTime && endTime <= wh.EndTime);
+            if (!validWorkingHour) return true; // Không nằm trong working hour thì coi là trùng (không hợp lệ)
+
+            // 2. Kiểm tra trùng với các ConsultationRequest đã có (Pending, Approved)
+            var requests = await _context.ConsultationRequests
+                .Where(r => r.ConsultantId == consultantId && (r.Status == ConsultationStatus.Pending || r.Status == ConsultationStatus.Approved))
+                .ToListAsync();
+            foreach (var req in requests)
+            {
+                var reqStart = req.RequestedDate;
+                var reqEnd = reqStart.AddMinutes(req.DurationMinutes);
+                if (requestedDate < reqEnd && requestedDate.AddMinutes(durationMinutes) > reqStart)
+                    return true;
+            }
+            return false;
         }
 
         // Private mapping methods

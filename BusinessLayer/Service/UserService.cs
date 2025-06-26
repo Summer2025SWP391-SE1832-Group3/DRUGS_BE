@@ -178,6 +178,18 @@ namespace BusinessLayer.Service
                 return IdentityResult.Failed(new IdentityError { Description = "User not found" });
             }
 
+            if (!string.IsNullOrWhiteSpace(dto.UserName) && dto.UserName != user.UserName)
+            {
+                var existingUserName = await _userManager.FindByNameAsync(dto.UserName);
+                if (existingUserName != null)
+                {
+                    _logger.LogWarning("Update failed: Username already exists - {UserName}", dto.UserName);
+                    return IdentityResult.Failed(new IdentityError { Description = "UserName is already taken" });
+                }
+                user.UserName = dto.UserName;
+                user.NormalizedUserName = _userManager.NormalizeName(dto.UserName);
+            }
+
             user.FullName = dto.FullName;
             user.PhoneNumber = dto.PhoneNumber;
             user.DateOfBirth = dto.DateOfBirth;

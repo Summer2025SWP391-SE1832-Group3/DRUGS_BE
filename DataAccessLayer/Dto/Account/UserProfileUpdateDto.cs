@@ -18,5 +18,9 @@ namespace DataAccessLayer.Dto.Account
         [Required(ErrorMessage = "Gender is required")]
         [StringLength(6, MinimumLength = 4, ErrorMessage = "Gender must be between 4 and 6 characters")]
         public string Gender { get; set; }
+
+        [Required(ErrorMessage = "User name is required")]
+        [StringLength(100, ErrorMessage = "User name must be less than 100 characters")]
+        public string UserName { get; set; }
     }
 } 

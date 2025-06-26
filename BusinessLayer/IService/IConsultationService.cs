@@ -37,5 +37,6 @@ namespace BusinessLayer.IService
         // Helper methods
         Task<bool> IsConsultantAsync(string userId);
         Task<bool> CanAccessConsultationRequestAsync(int requestId, string currentUserId);
+        Task<bool> IsConsultationRequestOverlappingAsync(string consultantId, DateTime requestedDate, int durationMinutes);
     }
 }
