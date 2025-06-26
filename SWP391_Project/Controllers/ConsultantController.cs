@@ -40,23 +40,6 @@ namespace SWP391_Project.Controllers
             return Ok(consultant);
         }
 
-        [HttpPut("profile")]
-        [Authorize(Roles = "Consultant")]
-        public async Task<IActionResult> UpdateConsultantProfile([FromBody] ConsultantUpdateDto updateDto)
-        {
-            var consultantId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
-            if (consultantId == null)
-            {
-                return Unauthorized();
-            }
-            var result = await _consultantService.UpdateConsultantProfileAsync(consultantId, updateDto);
-            if (result)
-            {
-                return Ok(new { Message = "Profile updated successfully." });
-            }
-            return BadRequest(new { Message = "Failed to update profile." });
-        }
-
         [HttpGet("{id}/certificates")]
         [AllowAnonymous]
         public async Task<IActionResult> GetCertificates(string id)

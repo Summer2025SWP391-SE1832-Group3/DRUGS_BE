@@ -364,9 +364,9 @@ namespace SWP391_Project.Controllers
 
         // === CONSULTATION REVIEW ENDPOINTS ===
 
-        [HttpPost("requests/{requestId}/reviews")]
+        [HttpPost("sessions/{sessionId}/reviews")]
         [Authorize]
-        public async Task<ActionResult<ConsultationReviewViewDto>> CreateConsultationReview(int requestId, [FromBody] ConsultationReviewCreateDto dto)
+        public async Task<ActionResult<ConsultationReviewViewDto>> CreateConsultationReview(int sessionId, [FromBody] ConsultationReviewCreateDto dto)
         {
             try
             {
@@ -376,11 +376,11 @@ namespace SWP391_Project.Controllers
                 }
 
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.CreateConsultationReviewAsync(requestId, dto, userId);
+                var result = await _consultationService.CreateConsultationReviewAsync(sessionId, dto, userId);
                 
-                _logger.LogInformation("Consultation review created. RequestId: {RequestId}, ReviewId: {ReviewId}, UserId: {UserId}", 
-                    requestId, result.Id, userId);
-                return CreatedAtAction(nameof(GetConsultationReview), new { requestId }, result);
+                _logger.LogInformation("Consultation review created. SessionId: {SessionId}, ReviewId: {ReviewId}, UserId: {UserId}", 
+                    sessionId, result.Id, userId);
+                return CreatedAtAction(nameof(GetConsultationReview), new { sessionId }, result);
             }
             catch (InvalidOperationException ex)
             {
@@ -394,19 +394,19 @@ namespace SWP391_Project.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating consultation review for request {RequestId}", requestId);
+                _logger.LogError(ex, "Error creating consultation review for session {SessionId}", sessionId);
                 return StatusCode(500, new { message = "An error occurred while creating the consultation review" });
             }
         }
 
-        [HttpGet("requests/{requestId}/reviews")]
+        [HttpGet("sessions/{sessionId}/reviews")]
         [Authorize]
-        public async Task<ActionResult<ConsultationReviewViewDto>> GetConsultationReview(int requestId)
+        public async Task<ActionResult<ConsultationReviewViewDto>> GetConsultationReview(int sessionId)
         {
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.GetConsultationReviewAsync(requestId, userId);
+                var result = await _consultationService.GetConsultationReviewAsync(sessionId, userId);
                 
                 if (result == null)
                     return NotFound(new { message = "Consultation review not found" });
@@ -420,7 +420,7 @@ namespace SWP391_Project.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving consultation review for request {RequestId}", requestId);
+                _logger.LogError(ex, "Error retrieving consultation review for session {SessionId}", sessionId);
                 return StatusCode(500, new { message = "An error occurred while retrieving the consultation review" });
             }
         }
