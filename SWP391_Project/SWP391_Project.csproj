@@ -8,10 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="wwwroot\uploads\blogs\**" />
-    <Content Remove="wwwroot\uploads\blogs\**" />
-    <EmbeddedResource Remove="wwwroot\uploads\blogs\**" />
-    <None Remove="wwwroot\uploads\blogs\**" />
+    <Compile Remove="wwwroot\hotlink-ok\blogs\**" />
+    <Content Remove="wwwroot\hotlink-ok\blogs\**" />
+    <EmbeddedResource Remove="wwwroot\hotlink-ok\blogs\**" />
+    <None Remove="wwwroot\hotlink-ok\blogs\**" />
   </ItemGroup>
 
   <ItemGroup>
