@@ -29,8 +29,7 @@ namespace BusinessLayer.Service
             SignInManager<ApplicationUser> signInManager,
             UserManager<ApplicationUser> userManager,
             ITokenService tokenService,
-            ILogger<UserService> logger,
-            IMapper mapper)
+            IMapper mapper,
             IEmailService emailService,
             ILogger<UserService> logger)
         {
