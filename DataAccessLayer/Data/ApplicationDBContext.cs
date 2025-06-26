@@ -25,6 +25,13 @@ namespace DataAccessLayer.Data
         public DbSet<SurveyAnswer> SurveyAnswers { get; set; }
         public DbSet<SurveyAnswerResult> SurveyAnswerResults { get; set; }  
 
+        public DbSet<Course> Courses { get; set; }
+        
+        // New consultation DbSets
+        public DbSet<ConsultationRequest> ConsultationRequests { get; set; }
+        public DbSet<ConsultationSession> ConsultationSessions { get; set; }
+        public DbSet<ConsultationReview> ConsultationReviews { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -157,6 +164,55 @@ namespace DataAccessLayer.Data
                     .WithMany(sq => sq.SurveyAnswerResults)
                     .HasForeignKey(ar => ar.QuestionId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+            
+            // New consultation configurations
+            builder.Entity<ConsultationRequest>(entity =>
+            {
+                entity.HasKey(cr => cr.Id);
+                
+                entity.Property(cr => cr.CreatedAt)
+                    .HasDefaultValueSql("GETDATE()");
+                
+                entity.Property(cr => cr.Status)
+                    .HasDefaultValue(ConsultationStatus.Pending);
+                
+                entity.HasOne(cr => cr.User)
+                    .WithMany(u => u.ConsultationRequests)
+                    .HasForeignKey(cr => cr.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                
+                entity.HasOne(cr => cr.Consultant)
+                    .WithMany(u => u.ConsultationRequestsAsConsultant)
+                    .HasForeignKey(cr => cr.ConsultantId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                
+                entity.HasOne(cr => cr.ConsultationSession)
+                    .WithOne(cs => cs.ConsultationRequest)
+                    .HasForeignKey<ConsultationSession>(cs => cs.ConsultationRequestId);
+                
+                entity.HasOne(cr => cr.Review)
+                    .WithOne(r => r.ConsultationRequest)
+                    .HasForeignKey<ConsultationReview>(r => r.ConsultationRequestId);
+            });
+            
+            builder.Entity<ConsultationSession>(entity =>
+            {
+                entity.HasKey(cs => cs.Id);
+                
+                entity.Property(cs => cs.CreatedAt)
+                    .HasDefaultValueSql("GETDATE()");
+            });
+            
+            builder.Entity<ConsultationReview>(entity =>
+            {
+                entity.HasKey(cr => cr.Id);
+                
+                entity.Property(cr => cr.CreatedAt)
+                    .HasDefaultValueSql("GETDATE()");
+                
+                entity.Property(cr => cr.Rating)
+                    .HasDefaultValue(5);
             });
         }
     }

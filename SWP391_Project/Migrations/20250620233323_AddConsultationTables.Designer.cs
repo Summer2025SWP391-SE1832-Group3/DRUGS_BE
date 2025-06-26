@@ -4,6 +4,7 @@ using DataAccessLayer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SWP391_Project.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250620233323_AddConsultationTables")]
+    partial class AddConsultationTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -37,7 +40,7 @@ namespace SWP391_Project.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("DateOfBirth")
+                    b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
@@ -48,9 +51,11 @@ namespace SWP391_Project.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("FullName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Gender")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("LockoutEnabled")
@@ -201,151 +206,6 @@ namespace SWP391_Project.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Comments");
-                });
-
-            modelBuilder.Entity("DataAccessLayer.Model.Survey", b =>
-                {
-                    b.Property<int>("SurveyId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SurveyId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETDATE()");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SurveyName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("SurveyType")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("SurveyId");
-
-                    b.ToTable("Surveys");
-                });
-
-            modelBuilder.Entity("DataAccessLayer.Model.SurveyAnswer", b =>
-                {
-                    b.Property<int>("AnswerId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AnswerId"));
-
-                    b.Property<string>("AnswerText")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<bool?>("IsCorrect")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<int>("QuestionId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Score")
-                        .HasColumnType("int");
-
-                    b.HasKey("AnswerId");
-
-                    b.HasIndex("QuestionId");
-
-                    b.ToTable("SurveyAnswers");
-                });
-
-            modelBuilder.Entity("DataAccessLayer.Model.SurveyAnswerResult", b =>
-                {
-                    b.Property<int>("SurveyResultId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AnswerId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("QuestionId")
-                        .HasColumnType("int");
-
-                    b.HasKey("SurveyResultId", "AnswerId");
-
-                    b.HasIndex("AnswerId");
-
-                    b.HasIndex("QuestionId");
-
-                    b.ToTable("SurveyAnswerResults");
-                });
-
-            modelBuilder.Entity("DataAccessLayer.Model.SurveyQuestion", b =>
-                {
-                    b.Property<int>("QuestionId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QuestionId"));
-
-                    b.Property<string>("QuestionText")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<int>("SurveyId")
-                        .HasColumnType("int");
-
-                    b.HasKey("QuestionId");
-
-                    b.HasIndex("SurveyId");
-
-                    b.ToTable("SurveyQuestions");
-                });
-
-            modelBuilder.Entity("DataAccessLayer.Model.SurveyResult", b =>
-                {
-                    b.Property<int>("ResultId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ResultId"));
-
-                    b.Property<string>("Recommendation")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("SurveyId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("TakeAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("TotalScore")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("ResultId");
-
-                    b.HasIndex("SurveyId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("SurveyResults");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationRequest", b =>
@@ -549,31 +409,31 @@ namespace SWP391_Project.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "6b00cbc7-00d9-495e-a8e3-5b50911aacd6",
+                            Id = "14e02134-05ba-4661-8be4-0cf45ada6eb6",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "f08347b1-80b6-4154-9fb4-130c311fd6e0",
+                            Id = "815160a0-514e-4013-ab5c-8748e17f34ac",
                             Name = "Staff",
                             NormalizedName = "STAFF"
                         },
                         new
                         {
-                            Id = "ebae9597-4fa3-44b5-b2e2-698ec683c8a4",
+                            Id = "6cc2ab0c-4ede-43a0-a6dc-f9aeaacaeaa0",
                             Name = "Manager",
                             NormalizedName = "MANAGER"
                         },
                         new
                         {
-                            Id = "c5b50def-d136-47bf-afd0-f63acf7c73fa",
+                            Id = "10121eb0-f031-4461-aa2f-616978d3050a",
                             Name = "Consultant",
                             NormalizedName = "CONSULTANT"
                         },
                         new
                         {
-                            Id = "3b19ba85-1790-4597-a47d-120270459a64",
+                            Id = "e3d41c1e-3778-4eca-8a46-03e7827067af",
                             Name = "Member",
                             NormalizedName = "MEMBER"
                         });
@@ -733,74 +593,6 @@ namespace SWP391_Project.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("DataAccessLayer.Model.SurveyAnswer", b =>
-                {
-                    b.HasOne("DataAccessLayer.Model.SurveyQuestion", "SurveyQuestion")
-                        .WithMany("SurveyAnswers")
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SurveyQuestion");
-                });
-
-            modelBuilder.Entity("DataAccessLayer.Model.SurveyAnswerResult", b =>
-                {
-                    b.HasOne("DataAccessLayer.Model.SurveyAnswer", "SurveyAnswer")
-                        .WithMany("SurveyAnswerResults")
-                        .HasForeignKey("AnswerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("DataAccessLayer.Model.SurveyQuestion", "SurveyQuestion")
-                        .WithMany("SurveyAnswerResults")
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("DataAccessLayer.Model.SurveyResult", "SurveyResult")
-                        .WithMany("SurveyAnswerResults")
-                        .HasForeignKey("SurveyResultId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SurveyAnswer");
-
-                    b.Navigation("SurveyQuestion");
-
-                    b.Navigation("SurveyResult");
-                });
-
-            modelBuilder.Entity("DataAccessLayer.Model.SurveyQuestion", b =>
-                {
-                    b.HasOne("DataAccessLayer.Model.Survey", "Survey")
-                        .WithMany("SurveyQuestions")
-                        .HasForeignKey("SurveyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Survey");
-                });
-
-            modelBuilder.Entity("DataAccessLayer.Model.SurveyResult", b =>
-                {
-                    b.HasOne("DataAccessLayer.Model.Survey", "Survey")
-                        .WithMany("SurveyResults")
-                        .HasForeignKey("SurveyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "User")
-                        .WithMany("SurveyResults")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Survey");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationRequest", b =>
                 {
                     b.HasOne("DataAccessLayer.Model.ApplicationUser", "Consultant")
@@ -901,8 +693,6 @@ namespace SWP391_Project.Migrations
 
                     b.Navigation("Comments");
 
-                    b.Navigation("SurveyResults");
-
                     b.Navigation("ConsultationRequests");
 
                     b.Navigation("ConsultationRequestsAsConsultant");
@@ -913,30 +703,6 @@ namespace SWP391_Project.Migrations
                     b.Navigation("BlogImages");
 
                     b.Navigation("Comments");
-                });
-
-            modelBuilder.Entity("DataAccessLayer.Model.Survey", b =>
-                {
-                    b.Navigation("SurveyQuestions");
-
-                    b.Navigation("SurveyResults");
-                });
-
-            modelBuilder.Entity("DataAccessLayer.Model.SurveyAnswer", b =>
-                {
-                    b.Navigation("SurveyAnswerResults");
-                });
-
-            modelBuilder.Entity("DataAccessLayer.Model.SurveyQuestion", b =>
-                {
-                    b.Navigation("SurveyAnswerResults");
-
-                    b.Navigation("SurveyAnswers");
-                });
-
-            modelBuilder.Entity("DataAccessLayer.Model.SurveyResult", b =>
-                {
-                    b.Navigation("SurveyAnswerResults");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationRequest", b =>
