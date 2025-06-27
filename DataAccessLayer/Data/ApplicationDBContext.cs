@@ -31,14 +31,7 @@ namespace DataAccessLayer.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            var roles = new List<IdentityRole>{
-                new IdentityRole{Name="Admin",NormalizedName="ADMIN"},
-                new IdentityRole{Name="Staff", NormalizedName="STAFF"},
-                new IdentityRole{Name="Manager", NormalizedName="MANAGER"},
-                new IdentityRole{Name="Consultant", NormalizedName="CONSULTANT"},
-                new IdentityRole{Name="Member", NormalizedName="MEMBER"},
-            };
-            builder.Entity<IdentityRole>().HasData(roles);
+            
 
             builder.Entity<Blog>(entity =>
             {
@@ -141,8 +134,30 @@ namespace DataAccessLayer.Data
                 entity.Property(cr => cr.Rating)
                     .HasDefaultValue(5);
                 entity.HasOne(cr => cr.ConsultationSession)
-                    .WithOne()
-                    .HasForeignKey<ConsultationReview>(cr => cr.ConsultationSessionId);
+                    .WithOne(cs => cs.ConsultationReview)
+                    .HasForeignKey<ConsultationReview>(cr => cr.ConsultationSessionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+            
+            builder.Entity<ConsultantWorkingHour>(entity =>
+            {
+                entity.HasKey(cwh => cwh.Id);
+                
+                entity.Property(cwh => cwh.CreatedAt)
+                    .HasDefaultValueSql("GETDATE()");
+                    
+                entity.Property(cwh => cwh.Status)
+                    .HasDefaultValue(WorkingHourStatus.Available);
+                
+                entity.HasOne(cwh => cwh.Consultant)
+                    .WithMany()
+                    .HasForeignKey(cwh => cwh.ConsultantId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                    
+                entity.HasOne(cwh => cwh.ConsultationRequest)
+                    .WithMany()
+                    .HasForeignKey(cwh => cwh.ConsultationRequestId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
         }
     }

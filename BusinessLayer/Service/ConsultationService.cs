@@ -35,18 +35,17 @@ namespace BusinessLayer.Service
         // ConsultationRequest methods
         public async Task<ConsultationRequestViewDto> CreateConsultationRequestAsync(ConsultationRequestCreateDto dto, string userId)
         {
-            _logger.LogInformation("Creating consultation request for user: {UserId}", userId);
-
-            // Validate consultant exists and is actually a consultant
-            var consultant = await _userManager.FindByIdAsync(dto.ConsultantId);
-            if (consultant == null)
+            // Validate user exists
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
             {
-                throw new InvalidOperationException("Consultant not found");
+                throw new InvalidOperationException("User not found");
             }
 
-            if (!await _userManager.IsInRoleAsync(consultant, "Consultant"))
+            // Validate consultant exists and is a consultant
+            if (!await IsConsultantAsync(dto.ConsultantId))
             {
-                throw new InvalidOperationException("Selected user is not a consultant");
+                throw new InvalidOperationException("Invalid consultant");
             }
 
             // Kiểm tra trùng lịch tư vấn
@@ -55,14 +54,18 @@ namespace BusinessLayer.Service
                 throw new InvalidOperationException("The requested time overlaps with consultant's schedule or another consultation.");
             }
 
-            // Xác định ca làm việc phù hợp
-            var workingHour = await _context.ConsultantWorkingHours
-                .Where(wh => wh.ConsultantId == dto.ConsultantId && wh.DayOfWeek == dto.RequestedDate.DayOfWeek)
-                .FirstOrDefaultAsync(wh => dto.RequestedDate.TimeOfDay >= wh.StartTime &&
-                                         dto.RequestedDate.AddMinutes(dto.DurationMinutes).TimeOfDay <= wh.EndTime);
-            if (workingHour == null)
+            // Tìm slot phù hợp cho thời gian yêu cầu
+            var availableSlot = await _context.ConsultantWorkingHours
+                .Where(slot => slot.ConsultantId == dto.ConsultantId &&
+                              slot.Status == WorkingHourStatus.Available &&
+                              slot.SlotDate == dto.RequestedDate.Date &&
+                              slot.StartTime <= dto.RequestedDate.TimeOfDay &&
+                              slot.EndTime >= dto.RequestedDate.AddMinutes(dto.DurationMinutes).TimeOfDay)
+                .FirstOrDefaultAsync();
+
+            if (availableSlot == null)
             {
-                throw new InvalidOperationException("Requested time is not within consultant's working hours.");
+                throw new InvalidOperationException("No available slot found for the requested time. Please check consultant's available slots.");
             }
 
             var request = new ConsultationRequest
@@ -76,11 +79,17 @@ namespace BusinessLayer.Service
                 UserId = userId,
                 ConsultantId = dto.ConsultantId,
                 Status = ConsultationStatus.Pending,
-                ConsultantWorkingHourId = workingHour.Id
+                ConsultantWorkingHourId = availableSlot.Id
             };
 
             var createdRequest = await _consultationRepository.CreateConsultationRequestAsync(request);
             _logger.LogInformation("Created request with ID: {RequestId}", createdRequest.Id);
+
+            // Book the slot
+            availableSlot.Status = WorkingHourStatus.Booked;
+            availableSlot.ConsultationRequestId = createdRequest.Id;
+            availableSlot.UpdatedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
 
             // Reload with navigation properties to ensure we have User and Consultant data
             var requestWithDetails = await _consultationRepository.GetConsultationRequestByIdAsync(createdRequest.Id);
@@ -174,7 +183,6 @@ namespace BusinessLayer.Service
 
             request.Status = dto.Status;
             request.ScheduledDate = dto.ScheduledDate;
-            request.GoogleMeetLink = dto.GoogleMeetLink;
             request.Notes = dto.Notes;
             request.UpdatedAt = DateTime.Now;
 
@@ -225,6 +233,7 @@ namespace BusinessLayer.Service
                 StartTime = dto.StartTime,
                 SessionNotes = dto.SessionNotes,
                 Recommendations = dto.Recommendations,
+                GoogleMeetLink = dto.GoogleMeetLink,
                 ConsultationRequestId = requestId
             };
 
@@ -251,14 +260,21 @@ namespace BusinessLayer.Service
                 throw new InvalidOperationException("Consultation session not found");
             }
 
-            if (session.ConsultationRequest.ConsultantId != currentUserId)
+            var request = await _consultationRepository.GetConsultationRequestByIdAsync(session.ConsultationRequestId);
+            if (request == null)
             {
-                throw new UnauthorizedAccessException("Only the assigned consultant can update the session");
+                throw new InvalidOperationException("Consultation request not found");
+            }
+
+            if (request.ConsultantId != currentUserId)
+            {
+                throw new UnauthorizedAccessException("Only the assigned consultant can update this session");
             }
 
             session.StartTime = dto.StartTime;
             session.SessionNotes = dto.SessionNotes;
             session.Recommendations = dto.Recommendations;
+            session.GoogleMeetLink = dto.GoogleMeetLink;
             session.UpdatedAt = DateTime.Now;
 
             var updatedSession = await _consultationRepository.UpdateConsultationSessionAsync(session);
@@ -430,29 +446,17 @@ namespace BusinessLayer.Service
 
         public async Task<bool> IsConsultationRequestOverlappingAsync(string consultantId, DateTime requestedDate, int durationMinutes)
         {
-            // 1. Kiểm tra có nằm trong WorkingHour không
-            var workingHours = await _userManager.Users
-                .Where(u => u.Id == consultantId)
-                .SelectMany(u => u.WorkingHours)
-                .ToListAsync();
-            var dayOfWeek = requestedDate.DayOfWeek;
-            var startTime = requestedDate.TimeOfDay;
-            var endTime = startTime.Add(TimeSpan.FromMinutes(durationMinutes));
-            var validWorkingHour = workingHours.Any(wh => wh.DayOfWeek == dayOfWeek && startTime >= wh.StartTime && endTime <= wh.EndTime);
-            if (!validWorkingHour) return true; // Không nằm trong working hour thì coi là trùng (không hợp lệ)
+            // Kiểm tra xem có slot available cho thời gian yêu cầu không
+            var availableSlot = await _context.ConsultantWorkingHours
+                .Where(slot => slot.ConsultantId == consultantId &&
+                              slot.Status == WorkingHourStatus.Available &&
+                              slot.SlotDate == requestedDate.Date &&
+                              slot.StartTime <= requestedDate.TimeOfDay &&
+                              slot.EndTime >= requestedDate.AddMinutes(durationMinutes).TimeOfDay)
+                .FirstOrDefaultAsync();
 
-            // 2. Kiểm tra trùng với các ConsultationRequest đã có (Pending, Approved)
-            var requests = await _context.ConsultationRequests
-                .Where(r => r.ConsultantId == consultantId && (r.Status == ConsultationStatus.Pending || r.Status == ConsultationStatus.Approved))
-                .ToListAsync();
-            foreach (var req in requests)
-            {
-                var reqStart = req.RequestedDate;
-                var reqEnd = reqStart.AddMinutes(req.DurationMinutes);
-                if (requestedDate < reqEnd && requestedDate.AddMinutes(durationMinutes) > reqStart)
-                    return true;
-            }
-            return false;
+            // Nếu không có slot available thì coi như trùng lịch
+            return availableSlot == null;
         }
 
         // Private mapping methods
@@ -500,7 +504,6 @@ namespace BusinessLayer.Service
                 RequestedDate = request.RequestedDate,
                 ScheduledDate = request.ScheduledDate,
                 DurationMinutes = request.DurationMinutes,
-                GoogleMeetLink = request.GoogleMeetLink,
                 Notes = request.Notes,
                 Status = request.Status,
                 CreatedAt = request.CreatedAt,

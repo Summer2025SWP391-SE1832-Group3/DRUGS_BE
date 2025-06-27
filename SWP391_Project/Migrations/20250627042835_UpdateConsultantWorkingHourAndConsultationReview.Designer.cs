@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SWP391_Project.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20250626193202_AddConsultantWorkingHourToConsultationRequest")]
-    partial class AddConsultantWorkingHourToConsultationRequest
+    [Migration("20250627042835_UpdateConsultantWorkingHourAndConsultationReview")]
+    partial class UpdateConsultantWorkingHourAndConsultationReview
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -251,9 +251,20 @@ namespace SWP391_Project.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("ConsultantId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("ConsultationRequestId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
 
                     b.Property<int>("DayOfWeek")
                         .HasColumnType("int");
@@ -261,12 +272,27 @@ namespace SWP391_Project.Migrations
                     b.Property<TimeSpan>("EndTime")
                         .HasColumnType("time");
 
+                    b.Property<DateTime?>("SlotDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<TimeSpan>("StartTime")
                         .HasColumnType("time");
 
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("ApplicationUserId");
+
                     b.HasIndex("ConsultantId");
+
+                    b.HasIndex("ConsultationRequestId");
 
                     b.ToTable("ConsultantWorkingHours");
                 });
@@ -473,38 +499,6 @@ namespace SWP391_Project.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = "4fc827df-84e6-4c78-9d0e-f77bc173fac6",
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
-                        },
-                        new
-                        {
-                            Id = "13196a02-f972-47ae-a6b8-b27fc9e4b299",
-                            Name = "Staff",
-                            NormalizedName = "STAFF"
-                        },
-                        new
-                        {
-                            Id = "65108aac-5308-4ae0-97be-d26addecbf38",
-                            Name = "Manager",
-                            NormalizedName = "MANAGER"
-                        },
-                        new
-                        {
-                            Id = "c3eaca59-7862-4386-a4c3-6bedb60c5497",
-                            Name = "Consultant",
-                            NormalizedName = "CONSULTANT"
-                        },
-                        new
-                        {
-                            Id = "fb80e183-c9ff-4f92-a291-2db61db93cd1",
-                            Name = "Member",
-                            NormalizedName = "MEMBER"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -674,13 +668,24 @@ namespace SWP391_Project.Migrations
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultantWorkingHour", b =>
                 {
-                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "Consultant")
+                    b.HasOne("DataAccessLayer.Model.ApplicationUser", null)
                         .WithMany("WorkingHours")
+                        .HasForeignKey("ApplicationUserId");
+
+                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "Consultant")
+                        .WithMany()
                         .HasForeignKey("ConsultantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("DataAccessLayer.Model.ConsultationRequest", "ConsultationRequest")
+                        .WithMany()
+                        .HasForeignKey("ConsultationRequestId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Consultant");
+
+                    b.Navigation("ConsultationRequest");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationRequest", b =>
@@ -712,7 +717,7 @@ namespace SWP391_Project.Migrations
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationReview", b =>
                 {
                     b.HasOne("DataAccessLayer.Model.ConsultationSession", "ConsultationSession")
-                        .WithOne()
+                        .WithOne("ConsultationReview")
                         .HasForeignKey("DataAccessLayer.Model.ConsultationReview", "ConsultationSessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -809,6 +814,11 @@ namespace SWP391_Project.Migrations
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationRequest", b =>
                 {
                     b.Navigation("ConsultationSession");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.ConsultationSession", b =>
+                {
+                    b.Navigation("ConsultationReview");
                 });
 #pragma warning restore 612, 618
         }

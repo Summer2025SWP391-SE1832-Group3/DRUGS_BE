@@ -110,6 +110,9 @@ builder.Services.AddScoped<IConsultationRepository, ConsultationRepository>();
 builder.Services.AddScoped<IConsultationService, ConsultationService>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+// Add background services
+builder.Services.AddHostedService<SlotAutoGenerationService>();
+
 var app = builder.Build();
 
 // Seed admin user
