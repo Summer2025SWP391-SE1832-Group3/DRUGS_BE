@@ -31,6 +31,8 @@ namespace DataAccessLayer.Data
         public DbSet<ConsultationRequest> ConsultationRequests { get; set; }
         public DbSet<ConsultationSession> ConsultationSessions { get; set; }
         public DbSet<ConsultationReview> ConsultationReviews { get; set; }
+        public DbSet<ConsultantWorkingHour> ConsultantWorkingHours { get; set; }
+        public DbSet<Certificate> Certificates { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

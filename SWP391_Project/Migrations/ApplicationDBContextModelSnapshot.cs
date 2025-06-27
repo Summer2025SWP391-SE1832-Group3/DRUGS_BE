@@ -40,6 +40,9 @@ namespace SWP391_Project.Migrations
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -168,6 +171,38 @@ namespace SWP391_Project.Migrations
                     b.HasIndex("BlogId");
 
                     b.ToTable("BlogImages");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.Certificate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("DateIssued")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IssuingOrganization")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("Certificates");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.Comment", b =>
@@ -346,6 +381,34 @@ namespace SWP391_Project.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("SurveyResults");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.ConsultantWorkingHour", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConsultantId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsultantId");
+
+                    b.ToTable("ConsultantWorkingHours");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationRequest", b =>
@@ -714,6 +777,17 @@ namespace SWP391_Project.Migrations
                     b.Navigation("Blog");
                 });
 
+            modelBuilder.Entity("DataAccessLayer.Model.Certificate", b =>
+                {
+                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "ApplicationUser")
+                        .WithMany("Certificates")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+                });
+
             modelBuilder.Entity("DataAccessLayer.Model.Comment", b =>
                 {
                     b.HasOne("DataAccessLayer.Model.Blog", "Blog")
@@ -799,6 +873,17 @@ namespace SWP391_Project.Migrations
                     b.Navigation("Survey");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.ConsultantWorkingHour", b =>
+                {
+                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "Consultant")
+                        .WithMany("WorkingHours")
+                        .HasForeignKey("ConsultantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Consultant");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationRequest", b =>
@@ -899,6 +984,8 @@ namespace SWP391_Project.Migrations
 
                     b.Navigation("BlogsPosted");
 
+                    b.Navigation("Certificates");
+
                     b.Navigation("Comments");
 
                     b.Navigation("SurveyResults");
@@ -906,6 +993,8 @@ namespace SWP391_Project.Migrations
                     b.Navigation("ConsultationRequests");
 
                     b.Navigation("ConsultationRequestsAsConsultant");
+
+                    b.Navigation("WorkingHours");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.Blog", b =>

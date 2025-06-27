@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using DataAccessLayer.Model;
+
 namespace DataAccessLayer.Dto.Account
 {
     public class ConsultantDetailDto
@@ -7,6 +10,8 @@ namespace DataAccessLayer.Dto.Account
         public string Email { get; set; }
         public string PhoneNumber { get; set; }
         public string Gender { get; set; }
-        public string? Description { get; set; } // Có thể mở rộng thêm các trường khác
+        public string? Description { get; set; }
+        public IEnumerable<ConsultantWorkingHour> WorkingHours { get; set; }
+        public IEnumerable<Certificate> Certificates { get; set; }
     }
 } 

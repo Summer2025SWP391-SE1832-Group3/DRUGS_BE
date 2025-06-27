@@ -157,24 +157,27 @@ namespace SWP391_Project.Controllers
         public async Task<IActionResult> AdminUpdate(string userId, [FromBody] RegisterDto dto, [FromQuery] string? newRole)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-       
+
             var profileDto = new UserProfileUpdateDto
             {
+                UserName = dto.UserName,
+                Email = dto.Email,
                 FullName = dto.FullName,
                 PhoneNumber = dto.PhoneNumber,
                 DateOfBirth = dto.DateOfBirth,
                 Gender = dto.Gender
             };
 
-            
             var result = await _userService.UpdateUserProfileAsync(userId, profileDto);
             if (!result.Succeeded) return StatusCode(500, result.Errors);
 
+            var passwordResult = await _userService.UpdateUserPasswordAsync(userId, dto.Password);
+            if (!passwordResult.Succeeded) return StatusCode(500, passwordResult.Errors);
             if (!string.IsNullOrEmpty(newRole))
             {
-
+                var roleResult = await _userService.UpdateUserRoleAsync(userId, newRole);
+                if (!roleResult.Succeeded) return StatusCode(500, roleResult.Errors);
             }
-
             return Ok(new { message = "User updated successfully" });
         }
 
