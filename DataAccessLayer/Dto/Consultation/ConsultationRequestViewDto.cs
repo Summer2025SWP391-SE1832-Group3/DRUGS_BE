@@ -29,6 +29,6 @@ namespace DataAccessLayer.Dto.Consultation
         
         // Session info
         public ConsultationSessionViewDto? Session { get; set; }
-        public ConsultationReviewViewDto? Review { get; set; }
+        public int? ConsultantWorkingHourId { get; set; }
     }
 } 

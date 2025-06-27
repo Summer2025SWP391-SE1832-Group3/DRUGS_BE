@@ -29,7 +29,7 @@ namespace DataAccessLayer.Repository
                 .Include(cr => cr.User)
                 .Include(cr => cr.Consultant)
                 .Include(cr => cr.ConsultationSession)
-                .Include(cr => cr.Review)
+                .Include(cr => cr.ConsultantWorkingHour)
                 .FirstOrDefaultAsync(cr => cr.Id == request.Id);
         }
 
@@ -39,7 +39,7 @@ namespace DataAccessLayer.Repository
                 .Include(cr => cr.User)
                 .Include(cr => cr.Consultant)
                 .Include(cr => cr.ConsultationSession)
-                .Include(cr => cr.Review)
+                .Include(cr => cr.ConsultantWorkingHour)
                 .FirstOrDefaultAsync(cr => cr.Id == id);
         }
 
@@ -48,7 +48,7 @@ namespace DataAccessLayer.Repository
             return await _context.ConsultationRequests
                 .Include(cr => cr.Consultant)
                 .Include(cr => cr.ConsultationSession)
-                .Include(cr => cr.Review)
+                .Include(cr => cr.ConsultantWorkingHour)
                 .Where(cr => cr.UserId == userId)
                 .OrderByDescending(cr => cr.CreatedAt)
                 .ToListAsync();
@@ -59,7 +59,7 @@ namespace DataAccessLayer.Repository
             return await _context.ConsultationRequests
                 .Include(cr => cr.User)
                 .Include(cr => cr.ConsultationSession)
-                .Include(cr => cr.Review)
+                .Include(cr => cr.ConsultantWorkingHour)
                 .Where(cr => cr.ConsultantId == consultantId)
                 .OrderByDescending(cr => cr.CreatedAt)
                 .ToListAsync();
@@ -71,7 +71,7 @@ namespace DataAccessLayer.Repository
                 .Include(cr => cr.User)
                 .Include(cr => cr.Consultant)
                 .Include(cr => cr.ConsultationSession)
-                .Include(cr => cr.Review)
+                .Include(cr => cr.ConsultantWorkingHour)
                 .OrderByDescending(cr => cr.CreatedAt)
                 .ToListAsync();
         }
@@ -133,25 +133,25 @@ namespace DataAccessLayer.Repository
         {
             _context.ConsultationReviews.Add(review);
             await _context.SaveChangesAsync();
-            
             // Reload with navigation properties
             return await _context.ConsultationReviews
-                .Include(cr => cr.ConsultationRequest)
+                .Include(cr => cr.ConsultationSession)
                 .FirstOrDefaultAsync(cr => cr.Id == review.Id);
         }
 
-        public async Task<ConsultationReview?> GetConsultationReviewByRequestIdAsync(int requestId)
+        public async Task<ConsultationReview?> GetConsultationReviewBySessionIdAsync(int sessionId)
         {
             return await _context.ConsultationReviews
-                .Include(cr => cr.ConsultationRequest)
-                .FirstOrDefaultAsync(cr => cr.ConsultationRequestId == requestId);
+                .Include(cr => cr.ConsultationSession)
+                .FirstOrDefaultAsync(cr => cr.ConsultationSessionId == sessionId);
         }
 
         public async Task<IEnumerable<ConsultationReview>> GetConsultationReviewsByConsultantIdAsync(string consultantId)
         {
             return await _context.ConsultationReviews
-                .Include(cr => cr.ConsultationRequest)
-                .Where(cr => cr.ConsultationRequest.ConsultantId == consultantId)
+                .Include(cr => cr.ConsultationSession)
+                .ThenInclude(cs => cs.ConsultationRequest)
+                .Where(cr => cr.ConsultationSession.ConsultationRequest.ConsultantId == consultantId)
                 .OrderByDescending(cr => cr.CreatedAt)
                 .ToListAsync();
         }
@@ -168,7 +168,7 @@ namespace DataAccessLayer.Repository
                 .Include(cr => cr.User)
                 .Include(cr => cr.Consultant)
                 .Include(cr => cr.ConsultationSession)
-                .Include(cr => cr.Review)
+                .Include(cr => cr.ConsultantWorkingHour)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(userId))

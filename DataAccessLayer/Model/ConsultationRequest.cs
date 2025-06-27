@@ -46,6 +46,8 @@ namespace DataAccessLayer.Model
         public ApplicationUser Consultant { get; set; }
         
         public ConsultationSession? ConsultationSession { get; set; }
-        public ConsultationReview? Review { get; set; }
+        
+        public int? ConsultantWorkingHourId { get; set; }
+        public ConsultantWorkingHour ConsultantWorkingHour { get; set; }
     }
 } 

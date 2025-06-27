@@ -55,6 +55,16 @@ namespace BusinessLayer.Service
                 throw new InvalidOperationException("The requested time overlaps with consultant's schedule or another consultation.");
             }
 
+            // Xác định ca làm việc phù hợp
+            var workingHour = await _context.ConsultantWorkingHours
+                .Where(wh => wh.ConsultantId == dto.ConsultantId && wh.DayOfWeek == dto.RequestedDate.DayOfWeek)
+                .FirstOrDefaultAsync(wh => dto.RequestedDate.TimeOfDay >= wh.StartTime &&
+                                         dto.RequestedDate.AddMinutes(dto.DurationMinutes).TimeOfDay <= wh.EndTime);
+            if (workingHour == null)
+            {
+                throw new InvalidOperationException("Requested time is not within consultant's working hours.");
+            }
+
             var request = new ConsultationRequest
             {
                 Title = dto.Title,
@@ -65,7 +75,8 @@ namespace BusinessLayer.Service
                 Notes = dto.Notes,
                 UserId = userId,
                 ConsultantId = dto.ConsultantId,
-                Status = ConsultationStatus.Pending
+                Status = ConsultationStatus.Pending,
+                ConsultantWorkingHourId = workingHour.Id
             };
 
             var createdRequest = await _consultationRepository.CreateConsultationRequestAsync(request);
@@ -282,12 +293,18 @@ namespace BusinessLayer.Service
         }
 
         // ConsultationReview methods
-        public async Task<ConsultationReviewViewDto> CreateConsultationReviewAsync(int requestId, ConsultationReviewCreateDto dto, string currentUserId)
+        public async Task<ConsultationReviewViewDto> CreateConsultationReviewAsync(int sessionId, ConsultationReviewCreateDto dto, string currentUserId)
         {
-            var request = await _consultationRepository.GetConsultationRequestByIdAsync(requestId);
+            var session = await _consultationRepository.GetConsultationSessionByIdAsync(sessionId);
+            if (session == null)
+            {
+                throw new InvalidOperationException("Consultation session not found");
+            }
+
+            var request = session.ConsultationRequest;
             if (request == null)
             {
-                throw new InvalidOperationException("Consultation request not found");
+                throw new InvalidOperationException("Consultation request not found for this session");
             }
 
             if (request.UserId != currentUserId)
@@ -301,31 +318,43 @@ namespace BusinessLayer.Service
             }
 
             // Check if review already exists
-            var existingReview = await _consultationRepository.GetConsultationReviewByRequestIdAsync(requestId);
+            var existingReview = await _consultationRepository.GetConsultationReviewBySessionIdAsync(sessionId);
             if (existingReview != null)
             {
-                throw new InvalidOperationException("Review already exists for this consultation");
+                throw new InvalidOperationException("Review already exists for this consultation session");
             }
 
             var review = new ConsultationReview
             {
                 Rating = dto.Rating,
                 Comment = dto.Comment,
-                ConsultationRequestId = requestId
+                ConsultationSessionId = sessionId
             };
 
             var createdReview = await _consultationRepository.CreateConsultationReviewAsync(review);
             return MapToConsultationReviewViewDto(createdReview);
         }
 
-        public async Task<ConsultationReviewViewDto?> GetConsultationReviewAsync(int requestId, string currentUserId)
+        public async Task<ConsultationReviewViewDto?> GetConsultationReviewAsync(int sessionId, string currentUserId)
         {
-            if (!await CanAccessConsultationRequestAsync(requestId, currentUserId))
+            var session = await _consultationRepository.GetConsultationSessionByIdAsync(sessionId);
+            if (session == null)
+            {
+                throw new InvalidOperationException("Consultation session not found");
+            }
+
+            var request = session.ConsultationRequest;
+            if (request == null)
+            {
+                throw new InvalidOperationException("Consultation request not found for this session");
+            }
+
+            if (!await CanAccessConsultationRequestAsync(request.Id, currentUserId))
             {
                 throw new UnauthorizedAccessException("You don't have permission to access this review");
             }
 
-            var review = await _consultationRepository.GetConsultationReviewByRequestIdAsync(requestId);
+            var review = await _consultationRepository.GetConsultationReviewBySessionIdAsync(sessionId);
             return review != null ? MapToConsultationReviewViewDto(review) : null;
         }
 
@@ -365,6 +394,18 @@ namespace BusinessLayer.Service
             }
             
             return result;
+        }
+
+        // Xóa các request đã qua tuần hiện tại
+        public async Task<int> DeleteOldConsultationRequestsAsync()
+        {
+            var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
+            var oldRequests = await _context.ConsultationRequests
+                .Where(r => r.RequestedDate < startOfWeek)
+                .ToListAsync();
+            _context.ConsultationRequests.RemoveRange(oldRequests);
+            await _context.SaveChangesAsync();
+            return oldRequests.Count;
         }
 
         // Helper methods
@@ -473,7 +514,7 @@ namespace BusinessLayer.Service
                 ConsultantFullName = consultant.FullName ?? "Unknown",
                 
                 Session = request.ConsultationSession != null ? MapToConsultationSessionViewDto(request.ConsultationSession) : null,
-                Review = request.Review != null ? MapToConsultationReviewViewDto(request.Review) : null
+                ConsultantWorkingHourId = request.ConsultantWorkingHourId
             };
         }
 

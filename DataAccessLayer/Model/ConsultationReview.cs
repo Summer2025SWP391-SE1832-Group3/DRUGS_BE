@@ -19,7 +19,7 @@ namespace DataAccessLayer.Model
         
         // Foreign Key
         [Required]
-        public int ConsultationRequestId { get; set; }
-        public ConsultationRequest ConsultationRequest { get; set; }
+        public int ConsultationSessionId { get; set; }
+        public ConsultationSession ConsultationSession { get; set; }
     }
 } 

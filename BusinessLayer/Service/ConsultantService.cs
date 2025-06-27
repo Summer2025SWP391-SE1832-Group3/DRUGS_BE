@@ -48,7 +48,6 @@ namespace BusinessLayer.Service
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 Gender = user.Gender,
-                Description = user.Description,
                 WorkingHours = user.WorkingHours,
                 Certificates = user.Certificates
             };
@@ -62,15 +61,6 @@ namespace BusinessLayer.Service
         public async Task<IEnumerable<Certificate>> GetCertificatesAsync(string consultantId)
         {
             return await _context.Certificates.Where(c => c.ApplicationUserId == consultantId).ToListAsync();
-        }
-
-        public async Task<bool> UpdateConsultantProfileAsync(string consultantId, ConsultantUpdateDto updateDto)
-        {
-            var user = await _userManager.FindByIdAsync(consultantId);
-            if (user == null) return false;
-            user.Description = updateDto.Description;
-            var result = await _userManager.UpdateAsync(user);
-            return result.Succeeded;
         }
 
         public async Task<bool> AddOrUpdateCertificateAsync(string consultantId, CertificateDto certificateDto, int? certificateId = null)

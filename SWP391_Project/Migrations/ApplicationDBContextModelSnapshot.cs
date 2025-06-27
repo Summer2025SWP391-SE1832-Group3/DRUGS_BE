@@ -40,9 +40,6 @@ namespace SWP391_Project.Migrations
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -88,6 +85,9 @@ namespace SWP391_Project.Migrations
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("YearsOfExperience")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -427,6 +427,9 @@ namespace SWP391_Project.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<int?>("ConsultantWorkingHourId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -471,6 +474,8 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("ConsultantId");
 
+                    b.HasIndex("ConsultantWorkingHourId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("ConsultationRequests");
@@ -489,7 +494,7 @@ namespace SWP391_Project.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<int>("ConsultationRequestId")
+                    b.Property<int>("ConsultationSessionId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
@@ -504,7 +509,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ConsultationRequestId")
+                    b.HasIndex("ConsultationSessionId")
                         .IsUnique();
 
                     b.ToTable("ConsultationReviews");
@@ -894,6 +899,11 @@ namespace SWP391_Project.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("DataAccessLayer.Model.ConsultantWorkingHour", "ConsultantWorkingHour")
+                        .WithMany()
+                        .HasForeignKey("ConsultantWorkingHourId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("DataAccessLayer.Model.ApplicationUser", "User")
                         .WithMany("ConsultationRequests")
                         .HasForeignKey("UserId")
@@ -902,18 +912,20 @@ namespace SWP391_Project.Migrations
 
                     b.Navigation("Consultant");
 
+                    b.Navigation("ConsultantWorkingHour");
+
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationReview", b =>
                 {
-                    b.HasOne("DataAccessLayer.Model.ConsultationRequest", "ConsultationRequest")
-                        .WithOne("Review")
-                        .HasForeignKey("DataAccessLayer.Model.ConsultationReview", "ConsultationRequestId")
+                    b.HasOne("DataAccessLayer.Model.ConsultationSession", "ConsultationSession")
+                        .WithOne()
+                        .HasForeignKey("DataAccessLayer.Model.ConsultationReview", "ConsultationSessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ConsultationRequest");
+                    b.Navigation("ConsultationSession");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationSession", b =>
@@ -1031,8 +1043,6 @@ namespace SWP391_Project.Migrations
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationRequest", b =>
                 {
                     b.Navigation("ConsultationSession");
-
-                    b.Navigation("Review");
                 });
 #pragma warning restore 612, 618
         }

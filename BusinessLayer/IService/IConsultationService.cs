@@ -21,8 +21,8 @@ namespace BusinessLayer.IService
         Task<ConsultationSessionViewDto> CompleteConsultationSessionAsync(int sessionId, string currentUserId);
 
         // ConsultationReview methods
-        Task<ConsultationReviewViewDto> CreateConsultationReviewAsync(int requestId, ConsultationReviewCreateDto dto, string currentUserId);
-        Task<ConsultationReviewViewDto?> GetConsultationReviewAsync(int requestId, string currentUserId);
+        Task<ConsultationReviewViewDto> CreateConsultationReviewAsync(int sessionId, ConsultationReviewCreateDto dto, string currentUserId);
+        Task<ConsultationReviewViewDto?> GetConsultationReviewAsync(int sessionId, string currentUserId);
         Task<IEnumerable<ConsultationReviewViewDto>> GetConsultantReviewsAsync(string consultantId);
 
         // Search and filter methods

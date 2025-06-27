@@ -25,7 +25,7 @@ namespace DataAccessLayer.IRepository
         
         // ConsultationReview methods
         Task<ConsultationReview> CreateConsultationReviewAsync(ConsultationReview review);
-        Task<ConsultationReview?> GetConsultationReviewByRequestIdAsync(int requestId);
+        Task<ConsultationReview?> GetConsultationReviewBySessionIdAsync(int sessionId);
         Task<IEnumerable<ConsultationReview>> GetConsultationReviewsByConsultantIdAsync(string consultantId);
         
         // Search and filter methods

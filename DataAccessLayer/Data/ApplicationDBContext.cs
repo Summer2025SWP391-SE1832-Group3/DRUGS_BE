@@ -193,9 +193,10 @@ namespace DataAccessLayer.Data
                     .WithOne(cs => cs.ConsultationRequest)
                     .HasForeignKey<ConsultationSession>(cs => cs.ConsultationRequestId);
                 
-                entity.HasOne(cr => cr.Review)
-                    .WithOne(r => r.ConsultationRequest)
-                    .HasForeignKey<ConsultationReview>(r => r.ConsultationRequestId);
+                entity.HasOne(cr => cr.ConsultantWorkingHour)
+                    .WithMany()
+                    .HasForeignKey(cr => cr.ConsultantWorkingHourId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
             
             builder.Entity<ConsultationSession>(entity =>
@@ -215,6 +216,9 @@ namespace DataAccessLayer.Data
                 
                 entity.Property(cr => cr.Rating)
                     .HasDefaultValue(5);
+                entity.HasOne(cr => cr.ConsultationSession)
+                    .WithOne()
+                    .HasForeignKey<ConsultationReview>(cr => cr.ConsultationSessionId);
             });
         }
     }
