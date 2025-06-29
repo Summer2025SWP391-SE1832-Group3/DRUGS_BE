@@ -73,8 +73,7 @@ namespace SWP391_Project.Controllers
         public async Task<IActionResult> DeleteCertificate( int certificateId)
         {
             var consultantId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
-            if (consultantId != id) return Forbid();
-            var result = await _consultantService.DeleteCertificateAsync(id, certificateId);
+            var result = await _consultantService.DeleteCertificateAsync(consultantId, certificateId);
             if (result) return Ok(new { Message = "Certificate deleted." });
             return BadRequest(new { Message = "Failed to delete certificate." });
         }

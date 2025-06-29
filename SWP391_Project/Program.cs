@@ -1,5 +1,6 @@
 using BusinessLayer.IService;
 using BusinessLayer.Service;
+using CloudinaryDotNet;
 using DataAccessLayer.Data;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
@@ -9,11 +10,21 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using SWP391_Project.Middleware;
 using System.Text;
 using System.Text.Json.Serialization;
-using SWP391_Project.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+
+DotNetEnv.Env.Load();
+builder.Services.AddSingleton(provider =>
+{
+    var cloudinaryUrl = Environment.GetEnvironmentVariable("CLOUDINARY_URL");
+    var cloudinaryAccount = new Account(cloudinaryUrl);
+    var cloudinary = new Cloudinary(cloudinaryAccount);
+    cloudinary.Api.Secure = true; 
+    return cloudinary;
+});
 
 // Add services to the container.
 builder.Services.AddControllers()
@@ -116,55 +127,55 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 var app = builder.Build();
 
 // Seed admin user
-using (var scope = app.Services.CreateScope())
-{
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+//using (var scope = app.Services.CreateScope())
+//{
+//    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+//    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     
-    // Ensure Admin role exists
-    if (!await roleManager.RoleExistsAsync("Admin"))
-    {
-        await roleManager.CreateAsync(new IdentityRole("Admin"));
-        Console.WriteLine("Admin role created successfully");
-    }
+//    // Ensure Admin role exists
+//    if (!await roleManager.RoleExistsAsync("Admin"))
+//    {
+//        await roleManager.CreateAsync(new IdentityRole("Admin"));
+//        Console.WriteLine("Admin role created successfully");
+//    }
     
-    // Check if admin user exists
-    var adminUser = await userManager.FindByNameAsync("admin");
-    if (adminUser == null)
-    {
-        adminUser = new ApplicationUser
-        {
-            UserName = "admin",
-            Email = "Admin2000@gmail.com",
-            FullName = "Nguyễn Văn A",
-            DateOfBirth = new DateTime(2000, 2, 20),
-            Gender = "male",
-            PhoneNumber = "0942511194",
-            CreatedAt = DateTime.Now
-        };
+//    // Check if admin user exists
+//    var adminUser = await userManager.FindByNameAsync("admin");
+//    if (adminUser == null)
+//    {
+//        adminUser = new ApplicationUser
+//        {
+//            UserName = "admin",
+//            Email = "Admin2000@gmail.com",
+//            FullName = "Nguyễn Văn A",
+//            DateOfBirth = new DateTime(2000, 2, 20),
+//            Gender = "male",
+//            PhoneNumber = "0942511194",
+//            CreatedAt = DateTime.Now
+//        };
         
-        var result = await userManager.CreateAsync(adminUser, "Admin@123");
-        if (result.Succeeded)
-        {
-            await userManager.AddToRoleAsync(adminUser, "Admin");
-            Console.WriteLine("Admin user created successfully");
-        }
-        else
-        {
-            Console.WriteLine("Failed to create admin user: " + string.Join(", ", result.Errors.Select(e => e.Description)));
-        }
-    }
-    else
-    {
-        // Ensure admin user has Admin role
-        if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
-        {
-            await userManager.AddToRoleAsync(adminUser, "Admin");
-            Console.WriteLine("Admin role assigned to existing admin user");
-        }
-        Console.WriteLine("Admin user already exists");
-    }
-}
+//        var result = await userManager.CreateAsync(adminUser, "Admin@123");
+//        if (result.Succeeded)
+//        {
+//            await userManager.AddToRoleAsync(adminUser, "Admin");
+//            Console.WriteLine("Admin user created successfully");
+//        }
+//        else
+//        {
+//            Console.WriteLine("Failed to create admin user: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+//        }
+//    }
+//    else
+//    {
+//        // Ensure admin user has Admin role
+//        if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+//        {
+//            await userManager.AddToRoleAsync(adminUser, "Admin");
+//            Console.WriteLine("Admin role assigned to existing admin user");
+//        }
+//        Console.WriteLine("Admin user already exists");
+//    }
+//}
 
 // Add request/response logging middleware
 app.UseMiddleware<RequestResponseLoggingMiddleware>();

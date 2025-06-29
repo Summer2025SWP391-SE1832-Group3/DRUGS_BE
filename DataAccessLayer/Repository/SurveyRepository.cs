@@ -19,35 +19,35 @@ namespace DataAccessLayer.Repository
         }
         public async Task<SurveyAnswer> CreateAnswerAsync(SurveyAnswer answer)
         {
-            _context.SurveyAnswers.Add(answer);
+            await _context.SurveyAnswers.AddAsync(answer);
             await _context.SaveChangesAsync();
             return answer;
         }
 
         public async Task<Survey> CreateAsync(Survey survey)
         {
-            _context.Surveys.Add(survey);
+            await _context.Surveys.AddAsync(survey);
             await _context.SaveChangesAsync();
             return survey;
         }
 
         public async Task<SurveyQuestion> CreateQuestionAsync(SurveyQuestion question)
         {
-            _context.SurveyQuestions.Add(question);
+            await _context.SurveyQuestions.AddAsync(question);
             await _context.SaveChangesAsync();
             return question;
         }
 
         public async Task<SurveyResult> CreateSurveyResultAsync(SurveyResult result)
         {
-            _context.SurveyResults.Add(result);
+            await _context.SurveyResults.AddAsync(result);
             await _context.SaveChangesAsync();
             return result;
         }
 
         public async Task<SurveyAnswerResult> CreateSurveyAnswerResultAsync(SurveyAnswerResult result)
         {
-            _context.SurveyAnswerResults.Add(result);
+            await _context.SurveyAnswerResults.AddAsync(result);
              await _context.SaveChangesAsync();
             return result;
         }

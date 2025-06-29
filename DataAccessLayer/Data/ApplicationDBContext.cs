@@ -24,8 +24,11 @@ namespace DataAccessLayer.Data
         public DbSet<SurveyQuestion> SurveyQuestions { get; set; }
         public DbSet<SurveyAnswer> SurveyAnswers { get; set; }
         public DbSet<SurveyAnswerResult> SurveyAnswerResults { get; set; }  
-
         public DbSet<Course> Courses { get; set; }
+        public DbSet<Lesson> Lessons {  get; set; }
+        public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
+        public DbSet<LessonProgress> LessonProgresses { get; set; }
+
         
         // New consultation DbSets
         public DbSet<ConsultationRequest> ConsultationRequests { get; set; }
@@ -113,6 +116,12 @@ namespace DataAccessLayer.Data
                     .WithOne(sq => sq.Survey)
                     .HasForeignKey(sq => sq.SurveyId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(s => s.Course)
+                      .WithOne(c => c.FinalExamSurvey)
+                      .HasForeignKey<Survey>(s => s.CourseId) 
+                      .OnDelete(DeleteBehavior.SetNull);
+
 
             });
 
@@ -220,6 +229,53 @@ namespace DataAccessLayer.Data
                     .WithOne()
                     .HasForeignKey<ConsultationReview>(cr => cr.ConsultationSessionId);
             });
+            builder.Entity<Course>(entity =>
+            {
+                entity.HasKey(cs => cs.Id);
+                entity.HasMany(c => c.Lessions)
+                    .WithOne(l => l.Course)
+                    .HasForeignKey(l => l.CourseId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(c => c.CourseEnrollments)
+                   .WithOne(ce => ce.Course)
+                   .HasForeignKey(ce => ce.CourseId)
+                   .OnDelete(DeleteBehavior.NoAction);
+
+
+                entity.HasOne(c => c.FinalExamSurvey)
+                  .WithOne(f => f.Course)
+                  .HasForeignKey<Survey>(s => s.CourseId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
+            });
+
+            builder.Entity<Lesson>(entity =>
+            {
+                entity.HasKey(l => l.Id);
+                entity.HasMany(l => l.LessonProgresses)
+                      .WithOne(lq => lq.Lesson)
+                      .HasForeignKey(lq => lq.LessonId)
+                      .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            builder.Entity<CourseEnrollment>(entity =>
+            {
+
+                entity.HasKey(ce => ce.Id);
+                entity.HasMany(ce => ce.LessonProgresses)
+                  .WithOne(lq => lq.CourseEnrollment)
+                  .HasForeignKey(lq => lq.CourseEnrollmentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(c => c.User)
+                 .WithMany(u => u.CourseEnrollments)
+                 .HasForeignKey(c => c.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+               
+
+
         }
     }
 }
