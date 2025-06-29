@@ -158,26 +158,33 @@ namespace BusinessLayer.Service
             {
                 if (totalScore < 10)
                 {
+                    surveyResult.RiskLevel = RiskLevel.Low;
                     surveyResult.Recommendation = "No risk of addiction";
                 }
                 else if (totalScore < 20)
                 {
+                    surveyResult.RiskLevel = RiskLevel.Medium;
                     surveyResult.Recommendation = "At risk, should attend prevention course";
                 }
                 else
                 {
+                    surveyResult.RiskLevel = RiskLevel.High;
                     surveyResult.Recommendation = "High risk, should seek professional counseling";
                 }
             }
             else if(survey.SurveyType == SurveyType.CourseTest)
             {
-                if (totalScore >= 7)
+                var totalQuestions = survey.SurveyQuestions.Count();
+                var requiredScore = (int)(totalQuestions * 0.7);
+                if (totalScore >= requiredScore)
                 {
+                    surveyResult.ResultStatus = "Pass";
                     surveyResult.Recommendation = "Pass";
                 }
                 else
                 {
-                    surveyResult.Recommendation = "Fail";
+                    surveyResult.ResultStatus = "Fail";
+                    surveyResult.Recommendation = $"Fail. You answered {totalScore} out of {totalQuestions} questions correctly. You need to get at least 70% to pass";
                 }
             }
             var createdSurveyResult = await _repository.CreateSurveyResultAsync(surveyResult);

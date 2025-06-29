@@ -17,9 +17,17 @@ namespace DataAccessLayer.Model
         public string? Gender { get; set; }
         [PersonalData]
         public DateTime CreatedAt { get; set; } 
+        [PersonalData]
+        public int YearsOfExperience { get; set; }
         public ICollection<Blog> BlogsPosted { get; set; }
         public ICollection<Blog> BlogsApproved { get; set; }
         public ICollection<Comment> Comments { get; set; }
+        public ICollection<CourseEnrollment> CourseEnrollments { get; set; }  
         public ICollection<SurveyResult> SurveyResults { get; set; }
+        public ICollection<ConsultationRequest> ConsultationRequests { get; set; }
+        public ICollection<ConsultationRequest> ConsultationRequestsAsConsultant { get; set; }
+        public ICollection<ConsultantWorkingHour> WorkingHours { get; set; }
+        public ICollection<Certificate> Certificates { get; set; }
+
     }
 }

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SWP391_Project.Migrations
 {
     /// <inheritdoc />
-    public partial class InitDb : Migration
+    public partial class InitDB : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -36,6 +36,7 @@ namespace SWP391_Project.Migrations
                     DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Gender = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    YearsOfExperience = table.Column<int>(type: "int", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -57,21 +58,22 @@ namespace SWP391_Project.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Surveys",
+                name: "Courses",
                 columns: table => new
                 {
-                    SurveyId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    SurveyName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
-                    SurveyType = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    Topic = table.Column<int>(type: "int", nullable: false),
+                    FinalExamSurveyId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Surveys", x => x.SurveyId);
+                    table.PrimaryKey("PK_Courses", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -213,52 +215,120 @@ namespace SWP391_Project.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SurveyQuestions",
+                name: "Certificates",
                 columns: table => new
                 {
-                    QuestionId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    SurveyId = table.Column<int>(type: "int", nullable: false),
-                    QuestionText = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false)
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    IssuingOrganization = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    DateIssued = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SurveyQuestions", x => x.QuestionId);
+                    table.PrimaryKey("PK_Certificates", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_SurveyQuestions_Surveys_SurveyId",
-                        column: x => x.SurveyId,
-                        principalTable: "Surveys",
-                        principalColumn: "SurveyId",
+                        name: "FK_Certificates_AspNetUsers_ApplicationUserId",
+                        column: x => x.ApplicationUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "SurveyResults",
+                name: "ConsultantWorkingHours",
                 columns: table => new
                 {
-                    ResultId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    SurveyId = table.Column<int>(type: "int", nullable: false),
-                    TotalScore = table.Column<int>(type: "int", nullable: false),
-                    Recommendation = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    TakeAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    ConsultantId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    DayOfWeek = table.Column<int>(type: "int", nullable: false),
+                    StartTime = table.Column<TimeSpan>(type: "time", nullable: false),
+                    EndTime = table.Column<TimeSpan>(type: "time", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SurveyResults", x => x.ResultId);
+                    table.PrimaryKey("PK_ConsultantWorkingHours", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_SurveyResults_AspNetUsers_UserId",
+                        name: "FK_ConsultantWorkingHours_AspNetUsers_ConsultantId",
+                        column: x => x.ConsultantId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CourseEnrollments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CourseId = table.Column<int>(type: "int", nullable: false),
+                    EnrolledAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CourseEnrollments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CourseEnrollments_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_SurveyResults_Surveys_SurveyId",
-                        column: x => x.SurveyId,
-                        principalTable: "Surveys",
-                        principalColumn: "SurveyId",
-                        onDelete: ReferentialAction.Restrict);
+                        name: "FK_CourseEnrollments_Courses_CourseId",
+                        column: x => x.CourseId,
+                        principalTable: "Courses",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Lessions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Title = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    VideoUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CourseId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Lessions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Lessions_Courses_CourseId",
+                        column: x => x.CourseId,
+                        principalTable: "Courses",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Surveys",
+                columns: table => new
+                {
+                    SurveyId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SurveyName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    SurveyType = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CourseId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Surveys", x => x.SurveyId);
+                    table.ForeignKey(
+                        name: "FK_Surveys_Courses_CourseId",
+                        column: x => x.CourseId,
+                        principalTable: "Courses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -310,6 +380,154 @@ namespace SWP391_Project.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ConsultationRequests",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Category = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RequestedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ScheduledDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DurationMinutes = table.Column<int>(type: "int", nullable: false),
+                    GoogleMeetLink = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ConsultantId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ConsultantWorkingHourId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ConsultationRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ConsultationRequests_AspNetUsers_ConsultantId",
+                        column: x => x.ConsultantId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ConsultationRequests_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ConsultationRequests_ConsultantWorkingHours_ConsultantWorkingHourId",
+                        column: x => x.ConsultantWorkingHourId,
+                        principalTable: "ConsultantWorkingHours",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "LessonProgesses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CourseEnrollmentId = table.Column<int>(type: "int", nullable: false),
+                    LessonId = table.Column<int>(type: "int", nullable: false),
+                    IsCompleted = table.Column<bool>(type: "bit", nullable: false),
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LessonProgesses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LessonProgesses_CourseEnrollments_CourseEnrollmentId",
+                        column: x => x.CourseEnrollmentId,
+                        principalTable: "CourseEnrollments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_LessonProgesses_Lessions_LessonId",
+                        column: x => x.LessonId,
+                        principalTable: "Lessions",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SurveyQuestions",
+                columns: table => new
+                {
+                    QuestionId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SurveyId = table.Column<int>(type: "int", nullable: false),
+                    QuestionText = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SurveyQuestions", x => x.QuestionId);
+                    table.ForeignKey(
+                        name: "FK_SurveyQuestions_Surveys_SurveyId",
+                        column: x => x.SurveyId,
+                        principalTable: "Surveys",
+                        principalColumn: "SurveyId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SurveyResults",
+                columns: table => new
+                {
+                    ResultId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    SurveyId = table.Column<int>(type: "int", nullable: false),
+                    TotalScore = table.Column<int>(type: "int", nullable: false),
+                    RiskLevel = table.Column<int>(type: "int", nullable: true),
+                    ResultStatus = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Recommendation = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    TakeAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SurveyResults", x => x.ResultId);
+                    table.ForeignKey(
+                        name: "FK_SurveyResults_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_SurveyResults_Surveys_SurveyId",
+                        column: x => x.SurveyId,
+                        principalTable: "Surveys",
+                        principalColumn: "SurveyId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ConsultationSessions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StartTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    SessionNotes = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Recommendations = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsCompleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ConsultationRequestId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ConsultationSessions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ConsultationSessions_ConsultationRequests_ConsultationRequestId",
+                        column: x => x.ConsultationRequestId,
+                        principalTable: "ConsultationRequests",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "SurveyAnswers",
                 columns: table => new
                 {
@@ -328,6 +546,28 @@ namespace SWP391_Project.Migrations
                         column: x => x.QuestionId,
                         principalTable: "SurveyQuestions",
                         principalColumn: "QuestionId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ConsultationReviews",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Rating = table.Column<int>(type: "int", nullable: false, defaultValue: 5),
+                    Comment = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
+                    ConsultationSessionId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ConsultationReviews", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ConsultationReviews_ConsultationSessions_ConsultationSessionId",
+                        column: x => x.ConsultationSessionId,
+                        principalTable: "ConsultationSessions",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -367,11 +607,11 @@ namespace SWP391_Project.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "3b19ba85-1790-4597-a47d-120270459a64", null, "Member", "MEMBER" },
-                    { "6b00cbc7-00d9-495e-a8e3-5b50911aacd6", null, "Admin", "ADMIN" },
-                    { "c5b50def-d136-47bf-afd0-f63acf7c73fa", null, "Consultant", "CONSULTANT" },
-                    { "ebae9597-4fa3-44b5-b2e2-698ec683c8a4", null, "Manager", "MANAGER" },
-                    { "f08347b1-80b6-4154-9fb4-130c311fd6e0", null, "Staff", "STAFF" }
+                    { "0a49ac77-5e14-474d-9e28-a4b3e7575e23", null, "Member", "MEMBER" },
+                    { "7fa2eb48-5e2a-4d32-98c7-84cff2b3d57c", null, "Staff", "STAFF" },
+                    { "8be4c3b0-7246-45fa-9284-0ea0e9c8836e", null, "Admin", "ADMIN" },
+                    { "97e4a983-27d8-455f-81b9-bf3917f242c7", null, "Manager", "MANAGER" },
+                    { "fc326226-433d-4a35-8175-d19ac0b62e23", null, "Consultant", "CONSULTANT" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -429,6 +669,11 @@ namespace SWP391_Project.Migrations
                 column: "PostedById");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Certificates_ApplicationUserId",
+                table: "Certificates",
+                column: "ApplicationUserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Comments_BlogId",
                 table: "Comments",
                 column: "BlogId");
@@ -437,6 +682,63 @@ namespace SWP391_Project.Migrations
                 name: "IX_Comments_UserId",
                 table: "Comments",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConsultantWorkingHours_ConsultantId",
+                table: "ConsultantWorkingHours",
+                column: "ConsultantId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConsultationRequests_ConsultantId",
+                table: "ConsultationRequests",
+                column: "ConsultantId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConsultationRequests_ConsultantWorkingHourId",
+                table: "ConsultationRequests",
+                column: "ConsultantWorkingHourId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConsultationRequests_UserId",
+                table: "ConsultationRequests",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConsultationReviews_ConsultationSessionId",
+                table: "ConsultationReviews",
+                column: "ConsultationSessionId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConsultationSessions_ConsultationRequestId",
+                table: "ConsultationSessions",
+                column: "ConsultationRequestId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourseEnrollments_CourseId",
+                table: "CourseEnrollments",
+                column: "CourseId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourseEnrollments_UserId",
+                table: "CourseEnrollments",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Lessions_CourseId",
+                table: "Lessions",
+                column: "CourseId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LessonProgesses_CourseEnrollmentId",
+                table: "LessonProgesses",
+                column: "CourseEnrollmentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LessonProgesses_LessonId",
+                table: "LessonProgesses",
+                column: "LessonId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SurveyAnswerResults_AnswerId",
@@ -467,6 +769,13 @@ namespace SWP391_Project.Migrations
                 name: "IX_SurveyResults_UserId",
                 table: "SurveyResults",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Surveys_CourseId",
+                table: "Surveys",
+                column: "CourseId",
+                unique: true,
+                filter: "[CourseId] IS NOT NULL");
         }
 
         /// <inheritdoc />
@@ -491,7 +800,16 @@ namespace SWP391_Project.Migrations
                 name: "BlogImages");
 
             migrationBuilder.DropTable(
+                name: "Certificates");
+
+            migrationBuilder.DropTable(
                 name: "Comments");
+
+            migrationBuilder.DropTable(
+                name: "ConsultationReviews");
+
+            migrationBuilder.DropTable(
+                name: "LessonProgesses");
 
             migrationBuilder.DropTable(
                 name: "SurveyAnswerResults");
@@ -503,19 +821,37 @@ namespace SWP391_Project.Migrations
                 name: "Blogs");
 
             migrationBuilder.DropTable(
+                name: "ConsultationSessions");
+
+            migrationBuilder.DropTable(
+                name: "CourseEnrollments");
+
+            migrationBuilder.DropTable(
+                name: "Lessions");
+
+            migrationBuilder.DropTable(
                 name: "SurveyAnswers");
 
             migrationBuilder.DropTable(
                 name: "SurveyResults");
 
             migrationBuilder.DropTable(
+                name: "ConsultationRequests");
+
+            migrationBuilder.DropTable(
                 name: "SurveyQuestions");
+
+            migrationBuilder.DropTable(
+                name: "ConsultantWorkingHours");
+
+            migrationBuilder.DropTable(
+                name: "Surveys");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
-                name: "Surveys");
+                name: "Courses");
         }
     }
 }

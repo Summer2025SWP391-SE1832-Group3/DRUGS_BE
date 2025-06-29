@@ -23,5 +23,10 @@ namespace BusinessLayer.IService
         Task<IdentityResult> UpdateUserProfileAsync(string userId, UserProfileUpdateDto dto);
         Task<List<AccountViewDto>> GetAllNonAdminAccountsAsync();
 
+        Task<IdentityResult> ChangePasswordAsync(string userId, ChangePasswordDto dto);
+        Task<IdentityResult> ForgotPasswordAsync(ForgotPasswordDto dto);
+        Task<IdentityResult> ResetPasswordAsync(ResetPasswordDto dto);
+        Task<IdentityResult> UpdateUserPasswordAsync(string userId, string newPassword);
+        Task<IdentityResult> UpdateUserRoleAsync(string userId, string newRole);
     } 
 } 

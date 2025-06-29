@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using DataAccessLayer.Dto.Account;
 using DataAccessLayer.Dto.BlogPost;
+using DataAccessLayer.Dto.Course;
+using DataAccessLayer.Dto.Lesson;
 using DataAccessLayer.Dto.Survey;
 using DataAccessLayer.Model;
 using System;
@@ -49,6 +51,15 @@ namespace BusinessLayer.Helpers
 
             CreateMap<SurveyResultDto, SurveyResult>();
             CreateMap<SurveyAnswerResultDto, SurveyAnswerResult>();
+
+            CreateMap<Course, CourseDto>();
+            CreateMap<CourseCreateDto, Course>();
+            CreateMap<CourseUpdateDto, Course>();
+            CreateMap<Course, CourseListDto>();
+
+            CreateMap<Lesson, LessonDto>();
+            CreateMap<LessonCreateDto,Lesson>();
+            CreateMap<LessonUpdateDto, Lesson>();
         }
     }
 }

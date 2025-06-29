@@ -73,7 +73,8 @@ namespace SWP391_Project.Controllers
                     return Ok(new
                     {
                         Message = "Survey submitted successfully!",
-                        recommendation = surveyResult.Recommendation
+                        RiskLevel = surveyResult.RiskLevel,
+                        Recommendation = surveyResult.Recommendation
                     });
                 }
                 else if (surveyResult.Survey.SurveyType == SurveyType.CourseTest)
@@ -81,7 +82,8 @@ namespace SWP391_Project.Controllers
                     return Ok(new
                     {
                         Message = "Survey submitted successfully!",
-                        Status = surveyResult.Recommendation
+                        Status= surveyResult.ResultStatus,
+                        Recommendation = surveyResult.Recommendation
                     });
                 }
             }

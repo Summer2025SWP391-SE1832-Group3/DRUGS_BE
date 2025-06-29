@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SWP391_Project.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20250622115639_InitDb")]
-    partial class InitDb
+    [Migration("20250628134121_InitDB")]
+    partial class InitDB
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -88,6 +88,9 @@ namespace SWP391_Project.Migrations
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("YearsOfExperience")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -173,6 +176,38 @@ namespace SWP391_Project.Migrations
                     b.ToTable("BlogImages");
                 });
 
+            modelBuilder.Entity("DataAccessLayer.Model.Certificate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("DateIssued")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IssuingOrganization")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("Certificates");
+                });
+
             modelBuilder.Entity("DataAccessLayer.Model.Comment", b =>
                 {
                     b.Property<int>("CommentId")
@@ -206,6 +241,305 @@ namespace SWP391_Project.Migrations
                     b.ToTable("Comments");
                 });
 
+            modelBuilder.Entity("DataAccessLayer.Model.ConsultantWorkingHour", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConsultantId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsultantId");
+
+                    b.ToTable("ConsultantWorkingHours");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.ConsultationRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ConsultantId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("ConsultantWorkingHourId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("GoogleMeetLink")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("RequestedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ScheduledDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsultantId");
+
+                    b.HasIndex("ConsultantWorkingHourId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ConsultationRequests");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.ConsultationReview", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("ConsultationSessionId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<int>("Rating")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(5);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsultationSessionId")
+                        .IsUnique();
+
+                    b.ToTable("ConsultationReviews");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.ConsultationSession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConsultationRequestId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<DateTime?>("EndTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Recommendations")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SessionNotes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsultationRequestId")
+                        .IsUnique();
+
+                    b.ToTable("ConsultationSessions");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.Course", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int?>("FinalExamSurveyId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Topic")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Courses");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.CourseEnrollment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EnrolledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CourseEnrollments");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.Lession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("VideoUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.ToTable("Lessions");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.LessonProgess", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CourseEnrollmentId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("LessonId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseEnrollmentId");
+
+                    b.HasIndex("LessonId");
+
+                    b.ToTable("LessonProgesses");
+                });
+
             modelBuilder.Entity("DataAccessLayer.Model.Survey", b =>
                 {
                     b.Property<int>("SurveyId")
@@ -213,6 +547,9 @@ namespace SWP391_Project.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SurveyId"));
+
+                    b.Property<int?>("CourseId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -238,6 +575,10 @@ namespace SWP391_Project.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("SurveyId");
+
+                    b.HasIndex("CourseId")
+                        .IsUnique()
+                        .HasFilter("[CourseId] IS NOT NULL");
 
                     b.ToTable("Surveys");
                 });
@@ -325,9 +666,14 @@ namespace SWP391_Project.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ResultId"));
 
                     b.Property<string>("Recommendation")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ResultStatus")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("RiskLevel")
+                        .HasColumnType("int");
 
                     b.Property<int>("SurveyId")
                         .HasColumnType("int");
@@ -380,31 +726,31 @@ namespace SWP391_Project.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "6b00cbc7-00d9-495e-a8e3-5b50911aacd6",
+                            Id = "8be4c3b0-7246-45fa-9284-0ea0e9c8836e",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "f08347b1-80b6-4154-9fb4-130c311fd6e0",
+                            Id = "7fa2eb48-5e2a-4d32-98c7-84cff2b3d57c",
                             Name = "Staff",
                             NormalizedName = "STAFF"
                         },
                         new
                         {
-                            Id = "ebae9597-4fa3-44b5-b2e2-698ec683c8a4",
+                            Id = "97e4a983-27d8-455f-81b9-bf3917f242c7",
                             Name = "Manager",
                             NormalizedName = "MANAGER"
                         },
                         new
                         {
-                            Id = "c5b50def-d136-47bf-afd0-f63acf7c73fa",
+                            Id = "fc326226-433d-4a35-8175-d19ac0b62e23",
                             Name = "Consultant",
                             NormalizedName = "CONSULTANT"
                         },
                         new
                         {
-                            Id = "3b19ba85-1790-4597-a47d-120270459a64",
+                            Id = "0a49ac77-5e14-474d-9e28-a4b3e7575e23",
                             Name = "Member",
                             NormalizedName = "MEMBER"
                         });
@@ -545,6 +891,17 @@ namespace SWP391_Project.Migrations
                     b.Navigation("Blog");
                 });
 
+            modelBuilder.Entity("DataAccessLayer.Model.Certificate", b =>
+                {
+                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "ApplicationUser")
+                        .WithMany("Certificates")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+                });
+
             modelBuilder.Entity("DataAccessLayer.Model.Comment", b =>
                 {
                     b.HasOne("DataAccessLayer.Model.Blog", "Blog")
@@ -562,6 +919,124 @@ namespace SWP391_Project.Migrations
                     b.Navigation("Blog");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.ConsultantWorkingHour", b =>
+                {
+                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "Consultant")
+                        .WithMany("WorkingHours")
+                        .HasForeignKey("ConsultantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Consultant");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.ConsultationRequest", b =>
+                {
+                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "Consultant")
+                        .WithMany("ConsultationRequestsAsConsultant")
+                        .HasForeignKey("ConsultantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DataAccessLayer.Model.ConsultantWorkingHour", "ConsultantWorkingHour")
+                        .WithMany()
+                        .HasForeignKey("ConsultantWorkingHourId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "User")
+                        .WithMany("ConsultationRequests")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Consultant");
+
+                    b.Navigation("ConsultantWorkingHour");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.ConsultationReview", b =>
+                {
+                    b.HasOne("DataAccessLayer.Model.ConsultationSession", "ConsultationSession")
+                        .WithOne()
+                        .HasForeignKey("DataAccessLayer.Model.ConsultationReview", "ConsultationSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ConsultationSession");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.ConsultationSession", b =>
+                {
+                    b.HasOne("DataAccessLayer.Model.ConsultationRequest", "ConsultationRequest")
+                        .WithOne("ConsultationSession")
+                        .HasForeignKey("DataAccessLayer.Model.ConsultationSession", "ConsultationRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ConsultationRequest");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.CourseEnrollment", b =>
+                {
+                    b.HasOne("DataAccessLayer.Model.Course", "Course")
+                        .WithMany("CourseEnrollments")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "User")
+                        .WithMany("CourseEnrollments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.Lession", b =>
+                {
+                    b.HasOne("DataAccessLayer.Model.Course", "Course")
+                        .WithMany("Lessions")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.LessonProgess", b =>
+                {
+                    b.HasOne("DataAccessLayer.Model.CourseEnrollment", "CourseEnrollment")
+                        .WithMany("LessonProgresses")
+                        .HasForeignKey("CourseEnrollmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DataAccessLayer.Model.Lession", "Lesson")
+                        .WithMany("LessonProgresses")
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("CourseEnrollment");
+
+                    b.Navigation("Lesson");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.Survey", b =>
+                {
+                    b.HasOne("DataAccessLayer.Model.Course", "Course")
+                        .WithOne("FinalExamSurvey")
+                        .HasForeignKey("DataAccessLayer.Model.Survey", "CourseId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Course");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.SurveyAnswer", b =>
@@ -689,9 +1164,19 @@ namespace SWP391_Project.Migrations
 
                     b.Navigation("BlogsPosted");
 
+                    b.Navigation("Certificates");
+
                     b.Navigation("Comments");
 
+                    b.Navigation("ConsultationRequests");
+
+                    b.Navigation("ConsultationRequestsAsConsultant");
+
+                    b.Navigation("CourseEnrollments");
+
                     b.Navigation("SurveyResults");
+
+                    b.Navigation("WorkingHours");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.Blog", b =>
@@ -699,6 +1184,30 @@ namespace SWP391_Project.Migrations
                     b.Navigation("BlogImages");
 
                     b.Navigation("Comments");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.ConsultationRequest", b =>
+                {
+                    b.Navigation("ConsultationSession");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.Course", b =>
+                {
+                    b.Navigation("CourseEnrollments");
+
+                    b.Navigation("FinalExamSurvey");
+
+                    b.Navigation("Lessions");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.CourseEnrollment", b =>
+                {
+                    b.Navigation("LessonProgresses");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.Lession", b =>
+                {
+                    b.Navigation("LessonProgresses");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.Survey", b =>

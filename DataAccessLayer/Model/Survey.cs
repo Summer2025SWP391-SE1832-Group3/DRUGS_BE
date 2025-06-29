@@ -26,6 +26,8 @@ namespace DataAccessLayer.Model
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public bool IsActive { get; set; }
+        public int? CourseId { get; set; }
+        public Course? Course { get; set; }
         public ICollection<SurveyResult> SurveyResults { get; set; }
         public ICollection<SurveyQuestion> SurveyQuestions { get; set; }
 
