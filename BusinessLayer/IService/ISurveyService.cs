@@ -20,7 +20,7 @@ namespace BusinessLayer.IService
         Task<List<SurveyQuestion>> GetAllQuestionsBySurveyIdAsync(int surveyId);
         Task<bool> DeleteQuestionAsync(int questionId);
 
-        Task<Survey> CreateSurveyWithQuestionAndAnswerAsync(SurveyCreateWithQuesAndAnsDto dto);
+        Task<Survey> CreateSurveyWithQuestionAndAnswerAsync(SurveyCreateWithQuesAndAnsDto dto,int? courseId);
         Task<bool> UpdateSurveyAsync(SurveyUpdateWithQuesAndAnsDto surveyUpdateDto, int surveyId);
         Task<SurveyResult> CreateSurveyResultAsync(int surveyId,SurveyAnswerDto surveyAnswerDto, string userId, int totalScore);
         Task<int> CalculatorScore(SurveyAnswerDto surveyAnswerDto, int surveyId);

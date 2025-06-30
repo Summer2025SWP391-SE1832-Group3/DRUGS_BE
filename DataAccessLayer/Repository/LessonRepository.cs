@@ -18,10 +18,11 @@ namespace DataAccessLayer.Repository
         {
             _context = context;
         }
-        public async Task AddAsync(Lesson lesson)
+        public async Task<Lesson> AddAsync(Lesson lesson)
         {
             await _context.Lessons.AddAsync(lesson);
             await _context.SaveChangesAsync();
+            return lesson;
         }
 
         public async Task DeleteAsync(int id)

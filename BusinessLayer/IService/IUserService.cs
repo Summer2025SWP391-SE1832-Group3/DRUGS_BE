@@ -17,11 +17,13 @@ namespace BusinessLayer.IService
         Task<IdentityResult> CreateAccountAsync(CreateAccountDto res,string role);
         Task<string> LoginAsync(LoginDto login);
         Task<IdentityResult> AdminDeleteUserAsync(string userId);
+        Task<IdentityResult> DeactivateUserAsync(string userId);
+        Task<IdentityResult> ActivateUserAsync(string userId);
         Task<bool> IsAdmin(string userId);
         Task<IEnumerable<ApplicationUser>> AdminSearchUsersAsync(string? email, string? username, string? role);
 
         Task<IdentityResult> UpdateUserProfileAsync(string userId, UserProfileUpdateDto dto);
-        Task<List<AccountViewDto>> GetAllNonAdminAccountsAsync();
+        Task<List<AccountViewDto>> GetAllNonAdminAccountsAsync(string status);
 
         Task<IdentityResult> ChangePasswordAsync(string userId, ChangePasswordDto dto);
         Task<IdentityResult> ForgotPasswordAsync(ForgotPasswordDto dto);

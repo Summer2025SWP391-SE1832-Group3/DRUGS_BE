@@ -11,6 +11,6 @@ namespace DataAccessLayer.IRepository
         Task UpdateAsync(Course course);
         Task DeleteAsync(int id);
         Task<List<Course>> GetByTopicAsync(CourseTopic topic);
-
+        Task<List<Course>> SearchCoursesAsync(string searchTerm);
     }
 } 

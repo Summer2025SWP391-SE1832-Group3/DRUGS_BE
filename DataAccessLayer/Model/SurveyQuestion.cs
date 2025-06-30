@@ -15,8 +15,6 @@ namespace DataAccessLayer.Model
         public Survey Survey { get; set; }
         [Required, MaxLength(1000)]
         public string QuestionText { get; set; }
-        //[Required, MaxLength(100)]  
-        //public string AnswerType { get; set; }
         public ICollection<SurveyAnswer> SurveyAnswers { get; set; }
         public ICollection<SurveyAnswerResult> SurveyAnswerResults { get; set; }
     }

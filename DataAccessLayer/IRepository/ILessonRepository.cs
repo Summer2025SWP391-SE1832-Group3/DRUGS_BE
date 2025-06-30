@@ -11,7 +11,7 @@ namespace DataAccessLayer.IRepository
     {
         Task<Lesson> GetByIdAsync(int id);
         Task<List<Lesson>> GetByCourseIdAsync(int courseId);
-        Task AddAsync(Lesson lesson);
+        Task<Lesson> AddAsync(Lesson lesson);
         Task DeleteAsync(int id);
         Task UpdateAsync(Lesson lesson);
 

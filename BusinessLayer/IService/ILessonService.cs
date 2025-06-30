@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BusinessLayer.IService
 {
-    public interface ILessionService
+    public interface ILessonService
     {
         Task<LessonDto> CreateLessonAsync(LessonCreateDto lessonCreateDto);
         Task<IEnumerable<LessonDto>> GetLessonsByCourseIdAsync(int courseId);

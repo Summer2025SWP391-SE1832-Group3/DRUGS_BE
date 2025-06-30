@@ -11,7 +11,7 @@ namespace DataAccessLayer.Dto.Course
         public string Title { get; set; }
         public string? Description { get; set; }
         public CourseTopic Topic { get; set; }
-        public IEnumerable<LessonDto> Lessons { get; set; } 
+        public IEnumerable<LessonDto> Lessions { get; set; } 
         public SurveyViewDto FinalExamSurvey { get; set; }
     }
 }

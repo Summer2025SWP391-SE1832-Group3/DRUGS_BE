@@ -15,6 +15,7 @@ namespace DataAccessLayer.IRepository
         public Task<IdentityResult> CreateAsync(CreateAccountDto model, string role);
         public  Task<ApplicationUser?> GetUserByUserName(string username);
         public Task<bool> CheckPassword(ApplicationUser user,string password);
+        Task<IdentityResult> UpdateUserAsync(ApplicationUser user);
 
         // --- ADMIN MANAGEMENT METHODS ---
         Task<IdentityResult> AdminUpdateUserAsync(string userId, RegisterDto updateDto, string? newRole = null);
