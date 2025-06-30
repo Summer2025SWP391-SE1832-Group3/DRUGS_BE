@@ -60,6 +60,11 @@ namespace BusinessLayer.Helpers
             CreateMap<Lesson, LessonDto>();
             CreateMap<LessonCreateDto,Lesson>();
             CreateMap<LessonUpdateDto, Lesson>();
+            CreateMap<LessonProgress, LessonProgressDto>();
+
+            CreateMap<CourseEnrollment, CourseEnrollmentDto>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.UserName));
+
         }
     }
 }

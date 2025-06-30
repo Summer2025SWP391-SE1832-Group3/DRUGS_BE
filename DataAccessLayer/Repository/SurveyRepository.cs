@@ -101,13 +101,14 @@ namespace DataAccessLayer.Repository
                 .ToListAsync();
         }
 
+        //fillter just survey active
         public async Task<Survey?> GetByIdAsync(int surveyId)
         {
             return await _context.Surveys
                 .Include(s=>s.SurveyResults)
                 .Include(s => s.SurveyQuestions)
                 .ThenInclude(s => s.SurveyAnswers)
-                .FirstOrDefaultAsync(s => s.SurveyId == surveyId);
+                .FirstOrDefaultAsync(s => s.SurveyId == surveyId && s.IsActive==true);
         }
 
         public async Task<SurveyQuestion?> GetQuestionByIdAsync(int questionId)

@@ -37,9 +37,34 @@ namespace DataAccessLayer.Repository
             return report;
         }
 
-        public Task<LessonProgressReportDto> GetLessonProgressReportAsync(int courseId)
+        public async Task<LessonProgressReportDto> GetLessonProgressReportAsync(int courseId)
         {
-            throw new NotImplementedException();
+            var enrollments = await _context.CourseEnrollments
+            .Where(e => e.CourseId == courseId)
+            .Include(e => e.User)
+            .ToListAsync();
+
+            var lessonProgressReports = new List<LessonProgressDetailDto>();
+
+            foreach (var enrollment in enrollments)
+            {
+                var progress = await _context.LessonProgresses
+                    .Where(p => p.CourseEnrollmentId == enrollment.Id)
+                    .ToListAsync();
+
+                lessonProgressReports.Add(new LessonProgressDetailDto
+                {
+                    UserId = enrollment.UserId,
+                    TotalLessons = progress.Count(),
+                    CompletedLessons = progress.Count(p => p.IsCompleted)
+                });
+            }
+
+            return new LessonProgressReportDto
+            {
+                CourseId = courseId,
+                Reports = lessonProgressReports
+            };
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using DataAccessLayer.Dto.Course;
+using DataAccessLayer.Dto.Lesson;
 using DataAccessLayer.Model;
 using System;
 using System.Collections.Generic;
@@ -17,11 +18,17 @@ namespace BusinessLayer.IService
         Task DeleteCourseAsync(int courseId);
         Task<IEnumerable<CourseListDto>> GetCoursesByTopicAsync(CourseTopic topic, string userRole);
 
-        //Task<IEnumerable<CourseListDto>> SearchCourseAsync(string searchTerm, string userRole);
+        Task<IEnumerable<CourseListDto>> SearchCourseAsync(string searchTerm, string userRole);
 
         Task<CourseEnrollment> EnrollInCourseAsync(string userId, int courseId);
-        Task<IEnumerable<CourseEnrollment>> GetAllEnrollmentsForCourseAsync(int courseId);
+        Task<IEnumerable<CourseEnrollmentDto>> GetAllEnrollmentsForCourseAsync(int courseId);
 
+        //updateProgressAsync when complete lesson
+        Task<LessonProgressDto> UpdateLessonProgressAsync(string userId, int lessonId, bool isCompleted);
+        Task<IEnumerable<LessonProgressDto>> GetLessonProgressForUserAsync(string userId, int courseId);
 
+        //Statis/survey
+        Task<CourseReportDto> GetCourseReportAsync(int courseId);
+        Task<LessonProgressReportDto> GetLessonProgressReportAsync(int courseId);
     }
 }

@@ -13,6 +13,6 @@ namespace DataAccessLayer.Dto.Survey
         public int QuestionId { get; set; }
         public string QuestionText { get; set; } = null!;
 
-        public List<SurveyAnswerViewDto> Questions { get; set; } = new List<SurveyAnswerViewDto>();
+        public List<SurveyAnswerViewDto> SurveyAnswers { get; set; } = new List<SurveyAnswerViewDto>();
     }
 }
