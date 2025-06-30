@@ -5,6 +5,7 @@ using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
 using DataAccessLayer.Repository;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -52,13 +53,18 @@ namespace BusinessLayer.Service
             if (user == null)
             {
                 _logger.LogWarning("Login failed: User not found - {UserName}", loginDto.UserName);
-                return null;
+                return "Invalid username";
             }
             var validPassword = await _userRepository.CheckPassword(user, loginDto.Password);
             if (!validPassword)
             {
                 _logger.LogWarning("Login failed: Invalid password for user - {UserName}", loginDto.UserName);
-                return null;
+                return "Invalid password";
+            }
+            if (!user.IsActive)
+            {
+                _logger.LogWarning("Login failed: Inactive account for user - {UserName}", loginDto.UserName);
+                return "Account is inactive"; 
             }
             _logger.LogInformation("Login successful for user: {UserName}", loginDto.UserName);
             return await _tokenService.CreateToken(user);
@@ -103,6 +109,30 @@ namespace BusinessLayer.Service
 
             var result = await _userRepository.RegisterAsync(res, currentUserId, role);
             return result;
+        }
+        public async Task<IdentityResult> DeactivateUserAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return IdentityResult.Failed(new IdentityError { Description = "User not found" });
+            }
+
+            user.IsActive = false;
+            return await _userRepository.UpdateUserAsync(user);
+        }
+
+        
+        public async Task<IdentityResult> ActivateUserAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return IdentityResult.Failed(new IdentityError { Description = "User not found" });
+            }
+
+            user.IsActive = true;
+            return await _userRepository.UpdateUserAsync(user);
         }
 
         public async Task<IdentityResult> AdminDeleteUserAsync(string userId)
@@ -302,12 +332,21 @@ namespace BusinessLayer.Service
             return result;
         }
 
-        public async Task<List<AccountViewDto>> GetAllNonAdminAccountsAsync()
+        public async Task<List<AccountViewDto>> GetAllNonAdminAccountsAsync(string status)
         {
-            var users = _userManager.Users.ToList();
+            var users = _userManager.Users.AsQueryable();
+            if (status.ToLower() == "active")
+            {
+                users = users.Where(u => u.IsActive);
+            }
+            else if (status.ToLower() == "inactive")
+            {
+                users = users.Where(u => !u.IsActive); 
+            }
+            var userList = await users.ToListAsync();
             var result = new List<AccountViewDto>();
 
-            foreach (var user in users)
+            foreach (var user in userList)
             {
                 var roles = await _userManager.GetRolesAsync(user);
                 var role = roles.FirstOrDefault();

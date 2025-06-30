@@ -6,6 +6,7 @@ using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
 using DataAccessLayer.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -13,6 +14,7 @@ using Microsoft.OpenApi.Models;
 using SWP391_Project.Middleware;
 using System.Text;
 using System.Text.Json.Serialization;
+using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,10 +22,28 @@ DotNetEnv.Env.Load();
 builder.Services.AddSingleton(provider =>
 {
     var cloudinaryUrl = Environment.GetEnvironmentVariable("CLOUDINARY_URL");
-    var cloudinaryAccount = new Account(cloudinaryUrl);
+    if (string.IsNullOrEmpty(cloudinaryUrl))    
+    {
+        throw new Exception("CLOUDINARY_URL is not set.");
+    }
+    var uri = new Uri(cloudinaryUrl);
+    var cloudinaryAccount = new Account(
+        uri.Host, 
+        uri.UserInfo.Split(':')[0], 
+        uri.UserInfo.Split(':')[1]  
+    );
     var cloudinary = new Cloudinary(cloudinaryAccount);
+    if (cloudinary == null)
+    {
+        throw new Exception("Failed to initialize Cloudinary.");
+    }
     cloudinary.Api.Secure = true; 
-    return cloudinary;
+    return cloudinary;  
+});
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 104857600; //100MB;
 });
 
 // Add services to the container.
@@ -122,6 +142,16 @@ builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
 builder.Services.AddScoped<IConsultantService, ConsultantService>();
 builder.Services.AddScoped<IConsultationRepository, ConsultationRepository>();
 builder.Services.AddScoped<IConsultationService, ConsultationService>();
+builder.Services.AddScoped<ICourseEnrollmentRepository, CourseEnrollmentRepository>();
+builder.Services.AddScoped<ICourseReportRepository, CourseReportRepository>();
+builder.Services.AddScoped<ICourseRepository, CourseRepository>();
+builder.Services.AddScoped<ILessonProgressRepository, LessonProgressRepository>();
+builder.Services.AddScoped<ILessonRepository, LessonRepository>();
+builder.Services.AddScoped<ILessonService, LessonService>();
+builder.Services.AddScoped<ICourseService, CourseService>();
+
+
+
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 var app = builder.Build();

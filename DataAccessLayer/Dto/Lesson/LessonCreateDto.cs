@@ -1,4 +1,5 @@
 ﻿using DataAccessLayer.Model;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -13,7 +14,7 @@ namespace DataAccessLayer.Dto.Lesson
         [Required, MaxLength(100)]
         public string Title { get; set; }
         public string? Content { get; set; }
-        public string? VideoUrl { get; set; }
+        public IFormFile? Video { get; set; }
         [Required]
         public int CourseId { get; set; }
     }

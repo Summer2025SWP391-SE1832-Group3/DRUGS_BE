@@ -33,6 +33,7 @@ namespace DataAccessLayer.Repository
             {
                 UserName = model.UserName,
                 CreatedAt = DateTime.Now,
+                IsActive=true,
             };
             var result = await _userManager.CreateAsync(user, model.Password);
             if (!result.Succeeded)
@@ -64,6 +65,7 @@ namespace DataAccessLayer.Repository
                 Gender = model.Gender,
                 CreatedAt = DateTime.Now,
                 PhoneNumber = model.PhoneNumber,
+                IsActive = true,
             };
             
             try
@@ -162,6 +164,11 @@ namespace DataAccessLayer.Repository
         {
             return await _userManager.CheckPasswordAsync(user, password);
         }
+        public async Task<IdentityResult> UpdateUserAsync(ApplicationUser user)
+        {
+            return await _userManager.UpdateAsync(user);  
+        }
+
 
         // --- ADMIN MANAGEMENT METHODS ---
         public async Task<IdentityResult> AdminUpdateUserAsync(string userId, RegisterDto updateDto, string? newRole = null)

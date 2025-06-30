@@ -65,5 +65,11 @@ namespace DataAccessLayer.Repository
                             .Where(c=>c.Topic == topic)
                             .ToListAsync();
         }
+        public async Task<List<Course>> SearchCoursesAsync(string searchTerm)
+        {
+            return await _context.Courses
+                .Where(c => c.Title.Contains(searchTerm))
+                .ToListAsync();
+        }
     }
 } 

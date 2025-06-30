@@ -23,7 +23,9 @@ namespace DataAccessLayer.Repository
             {
                 UserId = userId,
                 CourseId = courseId,
-                EnrolledAt = DateTime.Now
+                EnrolledAt = DateTime.Now,
+                IsCompleted = false
+                
             };
             await _context.CourseEnrollments.AddAsync(enroll);
             await _context.SaveChangesAsync();
@@ -37,6 +39,19 @@ namespace DataAccessLayer.Repository
                              .Where(c => c.CourseId == courseId)
                              .Include(c => c.User)
                              .ToListAsync();
+        }
+
+        public async Task<bool> UpdateStatus(string userId, int courseId)
+        {
+            var enrollment = await _context.CourseEnrollments
+               .FirstOrDefaultAsync(ce => ce.UserId == userId && ce.CourseId == courseId);
+            if (enrollment == null)
+            {
+                return false;
+            }
+            enrollment.IsCompleted = true;
+            enrollment.CompletedAt = DateTime.Now;
+            return await _context.SaveChangesAsync()>0;
         }
     }
 }

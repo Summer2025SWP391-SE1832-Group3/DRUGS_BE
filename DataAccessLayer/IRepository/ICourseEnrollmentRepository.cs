@@ -11,5 +11,7 @@ namespace DataAccessLayer.IRepository
     {
         Task<CourseEnrollment> EnrollInCourseAsync(string userId, int courseId);
         Task<IEnumerable<CourseEnrollment>> GetEnrollmentsByCourseIdAsync(int courseId);
+
+        Task<bool> UpdateStatus(string userId, int courseId);
     }
 }

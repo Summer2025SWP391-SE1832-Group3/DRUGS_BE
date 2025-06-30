@@ -114,16 +114,26 @@ namespace SWP391_Project.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-                var token = await _userService.LoginAsync(loginDto);
-                if (token == null)
+                var result = await _userService.LoginAsync(loginDto);
+
+                if (result == "Invalid username")
                 {
-                    return Unauthorized("Invalid username or password");
+                    return Unauthorized(new { Message = "Invalid username" });
                 }
+                if (result == "Invalid password")
+                {
+                    return Unauthorized(new { Message = "Invalid password" });
+                }
+                if (result == "Account is inactive")
+                {
+                    return Unauthorized(new { Message = "Account is inactive" });
+                }
+
                 return Ok(
                     new NewUserDto
                     {
-                        UserName=loginDto.UserName,
-                        Token=token,
+                        UserName = loginDto.UserName,
+                        Token = result,
                     }
                 );
             }
@@ -136,16 +146,15 @@ namespace SWP391_Project.Controllers
 
         [HttpGet("admin/all-account")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetAllNonAdminAccounts()
+        public async Task<IActionResult> GetAllNonAdminAccounts([FromQuery] string status = "")
         {
             try
             {
-                var accounts = await _userService.GetAllNonAdminAccountsAsync();
-                return Ok(accounts);
+                var accounts = await _userService.GetAllNonAdminAccountsAsync(status);
+                return Ok(accounts);    
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error fetching non-admin accounts");
                 return StatusCode(500, "An error occurred while retrieving accounts.");
             }
         }
@@ -179,6 +188,46 @@ namespace SWP391_Project.Controllers
                 if (!roleResult.Succeeded) return StatusCode(500, roleResult.Errors);
             }
             return Ok(new { message = "User updated successfully" });
+        }
+        [HttpPost("deactivate/{userId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeactivateUser(string userId)
+        {
+            try
+            {
+                var result = await _userService.DeactivateUserAsync(userId);
+
+                if (result.Succeeded)
+                {
+                    return Ok(new { Message = "Account deactivated successfully." });
+                }
+
+                return StatusCode(500, new { Message = "Failed to deactivate user.", Errors = result.Errors });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred during user deactivation");
+            }
+        }
+
+        [HttpPost("activate/{userId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ActivateUser(string userId)
+        {
+            try
+            {
+                var result = await _userService.ActivateUserAsync(userId);
+                if (result.Succeeded)
+                {
+                    return Ok(new { Message = "User account activated successfully." });
+                }
+                return StatusCode(500, new { Message = "Failed to activate user.", Errors = result.Errors });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during user activation");
+                return StatusCode(500, "An error occurred during user activation");
+            }
         }
 
         [HttpDelete("admin/delete/{userId}")]

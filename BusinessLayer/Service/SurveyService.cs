@@ -3,6 +3,7 @@ using BusinessLayer.IService;
 using DataAccessLayer.Dto.Survey;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
+using DataAccessLayer.Repository;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +16,13 @@ namespace BusinessLayer.Service
     {
         private readonly IMapper _mapper;
         private readonly ISurveyRepository _repository;
+        private readonly ICourseEnrollmentRepository _courseEnrollmentRepository;
 
-        public SurveyService(IMapper mapper,ISurveyRepository repository)
+        public SurveyService(IMapper mapper,ISurveyRepository repository,ICourseEnrollmentRepository courseEnrollmentRepository)
         {
             _mapper = mapper;
             _repository = repository;
+            _courseEnrollmentRepository = courseEnrollmentRepository;
         }
 
         public async Task<bool> DeleteAnswerAsync(int answerId)
@@ -70,21 +73,22 @@ namespace BusinessLayer.Service
             return _mapper.Map<SurveyViewDto>(survey);
         }
 
-        public async Task<Survey> CreateSurveyWithQuestionAndAnswerAsync(SurveyCreateWithQuesAndAnsDto dto)
+        public async Task<Survey> CreateSurveyWithQuestionAndAnswerAsync(SurveyCreateWithQuesAndAnsDto dto, int? courseId)
         {
-            //tạo survey
+            //create survey
             var survey = new Survey
             {
                 SurveyName = dto.SurveyName,
                 Description = dto.Description,
                 SurveyType = dto.SurveyType,
                 IsActive = dto.IsActive,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.Now,
+                CourseId = courseId
 
             };
             var createdSurvey =await _repository.CreateAsync(survey);
 
-            //duyệt và tạo câu hỏi
+            //create question
             foreach(var questionDto in dto.QuestionsDto)
             {
                 var question = new SurveyQuestion
@@ -94,7 +98,7 @@ namespace BusinessLayer.Service
                 };
                 var createdQuestion = await _repository.CreateQuestionAsync(question);
 
-                //duyệt qua và tạo câu trả lời
+                //create answer
                 foreach (var answerDto in questionDto.AnswersDto)
                 {
                     var answer = new SurveyAnswer
@@ -116,7 +120,7 @@ namespace BusinessLayer.Service
         {
             var survey = await _repository.GetByIdAsync(surveyId);
             int totalScore = 0;
-            int totalCorrect = 0;
+            //int totalCorrect = 0;
             if(survey== null) return 0;
             foreach (var answer in surveyAnswerDto.Answers)
             {
@@ -180,6 +184,10 @@ namespace BusinessLayer.Service
                 {
                     surveyResult.ResultStatus = "Pass";
                     surveyResult.Recommendation = "Pass";
+                    if (survey.CourseId.HasValue) {
+                        var courseId = survey.CourseId.Value;
+                        await _courseEnrollmentRepository.UpdateStatus(userId, courseId);
+                    }
                 }
                 else
                 {

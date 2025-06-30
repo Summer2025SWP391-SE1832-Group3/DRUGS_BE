@@ -15,21 +15,33 @@ namespace SWP391_Project.Controllers
     public class SurveyController : ControllerBase
     {
         private readonly ISurveyService _surveyService;
+        private readonly ICourseService _courseService;
 
-        public SurveyController(ISurveyService surveyService)
+        public SurveyController(ISurveyService surveyService,ICourseService courseService)
         {
             _surveyService = surveyService;
+            _courseService= courseService;
         }
 
         [HttpPost("create-survey")]
-        public async Task<IActionResult> CreateSurvey([FromBody] SurveyCreateWithQuesAndAnsDto dto)
+        [Authorize(Roles = "Staff")]
+        public async Task<IActionResult> CreateSurvey([FromBody] SurveyCreateWithQuesAndAnsDto dto,int? courseId)
         {
-            var createdSurvey = await _surveyService.CreateSurveyWithQuestionAndAnswerAsync(dto);
+          
             SurveyType surveyTypeEnum;
             if (!Enum.TryParse(dto.SurveyType.ToString(), out surveyTypeEnum))
             {
                 return BadRequest("Invalid SurveyType.");
             }
+            if (courseId.HasValue)
+            {
+                var course=await _courseService.GetCourseByIdAsync(courseId.Value);
+                if (course == null)
+                {
+                    return BadRequest("Invalid CourseId, course not found.");
+                }
+            }
+            var createdSurvey = await _surveyService.CreateSurveyWithQuestionAndAnswerAsync(dto,courseId);
             if (createdSurvey == null)
             {
                 return BadRequest("Failed to create survey.");
@@ -47,7 +59,7 @@ namespace SWP391_Project.Controllers
             var survey = await _surveyService.GetSurveyByIdAsync(surveyId);
             if (survey == null)
             {
-                return NotFound("Survey not found.");
+                return NotFound("Survey not found or Inactive ");
             }
             return Ok(survey);
         }
@@ -91,6 +103,7 @@ namespace SWP391_Project.Controllers
         }
 
         [HttpDelete("{surveyId:int}")]
+        [Authorize(Roles = "Manager")]
         public async Task<IActionResult> DeleteSurvey(int surveyId)
         {
             var result = await _surveyService.DeleteSurveyAsync(surveyId);
@@ -98,10 +111,11 @@ namespace SWP391_Project.Controllers
             {
                 return Ok("Survey deleted successfully.");
             }
-            return NotFound("Survey not found or could not be deleted.");
+            return NotFound("Survey not found");
         }
 
         [HttpPut("{surveyId:int}")]
+        [Authorize(Roles = "Staff")]
         public async Task<IActionResult> UpdateSurvey(int surveyId, [FromBody] SurveyUpdateWithQuesAndAnsDto surveyUpdateDto)
         {
             var result = await _surveyService.UpdateSurveyAsync(surveyUpdateDto, surveyId);
@@ -113,6 +127,7 @@ namespace SWP391_Project.Controllers
         }
 
         [HttpGet("{surveyId:int}/statistics")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetSurveyStatistics(int surveyId)
         {
             var surveyStatistic = await _surveyService.GetSurveyStatisticAsync(surveyId);
@@ -130,7 +145,7 @@ namespace SWP391_Project.Controllers
             var surveyResult = await _surveyService.GetUserSurveyResultAsync(surveyId, userId);
             if (surveyResult == null)
             {
-                return NotFound("Survey result not found.");
+                return NotFound("Survey result not found or inactive.");
             }
             return Ok(surveyResult);
         }
