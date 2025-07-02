@@ -51,19 +51,23 @@ namespace BusinessLayer.Service
             }
         }
 
-        public async Task<IEnumerable<CourseListDto>> GetAllCoursesAsync(string? userRole)
+        public async Task<IEnumerable<CourseWithEnrollmentStatusDto>> GetAllCoursesAsync(string? userRole, string userId)
         {
             var courses=await _courseRepository.GetAllAsync();
-            if (userRole == "Manager")
-            {
-                 return _mapper.Map<IEnumerable<CourseListDto>>(courses);
-            }
-            else
-            {
-                var activeCourse = courses.Where(c => c.IsActive).ToList();
-                return _mapper.Map<IEnumerable<CourseListDto>>(activeCourse);
+            courses = courses.Where(c => c.IsActive).ToList();
+            var result = new List<CourseWithEnrollmentStatusDto>();
 
+            foreach (var course in courses)
+            {
+                var status = await _courseEnrollmentRepository.GetEnrollmentStatusAsync(userId, course.Id);
+                result.Add(new CourseWithEnrollmentStatusDto
+                {
+                    Course = _mapper.Map<CourseListDto>(course),
+                    Status = status
+                });
             }
+
+            return result;
         }
 
         public async Task<CourseDto> GetCourseByCourseId(int courseId)
@@ -78,8 +82,24 @@ namespace BusinessLayer.Service
         {
             var course = await _courseRepository.GetByIdAsync(courseId);
             if (course == null) return null;
+            var enrollment = await _courseEnrollmentRepository.GetEnrollmentByUserIdAndCourseIdAsync(userId, courseId);
+            var isCourseCompleted = enrollment != null && enrollment.IsCompleted;
+
             if (userRole == "Member")
             {
+                if (enrollment == null)
+                {
+                    return new CourseDto
+                    {
+                        Id = course.Id,
+                        Title = course.Title,
+                        Description = course.Description,
+                        Topic = course.Topic,
+                        IsCompleted = false,
+                        Message = "You are not enrolled in this course. Please enroll to view details."
+                    };
+                }
+
                 var progress = await _lessonProgressRepository.GetLessonProgressByUserAndCourseAsync(userId, courseId);
                 var lessonsDto = course.Lessions.Select(lesson =>
                 {
@@ -93,7 +113,24 @@ namespace BusinessLayer.Service
                         IsCompleted = lessonProgress != null && lessonProgress.IsCompleted
                     };
                 }).ToList();
+
                 var finalExamSurvey = course.FinalExamSurvey;
+
+                if (isCourseCompleted)
+                {
+                    return new CourseDto
+                    {
+                        Id = course.Id,
+                        Title = course.Title,
+                        Description = course.Description,
+                        Topic = course.Topic,
+                        Lessions = lessonsDto,
+                        FinalExamSurvey = _mapper.Map<SurveyViewDto>(finalExamSurvey),
+                        IsCompleted = true,
+                        Message = "You have passed this course.",
+                    };
+                }
+
                 return new CourseDto
                 {
                     Id = course.Id,
@@ -101,7 +138,9 @@ namespace BusinessLayer.Service
                     Description = course.Description,
                     Topic = course.Topic,
                     Lessions = lessonsDto,
-                    FinalExamSurvey = _mapper.Map<SurveyViewDto>(finalExamSurvey)
+                    FinalExamSurvey = _mapper.Map<SurveyViewDto>(finalExamSurvey),
+                    IsCompleted = false,
+                    Message = "You are enrolled in this course and can continue learning."
                 };
             }
 
@@ -115,11 +154,12 @@ namespace BusinessLayer.Service
                         Title = lesson.Title,
                         Content = lesson.Content,
                         VideoUrl = lesson.VideoUrl,
-                        IsCompleted = true 
+                        IsCompleted = true  
                     };
                 }).ToList();
 
                 var finalExamSurvey = course.FinalExamSurvey;
+
                 return new CourseDto
                 {
                     Id = course.Id,
@@ -127,7 +167,9 @@ namespace BusinessLayer.Service
                     Description = course.Description,
                     Topic = course.Topic,
                     Lessions = lessonsDto,
-                    FinalExamSurvey = _mapper.Map<SurveyViewDto>(finalExamSurvey)
+                    FinalExamSurvey = _mapper.Map<SurveyViewDto>(finalExamSurvey),
+                    IsCompleted = isCourseCompleted,
+                    Message = "Viewing course details"
                 };
             }
             return null;
@@ -154,16 +196,23 @@ namespace BusinessLayer.Service
 
             return _mapper.Map<IEnumerable<CourseListDto>>(completedCourses);
         }
-        public async Task<IEnumerable<CourseListDto>> GetCoursesByTopicAsync(CourseTopic topic, string userRole)
+        public async Task<IEnumerable<CourseWithEnrollmentStatusDto>> GetCoursesByTopicAsync(CourseTopic topic, string userRole, string userId)
         {
             var courses=await _courseRepository.GetByTopicAsync(topic);
-            if (userRole == "Manager")
-            {
-                return _mapper.Map<IEnumerable<CourseListDto>>(courses);
+            courses = courses.Where(c => c.IsActive).ToList();
+            var result = new List<CourseWithEnrollmentStatusDto>();
 
+            foreach (var course in courses)
+            {
+                var status = await _courseEnrollmentRepository.GetEnrollmentStatusAsync(userId, course.Id);
+                result.Add(new CourseWithEnrollmentStatusDto
+                {
+                    Course = _mapper.Map<CourseListDto>(course),
+                    Status = status
+                });
             }
-            var filteredCourses = courses.Where(c => c.IsActive).ToList();
-            return _mapper.Map<IEnumerable<CourseListDto>>(filteredCourses);
+
+            return result;
         }
 
         public async Task UpdateCourseAsync(int courseId, CourseUpdateDto courseUpdateDto)
@@ -176,16 +225,23 @@ namespace BusinessLayer.Service
                 await _courseRepository.UpdateAsync(existCourse);
             }
         }
-        public async Task<IEnumerable<CourseListDto>> SearchCourseAsync(string searchTerm, string userRole)
+        public async Task<IEnumerable<CourseWithEnrollmentStatusDto>> SearchCourseAsync(string searchTerm, string userRole,string userId)
         {
             var courses = await _courseRepository.SearchCoursesAsync(searchTerm);
+            courses = courses.Where(c => c.IsActive).ToList();
+            var result = new List<CourseWithEnrollmentStatusDto>();
 
-            if (userRole != "Manager")
+            foreach (var course in courses)
             {
-                courses = courses.Where(c => c.IsActive).ToList();
+                var status = await _courseEnrollmentRepository.GetEnrollmentStatusAsync(userId, course.Id);
+                result.Add(new CourseWithEnrollmentStatusDto
+                {
+                    Course = _mapper.Map<CourseListDto>(course),
+                    Status = status
+                });
             }
 
-            return _mapper.Map<IEnumerable<CourseListDto>>(courses);
+            return result;
         }
 
         //course-enrollment
@@ -230,5 +286,49 @@ namespace BusinessLayer.Service
             return report;
         }
 
-    }
-}
+        public async Task<bool> IsCourseCompletedAsync(string userId, int courseId)
+        {
+            var enrollment = await _courseEnrollmentRepository.GetEnrollmentByUserIdAndCourseIdAsync(userId, courseId);
+            return enrollment != null && enrollment.IsCompleted;
+        }
+
+        public async Task<CompletedCourseDetailDto> GetCompletedCourseDetailAsync(int courseId, string userId)
+        {
+            var enrollment = await _courseEnrollmentRepository.GetEnrollmentByUserIdAndCourseIdAsync(userId, courseId);
+            if (enrollment == null || !enrollment.IsCompleted)
+                return null;
+
+            var course = await _courseRepository.GetByIdAsync(courseId);
+            if (course == null)
+                return null;
+
+            var lessonsDto = course.Lessions.Select(lesson => new LessonDto
+            {
+                Id = lesson.Id,
+                Title = lesson.Title,
+                Content = lesson.Content,
+                VideoUrl = lesson.VideoUrl,
+                IsCompleted = true 
+            }).ToList();
+
+            var completedDate = enrollment.CompletedAt;
+            //double? finalScore = enrollment.FinalScore; 
+            //string? certificateUrl = enrollment.CertificateUrl; 
+
+            return new CompletedCourseDetailDto
+            {
+                Id = course.Id,
+                Title = course.Title,
+                Description = course.Description,
+                Topic = course.Topic,
+                Lessons = lessonsDto,
+                FinalExamSurvey = _mapper.Map<SurveyViewDto>(course.FinalExamSurvey),
+                Progress = 100,
+                CompletedDate = completedDate,
+                //FinalScore = finalScore,
+                //CertificateUrl = certificateUrl
+            };
+        }
+
+            }
+        }
