@@ -331,7 +331,16 @@ namespace BusinessLayer.Service
             }
             return result;
         }
-
+        public async Task<AccountDto> GetAccountByIdAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return null;
+            }
+            var accountDto = _mapper.Map<AccountDto>(user);
+            return accountDto;
+        }
         public async Task<List<AccountViewDto>> GetAllNonAdminAccountsAsync(string status)
         {
             var users = _userManager.Users.AsQueryable();

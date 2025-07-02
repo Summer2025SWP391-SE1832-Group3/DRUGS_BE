@@ -30,15 +30,51 @@ namespace SWP391_Project.Controllers
             return Ok(new { Message = "Course created successfully!", CourseId = course.Id });
         }
 
-        [HttpGet("{courseId}")]
+        [HttpGet("Detail/{courseId:int}")]
         public async Task<IActionResult> GetCourseById(int courseId)
         {
-            var course = await _courseService.GetCourseByIdAsync(courseId);
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User is not authenticated.");
+            }
+
+            var course = await _courseService.GetCourseByIdAsync(courseId, userId, role);
             if (course == null)
             {
                 return NotFound("Course not found.");
             }
-            return Ok(course);
+            if (role == "Member")
+            {
+                var isEnrolled = await _courseService.IsUserEnrolledInCourseAsync(userId, courseId);
+                if (!isEnrolled)
+                {
+                    return Ok(new
+                    {
+                        Message = "You are not enrolled in this course.",
+                        Course = course,
+                        IsEnrolled = false
+                    });
+                }
+                return Ok(new
+                {
+                    Message = "You are enrolled in this course.",
+                    Course = course,
+                    IsEnrolled = true
+                });
+            }
+            else if (role == "Manager" || role == "Staff")
+            {
+                return Ok(new
+                {
+                    Message = "Viewing course details",
+                    Course = course,
+                });
+            }
+
+            return BadRequest("Role not recognized.");
         }
 
         [HttpGet("all")]
@@ -48,6 +84,28 @@ namespace SWP391_Project.Controllers
             var courses = await _courseService.GetAllCoursesAsync(userRole);
             return Ok(courses);
         }
+
+
+        [HttpGet("user/courses")]
+        [Authorize(Roles = "Member")]
+        public async Task<IActionResult> GetCoursesByUserId()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User ID not found.");
+            }
+
+            var coursesInProgress = await _courseService.GetCoursesInProgressAsync(userId);
+            var completedCourses = await _courseService.GetCompletedCoursesAsync(userId); 
+
+            return Ok(new
+            {
+                InProgress = coursesInProgress,  
+                Completed = completedCourses   
+            });
+        }
+
 
         [HttpPut("{courseId}")]
         [Authorize(Roles = "Manager")]
@@ -76,16 +134,35 @@ namespace SWP391_Project.Controllers
         [HttpGet("searchTitle")]
         public async Task<IActionResult> SearchCourse([FromQuery] string searchTerm)
         {
-            var userRole = User.FindFirstValue(ClaimTypes.Role); 
+            var userRole = User.FindFirstValue(ClaimTypes.Role);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var courses = await _courseService.SearchCourseAsync(searchTerm, userRole);
-            return Ok(courses);
+            var result = new List<CourseWithEnrollmentStatusDto>();
+
+            foreach (var course in courses)
+            {
+                var isEnrolled = await _courseService.IsUserEnrolledInCourseAsync(userId, course.Id);
+
+                result.Add(new CourseWithEnrollmentStatusDto
+                {
+                    Course = course,
+                    IsEnrolled = isEnrolled
+                });
+            }
+
+            return Ok(result);
         }
 
         [HttpPost("enroll/{courseId}")]
         [Authorize(Roles = "Member")]
         public async Task<IActionResult> EnrollInCourse(int courseId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); 
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isEnrolled = await _courseService.IsUserEnrolledInCourseAsync(userId, courseId);
+            if (isEnrolled)
+            {
+                return BadRequest("You are already enrolled in this course.");
+            }
             var enrollment = await _courseService.EnrollInCourseAsync(userId, courseId);
             if (enrollment == null)
             {

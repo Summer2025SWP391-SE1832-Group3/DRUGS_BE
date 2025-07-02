@@ -19,6 +19,7 @@ namespace BusinessLayer.Helpers
         public ApplicationMapper() 
         {
             CreateMap<ApplicationUser, AccountViewDto>();
+            CreateMap<ApplicationUser,AccountDto>();
             CreateMap<Blog, BlogViewDto>()
                 .ForMember(dest => dest.PostedBy, opt => opt.MapFrom(src => src.PostedBy.UserName))
                 .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.Comments.Select(c => new CommentViewDto

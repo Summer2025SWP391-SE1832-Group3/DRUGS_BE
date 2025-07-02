@@ -41,6 +41,20 @@ namespace DataAccessLayer.Repository
                              .ToListAsync();
         }
 
+        public async Task<IEnumerable<CourseEnrollment>> GetEnrollmentsByUserIdAsync(string userId)
+        {
+            return await _context.CourseEnrollments
+                .Include(e => e.Course)
+                .Where(e => e.UserId == userId)
+                .ToListAsync();
+        }
+
+        public async Task<CourseEnrollment> GetEnrollmentByUserIdAndCourseIdAsync(string userId, int courseId)
+        {
+            return await _context.CourseEnrollments
+                .FirstOrDefaultAsync(e => e.UserId == userId && e.CourseId == courseId);
+        }
+
         public async Task<bool> UpdateStatus(string userId, int courseId)
         {
             var enrollment = await _context.CourseEnrollments
