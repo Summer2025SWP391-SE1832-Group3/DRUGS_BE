@@ -46,43 +46,18 @@ namespace SWP391_Project.Controllers
             {
                 return NotFound("Course not found.");
             }
-            if (role == "Member")
-            {
-                var isEnrolled = await _courseService.IsUserEnrolledInCourseAsync(userId, courseId);
-                if (!isEnrolled)
-                {
-                    return Ok(new
-                    {
-                        Message = "You are not enrolled in this course.",
-                        Course = course,
-                        IsEnrolled = false
-                    });
-                }
-                return Ok(new
-                {
-                    Message = "You are enrolled in this course.",
-                    Course = course,
-                    IsEnrolled = true
-                });
-            }
-            else if (role == "Manager" || role == "Staff")
-            {
-                return Ok(new
-                {
-                    Message = "Viewing course details",
-                    Course = course,
-                });
-            }
 
-            return BadRequest("Role not recognized.");
+            return Ok(course);
         }
 
         [HttpGet("all")]
         public async Task<IActionResult> GetAllCourses()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); 
             var userRole = User.FindFirstValue(ClaimTypes.Role); 
-            var courses = await _courseService.GetAllCoursesAsync(userRole);
-            return Ok(courses);
+            var courses = await _courseService.GetAllCoursesAsync(userRole, userId);
+
+            return Ok(courses);  
         }
 
 
@@ -126,31 +101,25 @@ namespace SWP391_Project.Controllers
         [HttpGet("topic/{topic}")]
         public async Task<IActionResult> GetCoursesByTopic(CourseTopic topic)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); 
             var userRole = User.FindFirstValue(ClaimTypes.Role); 
-            var courses = await _courseService.GetCoursesByTopicAsync(topic, userRole);
+
+            var courses = await _courseService.GetCoursesByTopicAsync(topic, userRole, userId);
+
             return Ok(courses);
         }
 
         [HttpGet("searchTitle")]
-        public async Task<IActionResult> SearchCourse([FromQuery] string searchTerm)
+        public async Task<IActionResult> SearchCourse([FromQuery] string? searchTerm)
         {
+            if (searchTerm == null)
+            {
+                searchTerm = "";
+            }
             var userRole = User.FindFirstValue(ClaimTypes.Role);
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var courses = await _courseService.SearchCourseAsync(searchTerm, userRole);
-            var result = new List<CourseWithEnrollmentStatusDto>();
-
-            foreach (var course in courses)
-            {
-                var isEnrolled = await _courseService.IsUserEnrolledInCourseAsync(userId, course.Id);
-
-                result.Add(new CourseWithEnrollmentStatusDto
-                {
-                    Course = course,
-                    IsEnrolled = isEnrolled
-                });
-            }
-
-            return Ok(result);
+            var courses = await _courseService.SearchCourseAsync(searchTerm, userRole, userId);
+            return Ok(courses);
         }
 
         [HttpPost("enroll/{courseId}")]
@@ -211,6 +180,25 @@ namespace SWP391_Project.Controllers
         {
             var report = await _courseService.GetLessonProgressReportAsync(courseId);
             return Ok(report);
+        }
+
+        [HttpGet("completed-detail/{courseId}")]
+        [Authorize(Roles = "Member")]
+        public async Task<IActionResult> GetCompletedCourseDetail(int courseId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User is not authenticated.");
+
+            var isCompleted = await _courseService.IsCourseCompletedAsync(userId, courseId);
+            if (!isCompleted)
+                return BadRequest("Course is not completed yet.");
+
+            var detail = await _courseService.GetCompletedCourseDetailAsync(courseId, userId);
+            if (detail == null)
+                return NotFound("Course not found or not completed.");
+
+            return Ok(detail);
         }
     }
 }

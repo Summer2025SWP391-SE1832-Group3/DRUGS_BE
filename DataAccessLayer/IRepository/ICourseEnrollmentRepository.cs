@@ -1,4 +1,5 @@
-﻿using DataAccessLayer.Model;
+﻿using DataAccessLayer.Dto.Course;
+using DataAccessLayer.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +15,6 @@ namespace DataAccessLayer.IRepository
         Task<IEnumerable<CourseEnrollment>> GetEnrollmentsByUserIdAsync(string userId);
         Task<CourseEnrollment> GetEnrollmentByUserIdAndCourseIdAsync(string userId, int courseId);
         Task<bool> UpdateStatus(string userId, int courseId);
+        Task<CourseStatus> GetEnrollmentStatusAsync(string userId, int courseId);
     }
 }

@@ -14,15 +14,15 @@ namespace BusinessLayer.IService
         Task<CourseDto> CreateCourseAsync(CourseCreateDto courseCreateDto);
         Task<CourseDto> GetCourseByIdAsync(int courseId,string userId,string userRole);
         Task<CourseDto> GetCourseByCourseId(int courseId);
-        Task<IEnumerable<CourseListDto>> GetAllCoursesAsync(string userRole);
+        Task<IEnumerable<CourseWithEnrollmentStatusDto>> GetAllCoursesAsync(string userRole, string userId);
         Task<IEnumerable<CourseListDto>> GetCoursesInProgressAsync(string userId);
         Task<IEnumerable<CourseListDto>> GetCompletedCoursesAsync(string userId);
         Task<bool> IsUserEnrolledInCourseAsync(string userId, int courseId);
         Task UpdateCourseAsync(int courseId, CourseUpdateDto courseUpdateDto);
         Task DeleteCourseAsync(int courseId);
-        Task<IEnumerable<CourseListDto>> GetCoursesByTopicAsync(CourseTopic topic, string userRole);
+        Task<IEnumerable<CourseWithEnrollmentStatusDto>> GetCoursesByTopicAsync(CourseTopic topic, string userRole, string userId);
 
-        Task<IEnumerable<CourseListDto>> SearchCourseAsync(string searchTerm, string userRole);
+        Task<IEnumerable<CourseWithEnrollmentStatusDto>> SearchCourseAsync(string searchTerm, string userRole, string userId);
 
         Task<CourseEnrollment> EnrollInCourseAsync(string userId, int courseId);
         Task<IEnumerable<CourseEnrollmentDto>> GetAllEnrollmentsForCourseAsync(int courseId);
@@ -34,5 +34,9 @@ namespace BusinessLayer.IService
         //Statis/survey
         Task<CourseReportDto> GetCourseReportAsync(int courseId);
         Task<LessonProgressReportDto> GetLessonProgressReportAsync(int courseId);
+
+        //getdetailCompleteCourse
+        Task<bool> IsCourseCompletedAsync(string userId, int courseId);
+        Task<CompletedCourseDetailDto> GetCompletedCourseDetailAsync(int courseId, string userId);
     }
 }

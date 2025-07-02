@@ -1,4 +1,5 @@
 ﻿using DataAccessLayer.Data;
+using DataAccessLayer.Dto.Course;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +17,7 @@ namespace DataAccessLayer.Repository
 
         public CourseEnrollmentRepository(ApplicationDBContext context) {
             _context = context;
-        }
+        }   
         public async Task<CourseEnrollment> EnrollInCourseAsync(string userId, int courseId)
         {
             var enroll = new CourseEnrollment
@@ -24,8 +25,9 @@ namespace DataAccessLayer.Repository
                 UserId = userId,
                 CourseId = courseId,
                 EnrolledAt = DateTime.Now,
+                Status = EnrollmentStatus.InProgress,
                 IsCompleted = false
-                
+
             };
             await _context.CourseEnrollments.AddAsync(enroll);
             await _context.SaveChangesAsync();
@@ -63,9 +65,32 @@ namespace DataAccessLayer.Repository
             {
                 return false;
             }
+            enrollment.Status = EnrollmentStatus.Completed;
             enrollment.IsCompleted = true;
             enrollment.CompletedAt = DateTime.Now;
             return await _context.SaveChangesAsync()>0;
+        }
+
+        public async Task<CourseStatus> GetEnrollmentStatusAsync(string userId, int courseId)
+        {
+            var enrollment = await _context.CourseEnrollments
+        .FirstOrDefaultAsync(e => e.UserId == userId && e.CourseId == courseId);
+
+            if (enrollment == null)
+            {
+                return CourseStatus.NotEnrolled;  
+            }
+            if (enrollment.Status == EnrollmentStatus.Suspended && enrollment.SuspendedUntil > DateTime.Now)
+            {
+                return CourseStatus.Suspended;
+            }
+
+            if (enrollment.CompletedAt.HasValue)
+            {
+                return CourseStatus.Completed; 
+            }
+
+            return CourseStatus.InProgress; 
         }
     }
 }
