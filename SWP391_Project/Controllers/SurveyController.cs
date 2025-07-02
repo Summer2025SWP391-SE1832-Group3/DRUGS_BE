@@ -35,7 +35,7 @@ namespace SWP391_Project.Controllers
             }
             if (courseId.HasValue)
             {
-                var course=await _courseService.GetCourseByIdAsync(courseId.Value);
+                var course=await _courseService.GetCourseByCourseId(courseId.Value);
                 if (course == null)
                 {
                     return BadRequest("Invalid CourseId, course not found.");

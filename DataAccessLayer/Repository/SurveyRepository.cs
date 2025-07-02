@@ -151,7 +151,12 @@ namespace DataAccessLayer.Repository
                  .Include(s => s.User)
                  .OrderByDescending(s => s.TakeAt)
                  .ToListAsync();
-                //.FirstOrDefaultAsync(s=>s.SurveyId==surveyId && s.UserId==userId);
+        }
+        public async Task<Survey?> GetSurveyByCourseIdAsync(int courseId)
+        {
+            return await _context.Surveys
+                .Where(s => s.CourseId == courseId)
+                .FirstOrDefaultAsync();
         }
     }
 }

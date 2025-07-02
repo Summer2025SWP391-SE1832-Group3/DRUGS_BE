@@ -144,6 +144,19 @@ namespace SWP391_Project.Controllers
             }
         }
 
+        [HttpGet("account/{userId}")]
+        [Authorize(Roles = "Admin, Manager")]
+        public async Task<IActionResult> GetAccountById(string userId)
+        {
+            var account = await _userService.GetAccountByIdAsync(userId);
+            if (account == null)
+            {
+                return NotFound("Account not found.");
+            }
+
+            return Ok(account);
+        }
+
         [HttpGet("admin/all-account")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllNonAdminAccounts([FromQuery] string status = "")
@@ -159,29 +172,30 @@ namespace SWP391_Project.Controllers
             }
         }
 
+
         // --- ADMIN ACCOUNT MANAGEMENT ---
         [HttpPut("admin/update/{userId}")]
         [Authorize(Roles = "Admin")]
         [ApiExplorerSettings(IgnoreApi = false)] 
-        public async Task<IActionResult> AdminUpdate(string userId, [FromBody] RegisterDto dto, [FromQuery] string? newRole)
+        public async Task<IActionResult> AdminUpdate(string userId, [FromQuery] string? newRole)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var profileDto = new UserProfileUpdateDto
-            {
-                UserName = dto.UserName,
-                Email = dto.Email,
-                FullName = dto.FullName,
-                PhoneNumber = dto.PhoneNumber,
-                DateOfBirth = dto.DateOfBirth,
-                Gender = dto.Gender
-            };
+            //var profileDto = new UserProfileUpdateDto
+            //{
+            //    UserName = dto.UserName,
+            //    Email = dto.Email,
+            //    FullName = dto.FullName,
+            //    PhoneNumber = dto.PhoneNumber,
+            //    DateOfBirth = dto.DateOfBirth,
+            //    Gender = dto.Gender
+            //};
 
-            var result = await _userService.UpdateUserProfileAsync(userId, profileDto);
-            if (!result.Succeeded) return StatusCode(500, result.Errors);
+            //var result = await _userService.UpdateUserProfileAsync(userId, profileDto);
+            //if (!result.Succeeded) return StatusCode(500, result.Errors);
 
-            var passwordResult = await _userService.UpdateUserPasswordAsync(userId, dto.Password);
-            if (!passwordResult.Succeeded) return StatusCode(500, passwordResult.Errors);
+            //var passwordResult = await _userService.UpdateUserPasswordAsync(userId, dto.Password);
+            //if (!passwordResult.Succeeded) return StatusCode(500, passwordResult.Errors);
             if (!string.IsNullOrEmpty(newRole))
             {
                 var roleResult = await _userService.UpdateUserRoleAsync(userId, newRole);

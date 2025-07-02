@@ -12,8 +12,12 @@ namespace BusinessLayer.IService
     public interface ICourseService
     {
         Task<CourseDto> CreateCourseAsync(CourseCreateDto courseCreateDto);
-        Task<CourseDto> GetCourseByIdAsync(int courseId);
+        Task<CourseDto> GetCourseByIdAsync(int courseId,string userId,string userRole);
+        Task<CourseDto> GetCourseByCourseId(int courseId);
         Task<IEnumerable<CourseListDto>> GetAllCoursesAsync(string userRole);
+        Task<IEnumerable<CourseListDto>> GetCoursesInProgressAsync(string userId);
+        Task<IEnumerable<CourseListDto>> GetCompletedCoursesAsync(string userId);
+        Task<bool> IsUserEnrolledInCourseAsync(string userId, int courseId);
         Task UpdateCourseAsync(int courseId, CourseUpdateDto courseUpdateDto);
         Task DeleteCourseAsync(int courseId);
         Task<IEnumerable<CourseListDto>> GetCoursesByTopicAsync(CourseTopic topic, string userRole);

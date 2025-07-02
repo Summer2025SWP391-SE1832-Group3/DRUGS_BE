@@ -19,6 +19,7 @@ namespace BusinessLayer.IService
         Task<IdentityResult> AdminDeleteUserAsync(string userId);
         Task<IdentityResult> DeactivateUserAsync(string userId);
         Task<IdentityResult> ActivateUserAsync(string userId);
+        Task<AccountDto> GetAccountByIdAsync(string userId);
         Task<bool> IsAdmin(string userId);
         Task<IEnumerable<ApplicationUser>> AdminSearchUsersAsync(string? email, string? username, string? role);
 

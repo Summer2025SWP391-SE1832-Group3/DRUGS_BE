@@ -4,6 +4,7 @@ using DataAccessLayer.Dto.Survey;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
 using DataAccessLayer.Repository;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,12 +18,14 @@ namespace BusinessLayer.Service
         private readonly IMapper _mapper;
         private readonly ISurveyRepository _repository;
         private readonly ICourseEnrollmentRepository _courseEnrollmentRepository;
+        private readonly ICourseRepository _courseRepository;
 
-        public SurveyService(IMapper mapper,ISurveyRepository repository,ICourseEnrollmentRepository courseEnrollmentRepository)
+        public SurveyService(IMapper mapper,ISurveyRepository repository,ICourseEnrollmentRepository courseEnrollmentRepository,ICourseRepository courseRepository)
         {
             _mapper = mapper;
             _repository = repository;
             _courseEnrollmentRepository = courseEnrollmentRepository;
+            _courseRepository = courseRepository;
         }
 
         public async Task<bool> DeleteAnswerAsync(int answerId)
@@ -75,6 +78,15 @@ namespace BusinessLayer.Service
 
         public async Task<Survey> CreateSurveyWithQuestionAndAnswerAsync(SurveyCreateWithQuesAndAnsDto dto, int? courseId)
         {
+            if (courseId.HasValue)
+            {
+                var existingSurvey = await _repository.GetSurveyByCourseIdAsync(courseId.Value);
+                if (existingSurvey != null)
+                {
+                    return null;
+                }
+            }
+
             //create survey
             var survey = new Survey
             {
@@ -87,9 +99,18 @@ namespace BusinessLayer.Service
 
             };
             var createdSurvey =await _repository.CreateAsync(survey);
+            if (courseId.HasValue)
+            {
+                var course = await _courseRepository.GetByIdAsync(courseId.Value);
+                if (course != null)
+                {
+                    course.FinalExamSurveyId = createdSurvey.SurveyId; 
+                    await _courseRepository.UpdateAsync(course); 
+                }
+            }
 
             //create question
-            foreach(var questionDto in dto.QuestionsDto)
+            foreach (var questionDto in dto.QuestionsDto)
             {
                 var question = new SurveyQuestion
                 {
