@@ -13,8 +13,11 @@ namespace BusinessLayer.IService
     {
         Task<CourseDto> CreateCourseAsync(CourseCreateDto courseCreateDto);
         Task<CourseDto> GetCourseByIdAsync(int courseId,string userId,string userRole);
-        Task<CourseDto> GetCourseByCourseId(int courseId);
+        Task<CourseListDto> GetCourseByCourseId(int courseId);
         Task<IEnumerable<CourseWithEnrollmentStatusDto>> GetAllCoursesAsync(string userRole, string userId);
+        Task<IEnumerable<CourseListDto>> GetAllCoursesForManagerAsync();
+        Task<IEnumerable<CourseListDto>> GetActiveCoursesAsync();
+        Task<IEnumerable<CourseListDto>> GetInactiveCoursesAsync();
         Task<IEnumerable<CourseListDto>> GetCoursesInProgressAsync(string userId);
         Task<IEnumerable<CourseListDto>> GetCompletedCoursesAsync(string userId);
         Task<bool> IsUserEnrolledInCourseAsync(string userId, int courseId);
@@ -36,7 +39,6 @@ namespace BusinessLayer.IService
         Task<LessonProgressReportDto> GetLessonProgressReportAsync(int courseId);
 
         //getdetailCompleteCourse
-        Task<bool> IsCourseCompletedAsync(string userId, int courseId);
         Task<CompletedCourseDetailDto> GetCompletedCourseDetailAsync(int courseId, string userId);
     }
 }

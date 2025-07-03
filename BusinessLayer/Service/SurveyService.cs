@@ -319,11 +319,45 @@ namespace BusinessLayer.Service
                         AnswerText = a.AnswerText,
                         IsCorrect = a.IsCorrect,
                         Score = a.Score
-                    }).ToList()
-
+                    }).ToList(),
+                    UserAnswer = surveyResult.SurveyAnswerResults.FirstOrDefault(s => s.QuestionId == q.QuestionId).SurveyAnswer.AnswerText,
                 }).ToList()
             }).ToList();
             return surveyResultDtos;
+        }
+
+        public async Task<SurveyResultDto> GetUserSurveyResultNewestAsync(int surveyId, string userId)
+        {
+            var surveyResult = await _repository.GetSurveyResultAsync(surveyId, userId);
+            if (surveyResult == null || !surveyResult.Any()) return null;
+            var latestSurveyResult = surveyResult.FirstOrDefault();
+            if (latestSurveyResult == null) return null;
+
+            var surveyResultDto = new SurveyResultDto
+            {
+                SurveyResultId = latestSurveyResult.ResultId,
+                SurveyId = latestSurveyResult.SurveyId,
+                SurveyName = latestSurveyResult.Survey.SurveyName,
+                ExcutedBy = latestSurveyResult.User.UserName,
+                SubmittedAt = latestSurveyResult.TakeAt,
+                TotalScore = latestSurveyResult.TotalScore,
+                Recommendation = latestSurveyResult.Recommendation,
+                Questions = latestSurveyResult.Survey.SurveyQuestions.Select(q => new SurveyQuestionResultDto
+                {
+                    QuestionId = q.QuestionId,
+                    QuestionText = q.QuestionText,
+                    Answers = q.SurveyAnswers.Select(a => new SurveyAnswerResultDto
+                    {
+                        AnswerId = a.AnswerId,
+                        AnswerText = a.AnswerText,
+                        IsCorrect = a.IsCorrect,
+                        Score = a.Score
+                    }).ToList(),
+                    UserAnswer = latestSurveyResult.SurveyAnswerResults.FirstOrDefault(s => s.QuestionId == q.QuestionId)?.SurveyAnswer.AnswerText ?? "No answer"
+                }).ToList()
+            };
+
+            return surveyResultDto;
         }
     }
 }

@@ -28,5 +28,6 @@ namespace BusinessLayer.IService
         Task<List<SurveyAnswerResultDto>> GetSurveyAnswerResultAsync(int surveyResultId);
         Task<SurveyStatisticDto> GetSurveyStatisticAsync(int surveyId);
         Task<List<SurveyResultDto>> GetUserSurveyResultAsync(int surveyId, string userId);
+        Task<SurveyResultDto> GetUserSurveyResultNewestAsync(int surveyId, string userId);
     }
 }

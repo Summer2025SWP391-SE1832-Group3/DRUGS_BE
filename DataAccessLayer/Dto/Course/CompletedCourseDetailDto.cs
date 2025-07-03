@@ -14,11 +14,10 @@ namespace DataAccessLayer.Dto.Course
         public string Title { get; set; }
         public string? Description { get; set; }
         public CourseTopic Topic { get; set; }
-        public IEnumerable<LessonDto> Lessons { get; set; }
-        public SurveyViewDto FinalExamSurvey { get; set; }
-        public double Progress { get; set; }         
-        public DateTime? CompletedDate { get; set; }  
-        public double? FinalScore { get; set; }      
-        public string? CertificateUrl { get; set; }  
+        public IEnumerable<LessonDto> Lessons { get; set; } 
+        public double FinalScore { get; set; }  
+        public string CertificateUrl { get; set; }  
+        public DateTime? CompletedDate { get; set; }
+        public SurveyResultDto FinalSurveyResult { get; set; } 
     }
 }

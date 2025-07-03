@@ -45,7 +45,6 @@ namespace DataAccessLayer.Repository
         public async Task<Lesson?> GetByIdAsync(int id)
         {   
             return await _context.Lessons
-                            .Include(l=>l.LessonProgresses)
                             .FirstOrDefaultAsync(l=>l.Id==id);
         }
 

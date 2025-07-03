@@ -58,6 +58,7 @@ namespace BusinessLayer.Helpers
             CreateMap<CourseUpdateDto, Course>();
             CreateMap<Course, CourseListDto>();
 
+            CreateMap<Lesson, LessonViewDto>();
             CreateMap<Lesson, LessonDto>();
             CreateMap<LessonCreateDto,Lesson>();
             CreateMap<LessonUpdateDto, Lesson>();
