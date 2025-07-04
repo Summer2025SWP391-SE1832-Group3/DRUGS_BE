@@ -45,7 +45,7 @@ namespace SWP391_Project.Controllers
 
 
         [HttpGet("Detail/{courseId:int}")]
-        [Authorize(Roles = "Member")]
+        [Authorize(Roles = "Member,Manager,Staff")]
         public async Task<IActionResult> GetCourseDetailById(int courseId)
         {
             var role = User.FindFirstValue(ClaimTypes.Role);
@@ -238,5 +238,13 @@ namespace SWP391_Project.Controllers
 
             return Ok(courses);
         }
+        [HttpGet("courses_without_survey")]
+        [Authorize(Roles = "Manager")]
+        public async Task<IActionResult> GetCoursesWithoutSurveyOrInactiveSurvey()
+        {
+            var courses = await _courseService.GetCoursesWithoutSurveyOrInactiveSurveyAsync();
+            return Ok(courses);
+        }
+
     }
 }

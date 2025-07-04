@@ -353,6 +353,14 @@ namespace BusinessLayer.Service
                 FinalSurveyResult = lastSurveyResult
             };
         }
+        public async Task<IEnumerable<CourseListDto>> GetCoursesWithoutSurveyOrInactiveSurveyAsync()
+        {
+            var courses = await _courseRepository.GetAllAsync();
+            var coursesWithoutSurveyOrInactiveSurvey = courses.Where(c =>c.FinalExamSurvey == null || (c.FinalExamSurvey != null && !c.FinalExamSurvey.IsActive)
+            ).ToList();
 
-            }
+            return _mapper.Map<IEnumerable<CourseListDto>>(coursesWithoutSurveyOrInactiveSurvey);
         }
+
+    }
+}
