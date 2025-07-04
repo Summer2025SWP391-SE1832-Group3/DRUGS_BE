@@ -40,5 +40,6 @@ namespace BusinessLayer.IService
 
         //getdetailCompleteCourse
         Task<CompletedCourseDetailDto> GetCompletedCourseDetailAsync(int courseId, string userId);
+        Task<IEnumerable<CourseListDto>> GetCoursesWithoutSurveyOrInactiveSurveyAsync();
     }
 }
