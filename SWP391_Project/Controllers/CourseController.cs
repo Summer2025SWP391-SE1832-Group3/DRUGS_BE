@@ -239,7 +239,7 @@ namespace SWP391_Project.Controllers
             return Ok(courses);
         }
         [HttpGet("courses_without_survey")]
-        [Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Manager,Staff")]
         public async Task<IActionResult> GetCoursesWithoutSurveyOrInactiveSurvey()
         {
             var courses = await _courseService.GetCoursesWithoutSurveyOrInactiveSurveyAsync();
