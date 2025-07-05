@@ -30,12 +30,12 @@ namespace BusinessLayer.Service
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub,user.Id),
-                new Claim(JwtRegisteredClaimNames.Email,user.Email),
+                new Claim(JwtRegisteredClaimNames.Email,user.Email?? ""),
                 new Claim(JwtRegisteredClaimNames.GivenName,user.UserName),
-                new Claim("FullName",user.FullName),
-                new Claim("Phone",user.PhoneNumber),
-                new Claim(JwtRegisteredClaimNames.Gender,user.Gender),
-                new Claim(JwtRegisteredClaimNames.Birthdate,user.DateOfBirth.ToString()),
+                new Claim("FullName",user.FullName ?? ""),
+                new Claim("Phone",user.PhoneNumber ?? ""),
+                new Claim(JwtRegisteredClaimNames.Gender,user.Gender ?? ""),
+                new Claim(JwtRegisteredClaimNames.Birthdate,user.DateOfBirth.ToString()??""),
             };
 
             var userRoles = await _userManager.GetRolesAsync(user);

@@ -115,5 +115,50 @@ namespace DataAccessLayer.Repository
                .Include(b => b.BlogImages)
                .FirstOrDefaultAsync(b => b.BlogId == id);
         }
+
+        public async Task<List<Blog>> GetByUserIdAsync(string userId)
+        {
+            return await _context.Blogs
+                 .Where(b => b.PostedById.Equals(userId))
+                 .Include(b=>b.PostedBy)
+                 .Include(b => b.BlogImages)
+                 .OrderByDescending(b => b.PostedAt)
+                 .ToListAsync();
+        }
+
+        public async Task<List<Blog>> GetBlogByStatus(BlogStatus blogStatus)
+        {
+            return await _context.Blogs
+                .Where(b=>b.Status==blogStatus)
+                .Include(b => b.PostedBy)
+                .Include(b => b.BlogImages)
+                .OrderByDescending(b => b.PostedAt)
+                .ToListAsync(); ;
+        }
+
+        public async Task<List<Blog>> SearchAsync(string search, string? userId, string? status)
+        {
+            var query = _context.Blogs.AsQueryable();
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(b => b.Title.Contains(search));
+            }
+            if(!string.IsNullOrEmpty(userId))
+            {
+                query = query.Where(b => b.PostedById == userId);
+            }
+            if (!string.IsNullOrEmpty(status))
+            {
+                if(Enum.TryParse(status,true, out BlogStatus blogStatus))
+                {
+                    query = query.Where(b => b.Status == blogStatus);
+                }
+                else return new List<Blog>();
+            }
+            return await query.Include(b => b.PostedBy)
+                        .Include(b => b.BlogImages)
+                        .OrderByDescending(b => b.PostedAt)
+                        .ToListAsync();
+        }
     }
 }

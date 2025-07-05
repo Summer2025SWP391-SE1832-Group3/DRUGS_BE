@@ -23,8 +23,28 @@ namespace DataAccessLayer.Repository
             _signInManager = signInManager;
             _roleManager = roleManager;
         }
+        public async Task<IdentityResult> CreateAsync(CreateAccountDto model, string role)
+        {
+            if (string.IsNullOrEmpty(model.UserName)||string.IsNullOrEmpty(model.Password))
+            {
+                return IdentityResult.Failed(new IdentityError { Description = "Some fields are empty." });
+            }
+            var user = new ApplicationUser
+            {
+                UserName = model.UserName,
+                CreatedAt = DateTime.Now,
+                IsActive=true,
+            };
+            var result = await _userManager.CreateAsync(user, model.Password);
+            if (!result.Succeeded)
+            {
+                return IdentityResult.Failed(result.Errors.ToArray());
+            }
+            await _userManager.AddToRoleAsync(user, role);
+            return result;
+        }
 
-        public async Task<IdentityResult> CreateUserAsyn(RegisterDto model,string currentUserId, string role)
+        public async Task<IdentityResult> RegisterAsync(RegisterDto model,string currentUserId, string role)
         {
             // Log toàn bộ dữ liệu đầu vào
             Console.WriteLine($"[DEBUG] RegisterDto: UserName={model.UserName}, Email={model.Email}, FullName={model.FullName}, Password={model.Password}, DateOfBirth={model.DateOfBirth}, Gender={model.Gender}, PhoneNumber={model.PhoneNumber}");
@@ -45,6 +65,7 @@ namespace DataAccessLayer.Repository
                 Gender = model.Gender,
                 CreatedAt = DateTime.Now,
                 PhoneNumber = model.PhoneNumber,
+                IsActive = true,
             };
             
             try
@@ -143,6 +164,11 @@ namespace DataAccessLayer.Repository
         {
             return await _userManager.CheckPasswordAsync(user, password);
         }
+        public async Task<IdentityResult> UpdateUserAsync(ApplicationUser user)
+        {
+            return await _userManager.UpdateAsync(user);  
+        }
+
 
         // --- ADMIN MANAGEMENT METHODS ---
         public async Task<IdentityResult> AdminUpdateUserAsync(string userId, RegisterDto updateDto, string? newRole = null)
@@ -197,5 +223,7 @@ namespace DataAccessLayer.Repository
             }
             return users;
         }
+
+
     }
 }

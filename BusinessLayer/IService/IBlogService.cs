@@ -16,11 +16,20 @@ namespace BusinessLayer.IService
 
 
         Task<BlogViewDto> GetByIdAsync(int id);
-        Task<bool> UpdateAsync(BlogUpdateDto dto, string staffId,bool isManager);
+        Task<bool> UpdateAsync(int blogId,BlogUpdateDto dto, string staffId,bool isManager);
 
         Task<bool> DeleteAsync(int blogId,string staffId,bool isManager);
 
         Task<bool> ApproveAsync(int blogId,string managerId);
         Task<bool> RejectAsync(int blogId, string managerId);
+
+        Task AddBlogImageAsync(BlogImage blogImage);
+        Task<List<BlogImage>> GetImagesByBlogIdAsync(int blogId);
+
+        Task DeleteBLogImage(int blogImageId);
+        Task<List<BlogViewDto>> GetBlogByUserIdAsync(string userId);
+        Task<List<BlogViewDto>> GetBlogByStatus(string status);
+        Task<List<BlogViewDto>> SearchBlogByTitle(string search, string userId, string status);
+
     }
 }

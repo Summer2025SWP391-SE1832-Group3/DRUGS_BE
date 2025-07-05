@@ -1,9 +1,11 @@
+using AutoMapper;
 using BusinessLayer.IService;
 using DataAccessLayer.Dto.Account;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
 using DataAccessLayer.Repository;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -18,24 +20,30 @@ namespace BusinessLayer.Service
         private readonly IUserRepository _userRepository;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ITokenService _tokenService;
         private readonly IEmailService _emailService;
         private readonly ILogger<UserService> _logger;
+        private readonly IMapper _mapper;
 
         public UserService(
             IUserRepository userRepository,
             SignInManager<ApplicationUser> signInManager,
             UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager,
             ITokenService tokenService,
+            IMapper mapper,
             IEmailService emailService,
             ILogger<UserService> logger)
         {
             _userRepository = userRepository;
             _signInManager = signInManager;
             _userManager = userManager;
+            _roleManager = roleManager;
             _tokenService = tokenService;
             _emailService = emailService;
             _logger = logger;
+            _mapper = mapper;
         }
 
         public async Task<string?> LoginAsync(LoginDto loginDto)
@@ -45,37 +53,28 @@ namespace BusinessLayer.Service
             if (user == null)
             {
                 _logger.LogWarning("Login failed: User not found - {UserName}", loginDto.UserName);
-                return null;
+                return "Invalid username";
             }
             var validPassword = await _userRepository.CheckPassword(user, loginDto.Password);
             if (!validPassword)
             {
                 _logger.LogWarning("Login failed: Invalid password for user - {UserName}", loginDto.UserName);
-                return null;
+                return "Invalid password";
+            }
+            if (!user.IsActive)
+            {
+                _logger.LogWarning("Login failed: Inactive account for user - {UserName}", loginDto.UserName);
+                return "Account is inactive"; 
             }
             _logger.LogInformation("Login successful for user: {UserName}", loginDto.UserName);
             return await _tokenService.CreateToken(user);
         }
 
-        public async Task<IdentityResult> RegisterAsync(RegisterDto registerDto, string? role, string defaultRole)
+        public async Task<IdentityResult> CreateAccountAsync(CreateAccountDto res, string role)
         {
-            _logger.LogInformation("Attempting to register new user: {Email}", registerDto.Email);
-            
-            var existingEmail = await _userManager.FindByEmailAsync(registerDto.Email);
-            if (existingEmail != null)
-            {
-                _logger.LogWarning("Registration failed: Email already exists - {Email}", registerDto.Email);
-                return IdentityResult.Failed(new IdentityError
-                {
-                    Code = "EmailAlreadyExists",
-                    Description = "Email is already taken"
-                });
-            }
-
-            var existingUserName = await _userManager.FindByNameAsync(registerDto.UserName);
+            var existingUserName = await _userManager.FindByNameAsync(res.UserName);
             if (existingUserName != null)
             {
-                _logger.LogWarning("Registration failed: Username already exists - {UserName}", registerDto.UserName);
                 return IdentityResult.Failed(new IdentityError
                 {
                     Code = "UserNameAlreadyExists",
@@ -83,18 +82,57 @@ namespace BusinessLayer.Service
                 });
             }
 
-            var result = await _userRepository.CreateUserAsyn(registerDto, role, defaultRole);
-            if (result.Succeeded)
+            var result = await _userRepository.CreateAsync(res, role);
+            return result; ;
+        }
+        public async Task<IdentityResult> RegisterAsync(RegisterDto res, string currentUserId, string role = "Member")
+        {
+            var existingEmail = await _userManager.FindByEmailAsync(res.Email);
+            if (existingEmail != null)
             {
-                _logger.LogInformation("User registered successfully: {Email}", registerDto.Email);
+                return IdentityResult.Failed(new IdentityError
+                {
+                    Code = "EmailAlreadyExists",
+                    Description = "Email is already taken"
+                });
             }
-            else
+
+            var existingUserName = await _userManager.FindByNameAsync(res.UserName);
+            if (existingUserName != null)
             {
-                _logger.LogError("Registration failed for user {Email}: {Errors}", 
-                    registerDto.Email, 
-                    string.Join(", ", result.Errors.Select(e => e.Description)));
+                return IdentityResult.Failed(new IdentityError
+                {
+                    Code = "UserNameAlreadyExists",
+                    Description = "UserName is already taken"
+                });
             }
+
+            var result = await _userRepository.RegisterAsync(res, currentUserId, role);
             return result;
+        }
+        public async Task<IdentityResult> DeactivateUserAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return IdentityResult.Failed(new IdentityError { Description = "User not found" });
+            }
+
+            user.IsActive = false;
+            return await _userRepository.UpdateUserAsync(user);
+        }
+
+        
+        public async Task<IdentityResult> ActivateUserAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return IdentityResult.Failed(new IdentityError { Description = "User not found" });
+            }
+
+            user.IsActive = true;
+            return await _userRepository.UpdateUserAsync(user);
         }
 
         public async Task<IdentityResult> AdminDeleteUserAsync(string userId)
@@ -107,17 +145,24 @@ namespace BusinessLayer.Service
                 _logger.LogWarning("Delete failed: User not found - {UserId}", userId);
                 return IdentityResult.Failed(new IdentityError { Description = "User not found" });
             }
-
-            var result = await _userManager.DeleteAsync(user);
-            if (result.Succeeded)
+            else
             {
-                _logger.LogInformation("User deleted successfully: {UserId}", userId);
+                _logger.LogInformation("User found: {UserId}", userId);
+            }
+            var result = await _userManager.DeleteAsync(user);
+            if (result == null)
+            {
+                _logger.LogError("DeleteAsync returned null for user {UserId}", userId);
+            }
+            else if (!result.Succeeded)
+            {
+                _logger.LogError("Delete failed for user {UserId}: {Errors}",
+                    userId,
+                    string.Join(", ", result.Errors.Select(e => e.Description)));
             }
             else
             {
-                _logger.LogError("Delete failed for user {UserId}: {Errors}", 
-                    userId, 
-                    string.Join(", ", result.Errors.Select(e => e.Description)));
+                _logger.LogInformation("User deleted successfully: {UserId}", userId);
             }
             return result;
         }
@@ -189,7 +234,7 @@ namespace BusinessLayer.Service
                 user.UserName = dto.UserName;
                 user.NormalizedUserName = _userManager.NormalizeName(dto.UserName);
             }
-
+            user.Email = dto.Email;
             user.FullName = dto.FullName;
             user.PhoneNumber = dto.PhoneNumber;
             user.DateOfBirth = dto.DateOfBirth;
@@ -285,6 +330,96 @@ namespace BusinessLayer.Service
                     string.Join(", ", result.Errors.Select(e => e.Description)));
             }
             return result;
+        }
+
+        public async Task<List<AccountViewDto>> GetAllNonAdminAccountsAsync(string status)
+        {
+            var users = _userManager.Users.AsQueryable();
+            if (status.ToLower() == "active")
+            {
+                users = users.Where(u => u.IsActive);
+            }
+            else if (status.ToLower() == "inactive")
+            {
+                users = users.Where(u => !u.IsActive); 
+            }
+            var userList = await users.ToListAsync();
+            var result = new List<AccountViewDto>();
+
+            foreach (var user in userList)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                var role = roles.FirstOrDefault();
+                if (role != "Admin")
+                {
+                    var dto = _mapper.Map<AccountViewDto>(user);
+                    dto.Role = role;
+                    result.Add(dto);
+                }
+            }
+
+            return result.OrderBy(r=>r.Role).ThenBy(r=>r.UserName).ToList();
+        }
+
+        public async Task<IdentityResult> UpdateUserPasswordAsync(string userId, string newPassword)
+        {
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning("Update failed: User not found - {UserId}", userId);
+                return IdentityResult.Failed(new IdentityError { Description = "User not found" });
+            }
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var resetResult = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
+            if (resetResult.Succeeded)
+            {
+                _logger.LogInformation("Password updated successfully for user: {UserId}", userId);
+            }
+            else
+            {
+                _logger.LogError("Password update failed for user {UserId}: {Errors}", userId, string.Join(", ", resetResult.Errors.Select(e => e.Description)));
+            }
+
+            return resetResult;
+        }
+
+        public async Task<IdentityResult> UpdateUserRoleAsync(string userId, string newRole)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning("Update failed: User not found - {UserId}", userId);
+                return IdentityResult.Failed(new IdentityError { Description = "User not found" });
+            }
+            var roleExists = await _roleManager.RoleExistsAsync(newRole);
+            if (!roleExists)
+            {
+                _logger.LogWarning("Update failed: Role does not exist - {RoleName}", newRole);
+                return IdentityResult.Failed(new IdentityError { Description = "Role does not exist" });
+            }
+            var currentRoles = await _userManager.GetRolesAsync(user);
+            if (currentRoles.Contains(newRole))
+            {
+                return IdentityResult.Success;  
+            }
+            var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+            if (!removeResult.Succeeded)
+            {
+                return IdentityResult.Failed(new IdentityError { Description = "Failed to remove old roles" });
+            }
+
+            var addResult = await _userManager.AddToRoleAsync(user, newRole);
+            if (addResult.Succeeded)
+            {
+                _logger.LogInformation("Role updated successfully for user: {UserId}, new role: {RoleName}", userId, newRole);
+            }
+            else
+            {
+                _logger.LogError("Failed to add new role for user: {UserId}, role: {RoleName}", userId, newRole);
+            }
+
+            return addResult;
         }
     }
 } 

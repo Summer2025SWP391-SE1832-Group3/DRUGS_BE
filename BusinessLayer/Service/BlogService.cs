@@ -3,6 +3,7 @@ using BusinessLayer.IService;
 using DataAccessLayer.Dto.BlogPost;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
+using DataAccessLayer.Repository;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,11 +15,13 @@ namespace BusinessLayer.Service
     public class BlogService : IBlogService
     {
         private readonly IBlogRepository _blogRepository;
+        private readonly IBlogImageRepository _blogImageRepository;
         private readonly IMapper _mapper;
 
-        public BlogService(IBlogRepository blogRepository,IMapper mapper)
+        public BlogService(IBlogRepository blogRepository,IMapper mapper,IBlogImageRepository blogImageRepository)
         {
             _blogRepository = blogRepository;
+            _blogImageRepository = blogImageRepository;
             _mapper = mapper;
         }
 
@@ -69,20 +72,17 @@ namespace BusinessLayer.Service
             }
             return _mapper.Map<BlogViewDto>(blog);
         }
-        public async Task<bool> UpdateAsync(BlogUpdateDto dto, string staffId,bool isManager)
+        public async Task<bool> UpdateAsync(int blogId,BlogUpdateDto dto, string staffId,bool isManager)
         {
-            var blog = await _blogRepository.GetByIdAsync(dto.BlogId);
+            var blog = await _blogRepository.GetByIdAsync(blogId);
             if (blog == null || (blog.PostedById != staffId && !isManager))
             {
                 return false;
             }
-            Blog log = new Blog
-            {
-                
-                Content = dto.Content,
-                Category = dto.Category,
-                Title = dto.Title,
-            };
+            blog.Content = dto.Content;
+            blog.Category = dto.Category;
+            blog.Title = dto.Title;
+          
             return await _blogRepository.UpdateAsync(blog);
         }
 
@@ -95,5 +95,52 @@ namespace BusinessLayer.Service
             return await _blogRepository.ApproveAsync(blogId, managerId);
         }
 
+        public async Task AddBlogImageAsync(BlogImage blogImage)
+        {
+           await _blogImageRepository.AddAsync(blogImage);
+        }
+
+        public async Task<List<BlogImage>> GetImagesByBlogIdAsync(int blogId)
+        {
+            return await _blogImageRepository.GetByBlogIdAsync(blogId);
+        }
+
+        public async Task DeleteBLogImage(int blogImageId)
+        {
+           await _blogImageRepository.DeleteAsync(blogImageId);
+        }
+
+        public async Task<List<BlogViewDto>> GetBlogByUserIdAsync(string userId)
+        {
+
+            var blogs = await _blogRepository.GetByUserIdAsync(userId);
+            return _mapper.Map<List<BlogViewDto>>(blogs);
+        }
+
+        public async Task<List<BlogViewDto>> GetBlogByStatus(string status)
+        {
+            BlogStatus blogStatus;
+            if(!Enum.TryParse(status,true,out blogStatus))
+            {
+                return null;
+            }
+            var blogs= await _blogRepository.GetBlogByStatus(blogStatus);
+            if(blogs == null || blogs.Count == 0)
+            {
+                return new List<BlogViewDto>();
+            }
+            return _mapper.Map<List<BlogViewDto>>(blogs);
+        }
+
+        public async Task<List<BlogViewDto>> SearchBlogByTitle(string search, string? userId=null, string? status=null)
+        {
+            var blogs =await _blogRepository.SearchAsync(search, userId, status);
+            if(blogs==null || blogs.Count == 0)
+            {
+                return new List<BlogViewDto>();
+
+            }
+            return  _mapper.Map<List<BlogViewDto>>(blogs);
+        }
     }
 }

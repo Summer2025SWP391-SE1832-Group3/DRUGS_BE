@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SWP391_Project.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateConsultantWorkingHourAndConsultationReview : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,27 +16,37 @@ namespace SWP391_Project.Migrations
             migrationBuilder.DeleteData(
                 table: "AspNetRoles",
                 keyColumn: "Id",
-                keyValue: "13196a02-f972-47ae-a6b8-b27fc9e4b299");
+                keyValue: "1427982a-831d-4ff0-a373-9bed24b4937a");
 
             migrationBuilder.DeleteData(
                 table: "AspNetRoles",
                 keyColumn: "Id",
-                keyValue: "4fc827df-84e6-4c78-9d0e-f77bc173fac6");
+                keyValue: "1d81ba52-27b6-48e4-824d-8c722939c77e");
 
             migrationBuilder.DeleteData(
                 table: "AspNetRoles",
                 keyColumn: "Id",
-                keyValue: "65108aac-5308-4ae0-97be-d26addecbf38");
+                keyValue: "7d492a82-2ce8-4014-8b03-a727746c9bcf");
 
             migrationBuilder.DeleteData(
                 table: "AspNetRoles",
                 keyColumn: "Id",
-                keyValue: "c3eaca59-7862-4386-a4c3-6bedb60c5497");
+                keyValue: "bd5b8ab9-496c-44ed-8816-81ee0ea10a6d");
 
             migrationBuilder.DeleteData(
                 table: "AspNetRoles",
                 keyColumn: "Id",
-                keyValue: "fb80e183-c9ff-4f92-a291-2db61db93cd1");
+                keyValue: "c574416b-b4c6-4150-bc22-a8eaf0232795");
+
+            migrationBuilder.DropColumn(
+                name: "GoogleMeetLink",
+                table: "ConsultationRequests");
+
+            migrationBuilder.AddColumn<string>(
+                name: "GoogleMeetLink",
+                table: "ConsultationSessions",
+                type: "nvarchar(max)",
+                nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ApplicationUserId",
@@ -75,6 +85,18 @@ namespace SWP391_Project.Migrations
                 table: "ConsultantWorkingHours",
                 type: "datetime2",
                 nullable: true);
+
+            migrationBuilder.InsertData(
+                table: "AspNetRoles",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[,]
+                {
+                    { "0d86e815-eff1-4291-ba7d-f1188de9e65d", null, "Member", "MEMBER" },
+                    { "2c3a35c8-1d5c-4be1-a968-ee99421608a4", null, "Manager", "MANAGER" },
+                    { "9aff5d26-3499-454d-b896-c2009d2431bd", null, "Consultant", "CONSULTANT" },
+                    { "b9248aed-e127-4044-92f0-fea89b173487", null, "Staff", "STAFF" },
+                    { "dbe16734-3ec5-44ec-af79-74aa1d972e10", null, "Admin", "ADMIN" }
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ConsultantWorkingHours_ApplicationUserId",
@@ -121,6 +143,35 @@ namespace SWP391_Project.Migrations
                 name: "IX_ConsultantWorkingHours_ConsultationRequestId",
                 table: "ConsultantWorkingHours");
 
+            migrationBuilder.DeleteData(
+                table: "AspNetRoles",
+                keyColumn: "Id",
+                keyValue: "0d86e815-eff1-4291-ba7d-f1188de9e65d");
+
+            migrationBuilder.DeleteData(
+                table: "AspNetRoles",
+                keyColumn: "Id",
+                keyValue: "2c3a35c8-1d5c-4be1-a968-ee99421608a4");
+
+            migrationBuilder.DeleteData(
+                table: "AspNetRoles",
+                keyColumn: "Id",
+                keyValue: "9aff5d26-3499-454d-b896-c2009d2431bd");
+
+            migrationBuilder.DeleteData(
+                table: "AspNetRoles",
+                keyColumn: "Id",
+                keyValue: "b9248aed-e127-4044-92f0-fea89b173487");
+
+            migrationBuilder.DeleteData(
+                table: "AspNetRoles",
+                keyColumn: "Id",
+                keyValue: "dbe16734-3ec5-44ec-af79-74aa1d972e10");
+
+            migrationBuilder.DropColumn(
+                name: "GoogleMeetLink",
+                table: "ConsultationSessions");
+
             migrationBuilder.DropColumn(
                 name: "ApplicationUserId",
                 table: "ConsultantWorkingHours");
@@ -145,16 +196,22 @@ namespace SWP391_Project.Migrations
                 name: "UpdatedAt",
                 table: "ConsultantWorkingHours");
 
+            migrationBuilder.AddColumn<string>(
+                name: "GoogleMeetLink",
+                table: "ConsultationRequests",
+                type: "nvarchar(max)",
+                nullable: true);
+
             migrationBuilder.InsertData(
                 table: "AspNetRoles",
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "13196a02-f972-47ae-a6b8-b27fc9e4b299", null, "Staff", "STAFF" },
-                    { "4fc827df-84e6-4c78-9d0e-f77bc173fac6", null, "Admin", "ADMIN" },
-                    { "65108aac-5308-4ae0-97be-d26addecbf38", null, "Manager", "MANAGER" },
-                    { "c3eaca59-7862-4386-a4c3-6bedb60c5497", null, "Consultant", "CONSULTANT" },
-                    { "fb80e183-c9ff-4f92-a291-2db61db93cd1", null, "Member", "MEMBER" }
+                    { "1427982a-831d-4ff0-a373-9bed24b4937a", null, "Member", "MEMBER" },
+                    { "1d81ba52-27b6-48e4-824d-8c722939c77e", null, "Consultant", "CONSULTANT" },
+                    { "7d492a82-2ce8-4014-8b03-a727746c9bcf", null, "Staff", "STAFF" },
+                    { "bd5b8ab9-496c-44ed-8816-81ee0ea10a6d", null, "Manager", "MANAGER" },
+                    { "c574416b-b4c6-4150-bc22-a8eaf0232795", null, "Admin", "ADMIN" }
                 });
         }
     }

@@ -54,7 +54,7 @@ namespace SWP391_Project.Controllers
 
         [HttpPost("admin/createAccount")]
         [Authorize(Roles ="Admin")]
-        public async Task<IActionResult> CreateAccount([FromBody]RegisterDto dto,[FromQuery]string role)
+        public async Task<IActionResult> CreateAccount([FromBody]CreateAccountDto dto,[FromQuery]string role)
         {
             try
             {
@@ -79,21 +79,14 @@ namespace SWP391_Project.Controllers
                     _logger.LogWarning("Invalid role requested: {Role}", role);
                     return BadRequest("Invalid role!!");
                 }
-                
-                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                _logger.LogInformation("Creating account with currentUserId: {CurrentUserId}, Role: {Role}", currentUserId, role);
-                
-                var result = await _userService.RegisterAsync(dto, currentUserId, role);
+                var result = await _userService.CreateAccountAsync(dto, role);
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("Account created successfully: {UserName}, Role: {Role}", dto.UserName, role);
-                    return Ok(
-                        new NewUserDto
-                        {
-                            UserName = dto.UserName,
-                            Email = dto.Email,
-                        }
-                    );
+                    return Ok(new
+                    {
+                        UserName = dto.UserName,
+                        Role = role
+                    });
                 }
                 
                 if (result.Errors.Any())
@@ -121,16 +114,26 @@ namespace SWP391_Project.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-                var token = await _userService.LoginAsync(loginDto);
-                if (token == null)
+                var result = await _userService.LoginAsync(loginDto);
+
+                if (result == "Invalid username")
                 {
-                    return Unauthorized("Invalid username or password");
+                    return Unauthorized(new { Message = "Invalid username" });
                 }
+                if (result == "Invalid password")
+                {
+                    return Unauthorized(new { Message = "Invalid password" });
+                }
+                if (result == "Account is inactive")
+                {
+                    return Unauthorized(new { Message = "Account is inactive" });
+                }
+
                 return Ok(
                     new NewUserDto
                     {
-                        UserName=loginDto.UserName,
-                        Token=token,
+                        UserName = loginDto.UserName,
+                        Token = result,
                     }
                 );
             }
@@ -141,6 +144,21 @@ namespace SWP391_Project.Controllers
             }
         }
 
+        [HttpGet("admin/all-account")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllNonAdminAccounts([FromQuery] string status = "")
+        {
+            try
+            {
+                var accounts = await _userService.GetAllNonAdminAccountsAsync(status);
+                return Ok(accounts);    
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while retrieving accounts.");
+            }
+        }
+
         // --- ADMIN ACCOUNT MANAGEMENT ---
         [HttpPut("admin/update/{userId}")]
         [Authorize(Roles = "Admin")]
@@ -148,25 +166,68 @@ namespace SWP391_Project.Controllers
         public async Task<IActionResult> AdminUpdate(string userId, [FromBody] RegisterDto dto, [FromQuery] string? newRole)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-       
+
             var profileDto = new UserProfileUpdateDto
             {
+                UserName = dto.UserName,
+                Email = dto.Email,
                 FullName = dto.FullName,
                 PhoneNumber = dto.PhoneNumber,
                 DateOfBirth = dto.DateOfBirth,
                 Gender = dto.Gender
             };
 
-            
             var result = await _userService.UpdateUserProfileAsync(userId, profileDto);
             if (!result.Succeeded) return StatusCode(500, result.Errors);
 
+            var passwordResult = await _userService.UpdateUserPasswordAsync(userId, dto.Password);
+            if (!passwordResult.Succeeded) return StatusCode(500, passwordResult.Errors);
             if (!string.IsNullOrEmpty(newRole))
             {
-
+                var roleResult = await _userService.UpdateUserRoleAsync(userId, newRole);
+                if (!roleResult.Succeeded) return StatusCode(500, roleResult.Errors);
             }
-
             return Ok(new { message = "User updated successfully" });
+        }
+        [HttpPost("deactivate/{userId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeactivateUser(string userId)
+        {
+            try
+            {
+                var result = await _userService.DeactivateUserAsync(userId);
+
+                if (result.Succeeded)
+                {
+                    return Ok(new { Message = "Account deactivated successfully." });
+                }
+
+                return StatusCode(500, new { Message = "Failed to deactivate user.", Errors = result.Errors });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred during user deactivation");
+            }
+        }
+
+        [HttpPost("activate/{userId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ActivateUser(string userId)
+        {
+            try
+            {
+                var result = await _userService.ActivateUserAsync(userId);
+                if (result.Succeeded)
+                {
+                    return Ok(new { Message = "User account activated successfully." });
+                }
+                return StatusCode(500, new { Message = "Failed to activate user.", Errors = result.Errors });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during user activation");
+                return StatusCode(500, "An error occurred during user activation");
+            }
         }
 
         [HttpDelete("admin/delete/{userId}")]

@@ -25,7 +25,7 @@ namespace DataAccessLayer.Model
         public DateTime PostedAt { get; set; }
         public DateTime? ApprovedAt { get; set; }
         [Required, MaxLength(20)]
-        public BlogStatus Status { get; set; } = BlogStatus.Pending;
+        public BlogStatus Status { get; set; }
         [Required]
         public string PostedById { get; set; }
         public ApplicationUser PostedBy { get; set; }

@@ -17,6 +17,7 @@ namespace DataAccessLayer.Dto.BlogPost
         public string Content { get; set; }
         [MaxLength(100)]
         public DateTime PostedAt { get; set; }
+        public string? Category { get; set; }
         public string PostedBy { get; set; }
         public BlogStatus Status { get; set; }
         public List<CommentViewDto> Comments { get; set; }
