@@ -475,5 +475,107 @@ namespace SWP391_Project.Controllers
                 return StatusCode(500, new { message = "An error occurred while searching consultation requests" });
             }
         }
+
+        // Pagination endpoints
+        [HttpGet("requests/my/paginated")]
+        [Authorize]
+        public async Task<ActionResult> GetPaginatedMyConsultationRequests(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] ConsultationStatus? status = null)
+        {
+            try
+            {
+                if (page < 1) page = 1;
+                if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var result = await _consultationService.GetPaginatedMyConsultationRequestsAsync(userId, page, pageSize, status);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving paginated my consultation requests");
+                return StatusCode(500, new { message = "An error occurred while retrieving consultation requests" });
+            }
+        }
+
+        [HttpGet("requests/consultant/paginated")]
+        [Authorize(Roles = "Consultant")]
+        public async Task<ActionResult> GetPaginatedConsultationRequestsForConsultant(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] ConsultationStatus? status = null)
+        {
+            try
+            {
+                if (page < 1) page = 1;
+                if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+                var consultantId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var result = await _consultationService.GetPaginatedConsultationRequestsForConsultantAsync(consultantId, page, pageSize, status);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving paginated consultation requests for consultant");
+                return StatusCode(500, new { message = "An error occurred while retrieving consultation requests" });
+            }
+        }
+
+        [HttpGet("requests/paginated")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> GetPaginatedAllConsultationRequests(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? userId = null,
+            [FromQuery] string? consultantId = null,
+            [FromQuery] ConsultationStatus? status = null,
+            [FromQuery] DateTime? fromDate = null,
+            [FromQuery] DateTime? toDate = null)
+        {
+            try
+            {
+                if (page < 1) page = 1;
+                if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var result = await _consultationService.GetPaginatedAllConsultationRequestsAsync(
+                    currentUserId, page, pageSize, userId, consultantId, status, fromDate, toDate);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning("Unauthorized access to paginated consultation requests: {Message}", ex.Message);
+                return Forbid();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving paginated all consultation requests");
+                return StatusCode(500, new { message = "An error occurred while retrieving consultation requests" });
+            }
+        }
+
+        [HttpGet("consultants/{consultantId}/reviews/paginated")]
+        [Authorize(Roles = "Consultant")]
+        public async Task<ActionResult> GetPaginatedConsultantReviews(
+            string consultantId,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                if (page < 1) page = 1;
+                if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+                var result = await _consultationService.GetPaginatedConsultantReviewsAsync(consultantId, page, pageSize);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving paginated consultant reviews for consultant {ConsultantId}", consultantId);
+                return StatusCode(500, new { message = "An error occurred while retrieving consultant reviews" });
+            }
+        }
     }
 } 

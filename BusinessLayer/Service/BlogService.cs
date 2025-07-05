@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BusinessLayer.IService;
+using BusinessLayer.Dto.Common;
 using DataAccessLayer.Dto.BlogPost;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
@@ -141,6 +142,120 @@ namespace BusinessLayer.Service
 
             }
             return  _mapper.Map<List<BlogViewDto>>(blogs);
+        }
+
+        public async Task<PaginatedResult<BlogViewDto>> GetPaginatedBlogsAsync(int page, int pageSize, string? status = null, string? searchTerm = null)
+        {
+            var query = await _blogRepository.GetAllAsync();
+            var blogs = query.AsQueryable();
+
+            // Apply status filter
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                if (Enum.TryParse<BlogStatus>(status, true, out var blogStatus))
+                {
+                    blogs = blogs.Where(b => b.Status == blogStatus);
+                }
+            }
+
+            // Apply search filter
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                blogs = blogs.Where(b => 
+                    b.Title.Contains(searchTerm) || 
+                    b.Content.Contains(searchTerm) || 
+                    b.Category.Contains(searchTerm));
+            }
+
+            var totalCount = blogs.Count();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            page = Math.Max(1, Math.Min(page, totalPages));
+
+            var paginatedBlogs = blogs
+                .OrderByDescending(b => b.PostedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var result = _mapper.Map<List<BlogViewDto>>(paginatedBlogs);
+
+            return new PaginatedResult<BlogViewDto>
+            {
+                Items = result,
+                TotalCount = totalCount,
+                CurrentPage = page,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<PaginatedResult<BlogViewDto>> GetPaginatedApprovedBlogsAsync(int page, int pageSize, string? searchTerm = null)
+        {
+            var approvedBlogs = await _blogRepository.GetAllApprovedAsync();
+            var blogs = approvedBlogs.AsQueryable();
+
+            // Apply search filter
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                blogs = blogs.Where(b => 
+                    b.Title.Contains(searchTerm) || 
+                    b.Content.Contains(searchTerm) || 
+                    b.Category.Contains(searchTerm));
+            }
+
+            var totalCount = blogs.Count();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            page = Math.Max(1, Math.Min(page, totalPages));
+
+            var paginatedBlogs = blogs
+                .OrderByDescending(b => b.PostedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var result = _mapper.Map<List<BlogViewDto>>(paginatedBlogs);
+
+            return new PaginatedResult<BlogViewDto>
+            {
+                Items = result,
+                TotalCount = totalCount,
+                CurrentPage = page,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<PaginatedResult<BlogViewDto>> GetPaginatedBlogsByUserAsync(string userId, int page, int pageSize, string? status = null)
+        {
+            var userBlogs = await _blogRepository.GetByUserIdAsync(userId);
+            var blogs = userBlogs.AsQueryable();
+
+            // Apply status filter
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                if (Enum.TryParse<BlogStatus>(status, true, out var blogStatus))
+                {
+                    blogs = blogs.Where(b => b.Status == blogStatus);
+                }
+            }
+
+            var totalCount = blogs.Count();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            page = Math.Max(1, Math.Min(page, totalPages));
+
+            var paginatedBlogs = blogs
+                .OrderByDescending(b => b.PostedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var result = _mapper.Map<List<BlogViewDto>>(paginatedBlogs);
+
+            return new PaginatedResult<BlogViewDto>
+            {
+                Items = result,
+                TotalCount = totalCount,
+                CurrentPage = page,
+                PageSize = pageSize
+            };
         }
     }
 }

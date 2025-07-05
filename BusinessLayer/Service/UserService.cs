@@ -1,5 +1,7 @@
 using AutoMapper;
 using BusinessLayer.IService;
+using BusinessLayer.Dto.Common;
+using DataAccessLayer.Dto;
 using DataAccessLayer.Dto.Account;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
@@ -420,6 +422,121 @@ namespace BusinessLayer.Service
             }
 
             return addResult;
+        }
+
+        public async Task<PaginatedResult<AccountViewDto>> GetPaginatedUsersAsync(int page, int pageSize, string? searchTerm = null, string? role = null, string? status = null)
+        {
+            var query = _userManager.Users.AsQueryable();
+
+            // Apply search filter
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(u => 
+                    u.UserName.Contains(searchTerm) || 
+                    u.Email.Contains(searchTerm) || 
+                    u.FullName.Contains(searchTerm));
+            }
+
+            // Apply role filter
+            if (!string.IsNullOrWhiteSpace(role))
+            {
+                var usersInRole = await _userManager.GetUsersInRoleAsync(role);
+                var userIdsInRole = usersInRole.Select(u => u.Id);
+                query = query.Where(u => userIdsInRole.Contains(u.Id));
+            }
+
+            // Apply status filter
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                if (status.ToLower() == "active")
+                {
+                    query = query.Where(u => u.IsActive);
+                }
+                else if (status.ToLower() == "inactive")
+                {
+                    query = query.Where(u => !u.IsActive);
+                }
+            }
+
+            var totalCount = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            page = Math.Max(1, Math.Min(page, totalPages));
+
+            var users = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var result = new List<AccountViewDto>();
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                var userRole = roles.FirstOrDefault();
+                var dto = _mapper.Map<AccountViewDto>(user);
+                dto.Role = userRole;
+                result.Add(dto);
+            }
+
+            return new PaginatedResult<AccountViewDto>
+            {
+                Items = result,
+                TotalCount = totalCount,
+                CurrentPage = page,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<PaginatedResult<ConsultantViewDto>> GetPaginatedConsultantsAsync(int page, int pageSize, string? searchTerm = null)
+        {
+            var consultantRole = await _roleManager.FindByNameAsync("Consultant");
+            if (consultantRole == null)
+            {
+                return new PaginatedResult<ConsultantViewDto>
+                {
+                    Items = new List<ConsultantViewDto>(),
+                    TotalCount = 0,
+                    CurrentPage = page,
+                    PageSize = pageSize
+                };
+            }
+
+            var consultants = await _userManager.GetUsersInRoleAsync("Consultant");
+            var query = consultants.AsQueryable();
+
+            // Apply search filter
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(c => 
+                    c.UserName.Contains(searchTerm) || 
+                    c.Email.Contains(searchTerm) || 
+                    c.FullName.Contains(searchTerm));
+            }
+
+            var totalCount = query.Count();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            page = Math.Max(1, Math.Min(page, totalPages));
+
+            var paginatedConsultants = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var result = paginatedConsultants.Select(c => new ConsultantViewDto
+            {
+                Id = c.Id,
+                FullName = c.FullName ?? "Unknown",
+                Email = c.Email ?? "Unknown",
+                PhoneNumber = c.PhoneNumber ?? "Unknown",
+                Gender = c.Gender ?? "Unknown"
+            }).ToList();
+
+            return new PaginatedResult<ConsultantViewDto>
+            {
+                Items = result,
+                TotalCount = totalCount,
+                CurrentPage = page,
+                PageSize = pageSize
+            };
         }
     }
 } 

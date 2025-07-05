@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BusinessLayer.IService;
+using BusinessLayer.Dto.Common;
 using DataAccessLayer.Dto.Survey;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
@@ -32,11 +33,10 @@ namespace BusinessLayer.Service
 
         public async Task<bool> DeleteSurveyAsync(int surveyId)
         {
-            var survey=await _repository.GetByIdAsync(surveyId);
-            if(survey==null) return false;
+            var survey = await _repository.GetByIdAsync(surveyId);
+            if (survey == null) return false;
             survey.IsActive = false;
-            survey.UpdatedAt= DateTime.Now;
-            return await _repository.DeleteAsync(survey);
+            return await _repository.UpdateAsync(survey);
         }
 
         public async Task<bool> DeleteQuestionAsync(int questionId)
@@ -56,57 +56,51 @@ namespace BusinessLayer.Service
 
         public async Task<List<SurveyViewDto>> GetAllSurveyAsync()
         {
-           var surveys=await _repository.GetAllAsync();
+            var surveys = await _repository.GetAllAsync();
             return _mapper.Map<List<SurveyViewDto>>(surveys);
         }
 
         public async Task<List<SurveyAnswerResultDto>> GetSurveyAnswerResultAsync(int surveyResultId)
         {
-            var results=await _repository.GetSurveyAnswerResultAsync(surveyResultId);
-            return _mapper.Map<List<SurveyAnswerResultDto>>(results);
+            var surveyAnswerResults = await _repository.GetSurveyAnswerResultAsync(surveyResultId);
+            return _mapper.Map<List<SurveyAnswerResultDto>>(surveyAnswerResults);
         }
 
         public async Task<SurveyViewDto?> GetSurveyByIdAsync(int surveyId)
         { 
-            var survey=await _repository.GetByIdAsync(surveyId);
-            if(survey == null) return null;
+            var survey = await _repository.GetByIdAsync(surveyId);
+            if (survey == null || !survey.IsActive) return null;
             return _mapper.Map<SurveyViewDto>(survey);
         }
 
         public async Task<Survey> CreateSurveyWithQuestionAndAnswerAsync(SurveyCreateWithQuesAndAnsDto dto, int? courseId)
         {
-            //create survey
             var survey = new Survey
             {
                 SurveyName = dto.SurveyName,
                 Description = dto.Description,
                 SurveyType = dto.SurveyType,
-                IsActive = dto.IsActive,
-                CreatedAt = DateTime.Now,
-                CourseId = courseId
-
+                IsActive = true,
+                CourseId = courseId,
+                CreatedAt = DateTime.Now
             };
-            var createdSurvey =await _repository.CreateAsync(survey);
-
-            //create question
-            foreach(var questionDto in dto.QuestionsDto)
+            var createdSurvey = await _repository.CreateAsync(survey);
+            foreach (var questionDto in dto.QuestionsDto)
             {
                 var question = new SurveyQuestion
                 {
-                    SurveyId = createdSurvey.SurveyId,
-                    QuestionText = questionDto.QuestionText
+                    QuestionText = questionDto.QuestionText,
+                    SurveyId = createdSurvey.SurveyId
                 };
                 var createdQuestion = await _repository.CreateQuestionAsync(question);
-
-                //create answer
                 foreach (var answerDto in questionDto.AnswersDto)
                 {
                     var answer = new SurveyAnswer
                     {
                         AnswerText = answerDto.AnswerText,
-                        IsCorrect = answerDto.IsCorrect ?? false,
+                        IsCorrect = answerDto.IsCorrect,
                         Score = answerDto.Score,
-                        QuestionId = createdQuestion.QuestionId,
+                        QuestionId = createdQuestion.QuestionId
                     };
                     await _repository.CreateAnswerAsync(answer);
                 }
@@ -303,6 +297,104 @@ namespace BusinessLayer.Service
                 }).ToList()
             }).ToList();
             return surveyResultDtos;
+        }
+
+        // Pagination methods
+        public async Task<PaginatedResult<SurveyViewDto>> GetPaginatedSurveysAsync(int page, int pageSize, string? searchTerm = null, SurveyType? surveyType = null)
+        {
+            var surveys = await _repository.GetAllAsync();
+            var query = surveys.AsQueryable();
+
+            // Apply survey type filter
+            if (surveyType.HasValue)
+            {
+                query = query.Where(s => s.SurveyType == surveyType.Value);
+            }
+
+            // Apply search filter
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s => 
+                    s.SurveyName.Contains(searchTerm) || 
+                    s.Description.Contains(searchTerm));
+            }
+
+            var totalCount = query.Count();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            page = Math.Max(1, Math.Min(page, totalPages));
+
+            var paginatedSurveys = query
+                .OrderByDescending(s => s.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var result = _mapper.Map<List<SurveyViewDto>>(paginatedSurveys);
+
+            return new PaginatedResult<SurveyViewDto>
+            {
+                Items = result,
+                TotalCount = totalCount,
+                CurrentPage = page,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<PaginatedResult<SurveyResultDto>> GetPaginatedUserSurveyResultsAsync(int surveyId, string userId, int page, int pageSize)
+        {
+            var surveyResults = await _repository.GetSurveyResultAsync(surveyId, userId);
+            if (surveyResults == null || !surveyResults.Any())
+            {
+                return new PaginatedResult<SurveyResultDto>
+                {
+                    Items = new List<SurveyResultDto>(),
+                    TotalCount = 0,
+                    CurrentPage = page,
+                    PageSize = pageSize
+                };
+            }
+
+            var query = surveyResults.AsQueryable();
+            var totalCount = query.Count();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            page = Math.Max(1, Math.Min(page, totalPages));
+
+            var paginatedResults = query
+                .OrderByDescending(s => s.TakeAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var result = paginatedResults.Select(surveyResult => new SurveyResultDto
+            {
+                SurveyResultId = surveyResult.ResultId,
+                SurveyId = surveyResult.SurveyId,
+                SurveyName = surveyResult.Survey.SurveyName,
+                ExcutedBy = surveyResult.User.UserName,
+                SubmittedAt = surveyResult.TakeAt,
+                TotalScore = surveyResult.TotalScore,
+                Recommendation = surveyResult.Recommendation,
+                Questions = surveyResult.Survey.SurveyQuestions.Select(q => new SurveyQuestionResultDto
+                {
+                    QuestionId = q.QuestionId,
+                    QuestionText = q.QuestionText,
+                    Answers = q.SurveyAnswers.Select(a => new SurveyAnswerResultDto
+                    {
+                        AnswerId = a.AnswerId,
+                        AnswerText = a.AnswerText,
+                        IsCorrect = a.IsCorrect,
+                        Score = a.Score
+                    }).ToList()
+                }).ToList()
+            }).ToList();
+
+            return new PaginatedResult<SurveyResultDto>
+            {
+                Items = result,
+                TotalCount = totalCount,
+                CurrentPage = page,
+                PageSize = pageSize
+            };
         }
     }
 }

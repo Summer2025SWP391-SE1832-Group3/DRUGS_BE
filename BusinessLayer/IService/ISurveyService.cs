@@ -1,5 +1,6 @@
 ﻿    using DataAccessLayer.Dto.Survey;
 using DataAccessLayer.Model;
+using BusinessLayer.Dto.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,5 +28,9 @@ namespace BusinessLayer.IService
         Task<List<SurveyAnswerResultDto>> GetSurveyAnswerResultAsync(int surveyResultId);
         Task<SurveyStatisticDto> GetSurveyStatisticAsync(int surveyId);
         Task<List<SurveyResultDto>> GetUserSurveyResultAsync(int surveyId, string userId);
+
+        // Pagination methods
+        Task<PaginatedResult<SurveyViewDto>> GetPaginatedSurveysAsync(int page, int pageSize, string? searchTerm = null, SurveyType? surveyType = null);
+        Task<PaginatedResult<SurveyResultDto>> GetPaginatedUserSurveyResultsAsync(int surveyId, string userId, int page, int pageSize);
     }
 }

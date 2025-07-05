@@ -1,6 +1,7 @@
 using DataAccessLayer.Dto.Course;
 using DataAccessLayer.Dto.Lesson;
 using DataAccessLayer.Model;
+using BusinessLayer.Dto.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,5 +31,9 @@ namespace BusinessLayer.IService
         //Statis/survey
         Task<CourseReportDto> GetCourseReportAsync(int courseId);
         Task<LessonProgressReportDto> GetLessonProgressReportAsync(int courseId);
+
+        // Pagination methods
+        Task<PaginatedResult<CourseListDto>> GetPaginatedCoursesAsync(string userRole, int page, int pageSize, string? searchTerm = null, CourseTopic? topic = null);
+        Task<PaginatedResult<CourseEnrollmentDto>> GetPaginatedEnrollmentsForCourseAsync(int courseId, int page, int pageSize);
     }
 }

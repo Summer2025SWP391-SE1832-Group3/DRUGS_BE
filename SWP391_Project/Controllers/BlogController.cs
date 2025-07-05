@@ -252,5 +252,78 @@ namespace SWP391_Project.Controllers
             }
             return Ok(blogs);
         }
+
+        // Pagination endpoints
+        [HttpGet("paginated")]
+        [Authorize(Roles = "Manager,Admin")]
+        public async Task<IActionResult> GetPaginatedBlogs(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? status = null,
+            [FromQuery] string? searchTerm = null)
+        {
+            try
+            {
+                if (page < 1) page = 1;
+                if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+                var result = await _blogService.GetPaginatedBlogsAsync(page, pageSize, status, searchTerm);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while retrieving blogs");
+            }
+        }
+
+        [HttpGet("paginated/approved")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetPaginatedApprovedBlogs(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? searchTerm = null)
+        {
+            try
+            {
+                if (page < 1) page = 1;
+                if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+                var result = await _blogService.GetPaginatedApprovedBlogsAsync(page, pageSize, searchTerm);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while retrieving approved blogs");
+            }
+        }
+
+        [HttpGet("paginated/user/{userId}")]
+        [Authorize(Roles = "Staff,Manager")]
+        public async Task<IActionResult> GetPaginatedBlogsByUser(
+            string userId,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? status = null)
+        {
+            try
+            {
+                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var isStaff = User.IsInRole("Staff");
+                if (isStaff && currentUserId != userId)
+                {
+                    return Forbid();
+                }
+
+                if (page < 1) page = 1;
+                if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+                var result = await _blogService.GetPaginatedBlogsByUserAsync(userId, page, pageSize, status);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while retrieving user blogs");
+            }
+        }
     }
 }

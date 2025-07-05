@@ -1,4 +1,5 @@
 using BusinessLayer.IService;
+using BusinessLayer.Dto.Common;
 using DataAccessLayer.Dto.Consultation;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
@@ -543,6 +544,146 @@ namespace BusinessLayer.Service
                 Rating = review.Rating,
                 Comment = review.Comment,
                 CreatedAt = review.CreatedAt
+            };
+        }
+
+        public async Task<PaginatedResult<ConsultationRequestViewDto>> GetPaginatedMyConsultationRequestsAsync(string userId, int page, int pageSize, ConsultationStatus? status = null)
+        {
+            var requests = await _consultationRepository.GetConsultationRequestsByUserIdAsync(userId);
+            var query = requests.AsQueryable();
+
+            // Apply status filter
+            if (status.HasValue)
+            {
+                query = query.Where(r => r.Status == status.Value);
+            }
+
+            var totalCount = query.Count();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            page = Math.Max(1, Math.Min(page, totalPages));
+
+            var paginatedRequests = query
+                .OrderByDescending(r => r.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var result = new List<ConsultationRequestViewDto>();
+            foreach (var request in paginatedRequests)
+            {
+                result.Add(await MapToConsultationRequestViewDtoAsync(request));
+            }
+
+            return new PaginatedResult<ConsultationRequestViewDto>
+            {
+                Items = result,
+                TotalCount = totalCount,
+                CurrentPage = page,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<PaginatedResult<ConsultationRequestViewDto>> GetPaginatedConsultationRequestsForConsultantAsync(string consultantId, int page, int pageSize, ConsultationStatus? status = null)
+        {
+            var requests = await _consultationRepository.GetConsultationRequestsByConsultantIdAsync(consultantId);
+            var query = requests.AsQueryable();
+
+            // Apply status filter
+            if (status.HasValue)
+            {
+                query = query.Where(r => r.Status == status.Value);
+            }
+
+            var totalCount = query.Count();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            page = Math.Max(1, Math.Min(page, totalPages));
+
+            var paginatedRequests = query
+                .OrderByDescending(r => r.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var result = new List<ConsultationRequestViewDto>();
+            foreach (var request in paginatedRequests)
+            {
+                result.Add(await MapToConsultationRequestViewDtoAsync(request));
+            }
+
+            return new PaginatedResult<ConsultationRequestViewDto>
+            {
+                Items = result,
+                TotalCount = totalCount,
+                CurrentPage = page,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<PaginatedResult<ConsultationRequestViewDto>> GetPaginatedAllConsultationRequestsAsync(string currentUserId, int page, int pageSize, string? userId = null, string? consultantId = null, ConsultationStatus? status = null, DateTime? fromDate = null, DateTime? toDate = null)
+        {
+            // Only Admin can access all requests
+            var user = await _userManager.FindByIdAsync(currentUserId);
+            if (user == null || !await _userManager.IsInRoleAsync(user, "Admin"))
+            {
+                throw new UnauthorizedAccessException("Only Admin can access all consultation requests");
+            }
+
+            var requests = await _consultationRepository.SearchConsultationRequestsAsync(userId, consultantId, status, fromDate, toDate);
+            var query = requests.AsQueryable();
+
+            var totalCount = query.Count();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            page = Math.Max(1, Math.Min(page, totalPages));
+
+            var paginatedRequests = query
+                .OrderByDescending(r => r.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var result = new List<ConsultationRequestViewDto>();
+            foreach (var request in paginatedRequests)
+            {
+                result.Add(await MapToConsultationRequestViewDtoAsync(request));
+            }
+
+            return new PaginatedResult<ConsultationRequestViewDto>
+            {
+                Items = result,
+                TotalCount = totalCount,
+                CurrentPage = page,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<PaginatedResult<ConsultationReviewViewDto>> GetPaginatedConsultantReviewsAsync(string consultantId, int page, int pageSize)
+        {
+            if (!await IsConsultantAsync(consultantId))
+            {
+                throw new InvalidOperationException("User is not a consultant");
+            }
+
+            var reviews = await _consultationRepository.GetConsultationReviewsByConsultantIdAsync(consultantId);
+            var query = reviews.AsQueryable();
+
+            var totalCount = query.Count();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            page = Math.Max(1, Math.Min(page, totalPages));
+
+            var paginatedReviews = query
+                .OrderByDescending(r => r.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var result = paginatedReviews.Select(r => MapToConsultationReviewViewDto(r)).ToList();
+
+            return new PaginatedResult<ConsultationReviewViewDto>
+            {
+                Items = result,
+                TotalCount = totalCount,
+                CurrentPage = page,
+                PageSize = pageSize
             };
         }
     }

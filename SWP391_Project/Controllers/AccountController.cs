@@ -396,29 +396,68 @@ namespace SWP391_Project.Controllers
             {
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(new { 
-                        message = "Invalid input data", 
-                        errors = ModelState.Values
-                            .SelectMany(v => v.Errors)
-                            .Select(e => e.ErrorMessage) 
-                    });
+                    return BadRequest(ModelState);
                 }
 
                 var result = await _userService.ResetPasswordAsync(dto);
-                
                 if (result.Succeeded)
                 {
                     return Ok(new { message = "Password reset successfully" });
                 }
-                return BadRequest(new { 
-                    message = "Failed to reset password", 
-                    errors = result.Errors.Select(e => e.Description) 
-                });
+
+                return BadRequest(result.Errors);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error resetting password for email {Email}", dto.Email);
-                return StatusCode(500, "An error occurred while resetting password");
+                _logger.LogError(ex, "Error during password reset");
+                return StatusCode(500, "An error occurred during password reset");
+            }
+        }
+
+        // Pagination endpoints
+        [HttpGet("admin/paginated-users")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetPaginatedUsers(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] string? role = null,
+            [FromQuery] string? status = null)
+        {
+            try
+            {
+                if (page < 1) page = 1;
+                if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+                var result = await _userService.GetPaginatedUsersAsync(page, pageSize, searchTerm, role, status);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving paginated users");
+                return StatusCode(500, "An error occurred while retrieving users");
+            }
+        }
+
+        [HttpGet("admin/paginated-consultants")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetPaginatedConsultants(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? searchTerm = null)
+        {
+            try
+            {
+                if (page < 1) page = 1;
+                if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+                var result = await _userService.GetPaginatedConsultantsAsync(page, pageSize, searchTerm);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving paginated consultants");
+                return StatusCode(500, "An error occurred while retrieving consultants");
             }
         }
     }

@@ -1,5 +1,6 @@
 ﻿using DataAccessLayer.Dto.BlogPost;
 using DataAccessLayer.Model;
+using BusinessLayer.Dto.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,5 +32,9 @@ namespace BusinessLayer.IService
         Task<List<BlogViewDto>> GetBlogByStatus(string status);
         Task<List<BlogViewDto>> SearchBlogByTitle(string search, string userId, string status);
 
+        // Pagination methods
+        Task<PaginatedResult<BlogViewDto>> GetPaginatedBlogsAsync(int page, int pageSize, string? status = null, string? searchTerm = null);
+        Task<PaginatedResult<BlogViewDto>> GetPaginatedApprovedBlogsAsync(int page, int pageSize, string? searchTerm = null);
+        Task<PaginatedResult<BlogViewDto>> GetPaginatedBlogsByUserAsync(string userId, int page, int pageSize, string? status = null);
     }
 }

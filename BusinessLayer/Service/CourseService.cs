@@ -1,5 +1,6 @@
 using AutoMapper;
 using BusinessLayer.IService;
+using BusinessLayer.Dto.Common;
 using DataAccessLayer.Dto.Course;
 using DataAccessLayer.Dto.Lesson;
 using DataAccessLayer.IRepository;
@@ -141,5 +142,77 @@ namespace BusinessLayer.Service
             return report;
         }
 
+        // Pagination methods
+        public async Task<PaginatedResult<CourseListDto>> GetPaginatedCoursesAsync(string userRole, int page, int pageSize, string? searchTerm = null, CourseTopic? topic = null)
+        {
+            var courses = await _courseRepository.GetAllAsync();
+            var query = courses.AsQueryable();
+
+            // Apply role filter
+            if (userRole != "Manager")
+            {
+                query = query.Where(c => c.IsActive);
+            }
+
+            // Apply topic filter
+            if (topic.HasValue)
+            {
+                query = query.Where(c => c.Topic == topic.Value);
+            }
+
+            // Apply search filter
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(c => 
+                    c.Title.Contains(searchTerm) || 
+                    c.Description.Contains(searchTerm));
+            }
+
+            var totalCount = query.Count();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            page = Math.Max(1, Math.Min(page, totalPages));
+
+            var paginatedCourses = query
+                .OrderByDescending(c => c.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var result = _mapper.Map<List<CourseListDto>>(paginatedCourses);
+
+            return new PaginatedResult<CourseListDto>
+            {
+                Items = result,
+                TotalCount = totalCount,
+                CurrentPage = page,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<PaginatedResult<CourseEnrollmentDto>> GetPaginatedEnrollmentsForCourseAsync(int courseId, int page, int pageSize)
+        {
+            var enrollments = await _courseEnrollmentRepository.GetEnrollmentsByCourseIdAsync(courseId);
+            var query = enrollments.AsQueryable();
+
+            var totalCount = query.Count();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            page = Math.Max(1, Math.Min(page, totalPages));
+
+            var paginatedEnrollments = query
+                .OrderByDescending(e => e.EnrolledAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var result = _mapper.Map<List<CourseEnrollmentDto>>(paginatedEnrollments);
+
+            return new PaginatedResult<CourseEnrollmentDto>
+            {
+                Items = result,
+                TotalCount = totalCount,
+                CurrentPage = page,
+                PageSize = pageSize
+            };
+        }
     }
 }

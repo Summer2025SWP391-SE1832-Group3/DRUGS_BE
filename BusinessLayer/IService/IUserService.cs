@@ -30,5 +30,9 @@ namespace BusinessLayer.IService
         Task<IdentityResult> ResetPasswordAsync(ResetPasswordDto dto);
         Task<IdentityResult> UpdateUserPasswordAsync(string userId, string newPassword);
         Task<IdentityResult> UpdateUserRoleAsync(string userId, string newRole);
+        
+        // Pagination methods
+        Task<PaginatedResult<AccountViewDto>> GetPaginatedUsersAsync(int page, int pageSize, string? searchTerm = null, string? role = null, string? status = null);
+        Task<PaginatedResult<ConsultantViewDto>> GetPaginatedConsultantsAsync(int page, int pageSize, string? searchTerm = null);
     } 
 } 
