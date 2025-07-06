@@ -1,4 +1,4 @@
-﻿using DataAccessLayer.Dto.Course;
+﻿    using DataAccessLayer.Dto.Course;
 using DataAccessLayer.Dto.Lesson;
 using DataAccessLayer.Model;
 using System;
@@ -17,7 +17,10 @@ namespace BusinessLayer.IService
         Task<IEnumerable<CourseWithEnrollmentStatusDto>> GetAllCoursesAsync(string userRole, string userId);
         Task<IEnumerable<CourseListDto>> GetAllCoursesForManagerAsync();
         Task<IEnumerable<CourseListDto>> GetActiveCoursesAsync();
+        Task<IEnumerable<CourseListDto>> GetDraftCoursesAsync();
         Task<IEnumerable<CourseListDto>> GetInactiveCoursesAsync();
+        Task<bool> CanApproveCourseAsync(int courseId);
+        Task UpdateCourseStatusAsync(int courseId, CourseStatus status);
         Task<IEnumerable<CourseListDto>> GetCoursesInProgressAsync(string userId);
         Task<IEnumerable<CourseListDto>> GetCompletedCoursesAsync(string userId);
         Task<bool> IsUserEnrolledInCourseAsync(string userId, int courseId);

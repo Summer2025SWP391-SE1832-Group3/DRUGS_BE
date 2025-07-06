@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DataAccessLayer.Dto.Course
 {
-    public enum CourseStatus
+    public enum CourseEnrollmentStatus
     {
         NotEnrolled,   
         InProgress,  
@@ -16,6 +16,6 @@ namespace DataAccessLayer.Dto.Course
     public class CourseWithEnrollmentStatusDto
     {
         public CourseListDto Course { get; set; }
-        public CourseStatus Status { get; set; }
+        public CourseEnrollmentStatus Status { get; set; }
     }
 }

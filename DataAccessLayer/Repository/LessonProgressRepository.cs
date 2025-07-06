@@ -33,6 +33,10 @@ namespace DataAccessLayer.Repository
             {
                 throw new Exception("Lesson not found");
             }
+            if (!lesson.IsActive)
+            {
+                throw new Exception("Lesson is no longer available (deleted or hidden by manager)");
+            }
             var courseEnrollment = await _context.CourseEnrollments
                 .FirstOrDefaultAsync(ce => ce.UserId == userId && ce.CourseId == lesson.CourseId);
             if (courseEnrollment == null)
@@ -62,6 +66,15 @@ namespace DataAccessLayer.Repository
 
             await _context.SaveChangesAsync();
             return lessonProgress;
+        }
+        public async Task<List<int>> GetCompletedLessonIdsByUserAndCourseAsync(string userId, int courseId)
+        {
+            return await _context.LessonProgresses
+                .Where(lp => lp.CourseEnrollment.UserId == userId
+                          && lp.Lesson.CourseId == courseId
+                          && lp.IsCompleted)
+                .Select(lp => lp.LessonId)
+                .ToListAsync();
         }
     }
 }

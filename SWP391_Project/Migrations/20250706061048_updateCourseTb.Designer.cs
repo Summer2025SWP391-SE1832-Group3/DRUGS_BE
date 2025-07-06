@@ -4,6 +4,7 @@ using DataAccessLayer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SWP391_Project.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250706061048_updateCourseTb")]
+    partial class updateCourseTb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -505,9 +508,6 @@ namespace SWP391_Project.Migrations
                     b.Property<int>("CourseId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -738,31 +738,31 @@ namespace SWP391_Project.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "e494a7ff-d999-4b11-954e-16f458114906",
+                            Id = "aa8a859a-5360-49e8-b1c5-1907306907de",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "564e047e-0285-42a3-a6a5-840a8a7f5aea",
+                            Id = "8c36ab28-44df-4165-b20e-20823c0fef04",
                             Name = "Staff",
                             NormalizedName = "STAFF"
                         },
                         new
                         {
-                            Id = "a541a6fa-b33b-4f71-b1ce-b7562919f3db",
+                            Id = "095efa74-1d3f-4181-bd38-bce79ff3c32f",
                             Name = "Manager",
                             NormalizedName = "MANAGER"
                         },
                         new
                         {
-                            Id = "bc271027-f431-4810-80d5-9df45f119ed0",
+                            Id = "de9fb8bc-e392-4586-8d6e-a6249a21b8c9",
                             Name = "Consultant",
                             NormalizedName = "CONSULTANT"
                         },
                         new
                         {
-                            Id = "06da52ad-3107-41d9-ac77-1132312d6ef4",
+                            Id = "e935ff99-230b-4aef-9e54-31e748fec369",
                             Name = "Member",
                             NormalizedName = "MEMBER"
                         });

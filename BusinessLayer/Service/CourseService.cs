@@ -38,7 +38,7 @@ namespace BusinessLayer.Service
         public async Task<CourseDto> CreateCourseAsync(CourseCreateDto courseCreateDto)
         {
             var course=_mapper.Map<Course>(courseCreateDto);
-            course.IsActive = true;
+            course.Status = CourseStatus.Draft; 
             course.CreatedAt = DateTime.Now;
             var createdCourse=await _courseRepository.AddAsync(course);
             return _mapper.Map<CourseDto>(createdCourse);
@@ -49,7 +49,7 @@ namespace BusinessLayer.Service
             var course = await _courseRepository.GetByIdAsync(courseId);
             if (course != null)
             {
-                course.IsActive = false; 
+                course.Status=CourseStatus.Inactive; 
                 await _courseRepository.UpdateAsync(course);  
             }
         }
@@ -58,7 +58,10 @@ namespace BusinessLayer.Service
         public async Task<IEnumerable<CourseWithEnrollmentStatusDto>> GetAllCoursesAsync(string? userRole, string userId)
         {
             var courses=await _courseRepository.GetAllAsync();
-            courses = courses.Where(c => c.IsActive).ToList();
+            if (userRole != "Manager")
+            {
+                courses = courses.Where(c => c.Status==CourseStatus.Active).ToList();
+            }
             var result = new List<CourseWithEnrollmentStatusDto>();
 
             foreach (var course in courses)
@@ -81,15 +84,40 @@ namespace BusinessLayer.Service
         public async Task<IEnumerable<CourseListDto>> GetActiveCoursesAsync()
         {
             var courses = await _courseRepository.GetAllAsync();
-            var activeCourses = courses.Where(c => c.IsActive).ToList();
+            var activeCourses = courses.Where(c => c.Status == CourseStatus.Active).ToList();
             return _mapper.Map<IEnumerable<CourseListDto>>(activeCourses);
         }
 
         public async Task<IEnumerable<CourseListDto>> GetInactiveCoursesAsync()
         {
             var courses = await _courseRepository.GetAllAsync();
-            var inactiveCourses = courses.Where(c => !c.IsActive).ToList();
+            var inactiveCourses = courses.Where(c => c.Status == CourseStatus.Inactive).ToList();
             return _mapper.Map<IEnumerable<CourseListDto>>(inactiveCourses);
+        }
+        public async Task<IEnumerable<CourseListDto>> GetDraftCoursesAsync()
+        {
+            var courses = await _courseRepository.GetAllAsync();
+            var inactiveCourses = courses.Where(c => c.Status == CourseStatus.Draft).ToList();
+            return _mapper.Map<IEnumerable<CourseListDto>>(inactiveCourses);
+        }
+
+        public async Task<bool> CanApproveCourseAsync(int courseId)
+        {
+            var course = await _courseRepository.GetByIdAsync(courseId);
+            if (course == null) return false;
+            if (course.Lessions == null || !course.Lessions.Any()) return false;
+            if (course.FinalExamSurveyId == null) return false;
+            return true;
+        }
+        public async Task UpdateCourseStatusAsync(int courseId, CourseStatus status)
+        {
+            var course = await _courseRepository.GetByIdAsync(courseId);
+            if (course != null)
+            {
+                course.Status = status;
+                course.UpdatedAt = DateTime.Now;
+                await _courseRepository.UpdateAsync(course);
+            }
         }
 
         public async Task<CourseListDto> GetCourseByCourseId(int courseId)
@@ -121,9 +149,8 @@ namespace BusinessLayer.Service
                         Message = "You are not enrolled in this course. Please enroll to view details."
                     };
                 }
-
                 var progress = await _lessonProgressRepository.GetLessonProgressByUserAndCourseAsync(userId, courseId);
-                var lessonsDto = course.Lessions.Select(lesson =>
+                var lessonsDto = course.Lessions.Where(lesson=>lesson.IsActive).Select(lesson =>
                 {
                     var lessonProgress = progress.FirstOrDefault(p => p.LessonId == lesson.Id);
                     return new LessonDto
@@ -132,6 +159,7 @@ namespace BusinessLayer.Service
                         Title = lesson.Title,
                         Content = lesson.Content,
                         VideoUrl = lesson.VideoUrl,
+                        IsActive=lesson.IsActive,
                         IsCompleted = lessonProgress != null && lessonProgress.IsCompleted
                     };
                 }).ToList();
@@ -176,12 +204,11 @@ namespace BusinessLayer.Service
                         Title = lesson.Title,
                         Content = lesson.Content,
                         VideoUrl = lesson.VideoUrl,
-                        IsCompleted = true  
+                        IsCompleted = true,
+                        IsActive=lesson.IsActive,
                     };
                 }).ToList();
-
                 var finalExamSurvey = course.FinalExamSurvey;
-
                 return new CourseDto
                 {
                     Id = course.Id,
@@ -211,7 +238,10 @@ namespace BusinessLayer.Service
         public async Task<IEnumerable<CourseWithEnrollmentStatusDto>> GetCoursesByTopicAsync(CourseTopic topic, string userRole, string userId)
         {
             var courses=await _courseRepository.GetByTopicAsync(topic);
-            courses = courses.Where(c => c.IsActive).ToList();
+            if (userRole != "Manager")
+            {
+                courses = courses.Where(c => c.Status == CourseStatus.Active).ToList();
+            }
             var result = new List<CourseWithEnrollmentStatusDto>();
 
             foreach (var course in courses)
@@ -240,7 +270,10 @@ namespace BusinessLayer.Service
         public async Task<IEnumerable<CourseWithEnrollmentStatusDto>> SearchCourseAsync(string searchTerm, string userRole,string userId)
         {
             var courses = await _courseRepository.SearchCoursesAsync(searchTerm);
-            courses = courses.Where(c => c.IsActive).ToList();
+            if (userRole != "Manager")
+            {
+                courses = courses.Where(c => c.Status == CourseStatus.Active).ToList();
+            }
             var result = new List<CourseWithEnrollmentStatusDto>();
 
             foreach (var course in courses)
@@ -327,6 +360,8 @@ namespace BusinessLayer.Service
                 return null;
             }
 
+            var completedLessonIds = await _lessonProgressRepository
+                                          .GetCompletedLessonIdsByUserAndCourseAsync(userId, courseId);
             var course = await _courseRepository.GetByIdAsync(courseId);
             if (course == null) return null;
             var lessonsDto = course.Lessions.Select(lesson => new LessonDto
@@ -335,7 +370,8 @@ namespace BusinessLayer.Service
                 Title = lesson.Title,
                 Content = lesson.Content,
                 VideoUrl = lesson.VideoUrl,
-                IsCompleted =true,
+                IsCompleted = completedLessonIds.Contains(lesson.Id),
+                IsActive = lesson.IsActive,
             }).ToList();
 
             var lastSurveyResult = await _surveyService.GetUserSurveyResultNewestAsync(course.FinalExamSurveyId.Value, userId);

@@ -30,6 +30,33 @@ namespace SWP391_Project.Controllers
             return Ok(new { Message = "Course created successfully!", CourseId = course.Id });
         }
 
+        [HttpGet("draft")]
+        [Authorize(Roles = "Staff,Manager")]
+        public async Task<IActionResult> GetDraftCourses()
+        {
+            var draftCourses = await _courseService.GetDraftCoursesAsync();
+            return Ok(draftCourses);
+        }
+
+        [HttpPut("approve/{courseId}")]
+        [Authorize(Roles = "Manager")]
+        public async Task<IActionResult> ApproveCourse(int courseId)
+        {
+            var course = await _courseService.GetCourseByCourseId(courseId);
+            if (course == null)
+                return NotFound("Course not found.");
+
+            if (course.Status != CourseStatus.Draft)
+                return BadRequest("Only Draft courses can be activated.");
+
+            if (!await _courseService.CanApproveCourseAsync(courseId))
+                return BadRequest("Course must have at least one lesson and one survey before activation.");
+
+            await _courseService.UpdateCourseStatusAsync(courseId, CourseStatus.Active);
+            return Ok(new { Message = "Course is now active and visible to members!" });
+        }
+
+
         [HttpGet("{courseId:int}")]
         public async Task<IActionResult> GetCourseById(int courseId)
         {
@@ -116,6 +143,7 @@ namespace SWP391_Project.Controllers
         [HttpGet("topic/{topic}")]
         public async Task<IActionResult> GetCoursesByTopic(CourseTopic topic)
         {
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var userRole = User.FindFirstValue(ClaimTypes.Role);
 
@@ -225,6 +253,9 @@ namespace SWP391_Project.Controllers
             {
                 switch (status.ToLower())
                 {
+                    case "draft":
+                        courses = await _courseService.GetDraftCoursesAsync();
+                        break;
                     case "active":
                         courses = await _courseService.GetActiveCoursesAsync();
                         break;

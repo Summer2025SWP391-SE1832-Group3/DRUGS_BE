@@ -6,6 +6,7 @@ using DataAccessLayer.Dto.Lesson;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
 using DataAccessLayer.Repository;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -81,9 +82,9 @@ namespace BusinessLayer.Service
             return _mapper.Map<LessonViewDto>(createdLesson);
         }
 
-        public async Task DeleteLessonAsync(int lessonId)
+        public async Task<bool> DeleteLessonAsync(int lessonId)
         {
-             await _lessonRepository.DeleteAsync(lessonId);
+            return await _lessonRepository.DeleteAsync(lessonId);
         }
 
         public async Task<LessonViewDto> GetLessonByIdAsync(int lessonId)

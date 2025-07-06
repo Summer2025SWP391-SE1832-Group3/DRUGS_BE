@@ -15,5 +15,6 @@ namespace DataAccessLayer.Dto.Lesson
         public string? Content { get; set; }
         public string? VideoUrl { get; set; }
         public bool IsCompleted { get; set; }
+        public bool IsActive { get; set; }
     }
 }

@@ -12,7 +12,8 @@ namespace BusinessLayer.IService
     public interface ISurveyService
     {
         Task<SurveyViewDto?> GetSurveyByIdAsync(int surveyId);
-        Task<List<SurveyViewDto>> GetAllSurveyAsync();
+        Task<List<SurveyViewDto>> GetAllSurveyAsync(string userRole);
+        Task<List<SurveyViewDto>> GetAllSurveyByType(SurveyType? surveyType, string userRole);
         Task<bool> DeleteSurveyAsync(int surveyId);
 
         Task<List<SurveyAnswer>> GetAllAnswersByQuestionIdAsync(int questionId);
@@ -28,6 +29,7 @@ namespace BusinessLayer.IService
         Task<List<SurveyAnswerResultDto>> GetSurveyAnswerResultAsync(int surveyResultId);
         Task<SurveyStatisticDto> GetSurveyStatisticAsync(int surveyId);
         Task<List<SurveyResultDto>> GetUserSurveyResultAsync(int surveyId, string userId);
+        Task<List<SurveyResultDto>> GetAddictionSurveyResultsAsync(string userId);
         Task<SurveyResultDto> GetUserSurveyResultNewestAsync(int surveyId, string userId);
     }
 }

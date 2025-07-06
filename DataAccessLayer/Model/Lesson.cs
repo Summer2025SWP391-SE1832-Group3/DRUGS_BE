@@ -16,6 +16,7 @@ namespace DataAccessLayer.Model
         public string? VideoUrl { get; set; }
         [Required] 
         public int CourseId { get; set; }
+        public bool IsActive { get; set; } = true;
         public Course Course { get; set; }
         public ICollection<LessonProgress> LessonProgresses { get; set; }
     }
