@@ -14,7 +14,8 @@ namespace DataAccessLayer.Dto.Course
         public int Id { get; set; }
         public string Title { get; set; }
         public string? Description { get; set; }
-        public bool IsActive { get; set; }
+        //public bool IsActive { get; set; }
+        public CourseStatus Status { get; set; }
         public CourseTopic Topic { get; set; }
     }
 }

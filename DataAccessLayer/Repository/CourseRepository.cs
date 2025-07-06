@@ -37,6 +37,7 @@ namespace DataAccessLayer.Repository
             return await _context.Courses
                             .Include(c=>c.Lessions)
                             .Include(c=>c.FinalExamSurvey)
+                            .OrderByDescending(c=>c.CreatedAt)
                             .ToListAsync();
         }
 
@@ -63,12 +64,14 @@ namespace DataAccessLayer.Repository
                             .Include(c => c.Lessions)
                             .Include(c => c.FinalExamSurvey)
                             .Where(c=>c.Topic == topic)
+                            .OrderByDescending(c=>c.CreatedAt)
                             .ToListAsync();
         }
         public async Task<List<Course>> SearchCoursesAsync(string searchTerm)
         {
             return await _context.Courses
                 .Where(c => c.Title.Contains(searchTerm))
+                .OrderByDescending(c=>c.CreatedAt)
                 .ToListAsync();
         }
     }

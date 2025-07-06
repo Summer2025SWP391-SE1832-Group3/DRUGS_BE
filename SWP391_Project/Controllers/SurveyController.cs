@@ -24,7 +24,7 @@ namespace SWP391_Project.Controllers
         }
 
         [HttpPost("create-survey")]
-        [Authorize(Roles = "Staff")]
+        [Authorize(Roles = "Staff,Manager")]
         public async Task<IActionResult> CreateSurvey([FromBody] SurveyCreateWithQuesAndAnsDto dto,int? courseId)
         {
           
@@ -67,7 +67,16 @@ namespace SWP391_Project.Controllers
         [HttpGet("all_survey")]
         public async Task<IActionResult> GetAllSurveys()
         {
-            var surveys = await _surveyService.GetAllSurveyAsync();
+            var userRole = User.FindFirstValue(ClaimTypes.Role);
+            var surveys = await _surveyService.GetAllSurveyAsync(userRole);
+            return Ok(surveys);
+        }
+
+        [HttpGet("surveys/surveyType")]
+        public async Task<IActionResult> GetAllSurveys([FromQuery] SurveyType? surveyType = null)
+        {
+            var userRole = User.FindFirstValue(ClaimTypes.Role);
+            var surveys = await _surveyService.GetAllSurveyByType(surveyType, userRole);
             return Ok(surveys);
         }
 
@@ -115,7 +124,7 @@ namespace SWP391_Project.Controllers
         }
 
         [HttpPut("{surveyId:int}")]
-        [Authorize(Roles = "Staff")]
+        [Authorize(Roles = "Staff,Manager")]
         public async Task<IActionResult> UpdateSurvey(int surveyId, [FromBody] SurveyUpdateWithQuesAndAnsDto surveyUpdateDto)
         {
             var result = await _surveyService.UpdateSurveyAsync(surveyUpdateDto, surveyId);
@@ -148,6 +157,18 @@ namespace SWP391_Project.Controllers
                 return NotFound("Survey result not found or inactive.");
             }
             return Ok(surveyResult);
+        }
+
+        [HttpGet("user/{userId}/addiction-surveys")]
+        public async Task<IActionResult> GetAllAddictionSurveyResults(string userId)
+        {
+            var surveyResults = await _surveyService.GetAddictionSurveyResultsAsync(userId);
+            if (surveyResults == null || !surveyResults.Any())
+            {
+                return NotFound("No addiction survey results found for this user.");
+            }
+
+            return Ok(surveyResults);
         }
     }
 

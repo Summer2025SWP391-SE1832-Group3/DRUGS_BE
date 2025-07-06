@@ -57,9 +57,14 @@ namespace BusinessLayer.Service
             return await _repository.GetAllQuestionsAsync(surveyId);
         }
 
-        public async Task<List<SurveyViewDto>> GetAllSurveyAsync()
+        public async Task<List<SurveyViewDto>> GetAllSurveyAsync(string userRole)
         {
-           var surveys=await _repository.GetAllAsync();
+           var surveys=await _repository.GetAllAsync(userRole);
+            return _mapper.Map<List<SurveyViewDto>>(surveys);
+        }
+        public async Task<List<SurveyViewDto>> GetAllSurveyByType(SurveyType? surveyType, string userRole)
+        {
+            var surveys = await _repository.GetAllByTypeAsync(surveyType, userRole);
             return _mapper.Map<List<SurveyViewDto>>(surveys);
         }
 
@@ -358,6 +363,35 @@ namespace BusinessLayer.Service
             };
 
             return surveyResultDto;
+        }
+        public async Task<List<SurveyResultDto>> GetAddictionSurveyResultsAsync(string userId)
+        {
+            var surveyResults = await _repository.GetAddictionSurveyResultsAsync(userId);
+            if (surveyResults == null || !surveyResults.Any()) return new List<SurveyResultDto>();
+            var surveyResultDtos = surveyResults.Select(surveyResult => new SurveyResultDto
+            {
+                SurveyResultId = surveyResult.ResultId,
+                SurveyId = surveyResult.SurveyId,
+                SurveyName = surveyResult.Survey.SurveyName,
+                ExcutedBy = surveyResult.User?.UserName?? "Unknown survey",
+                SubmittedAt = surveyResult.TakeAt,
+                TotalScore = surveyResult.TotalScore,
+                Recommendation = surveyResult.Recommendation?? "",
+                Questions =(surveyResult.Survey.SurveyQuestions?? new List<SurveyQuestion>()).Select(q => new SurveyQuestionResultDto
+                {
+                    QuestionId = q.QuestionId,
+                    QuestionText = q.QuestionText,
+                    Answers = q.SurveyAnswers.Select(a => new SurveyAnswerResultDto
+                    {
+                        AnswerId = a.AnswerId,
+                        AnswerText = a.AnswerText,
+                        IsCorrect = a.IsCorrect,
+                        Score = a.Score
+                    }).ToList(),
+                    UserAnswer = surveyResult.SurveyAnswerResults?.FirstOrDefault(s => s.QuestionId == q.QuestionId)?.SurveyAnswer?.AnswerText ?? "No answer",
+                }).ToList()
+            }).ToList();
+            return surveyResultDtos;
         }
     }
 }

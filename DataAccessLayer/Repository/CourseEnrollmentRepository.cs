@@ -71,26 +71,26 @@ namespace DataAccessLayer.Repository
             return await _context.SaveChangesAsync()>0;
         }
 
-        public async Task<CourseStatus> GetEnrollmentStatusAsync(string userId, int courseId)
+        public async Task<CourseEnrollmentStatus> GetEnrollmentStatusAsync(string userId, int courseId)
         {
             var enrollment = await _context.CourseEnrollments
         .FirstOrDefaultAsync(e => e.UserId == userId && e.CourseId == courseId);
 
             if (enrollment == null)
             {
-                return CourseStatus.NotEnrolled;  
+                return CourseEnrollmentStatus.NotEnrolled;  
             }
             if (enrollment.Status == EnrollmentStatus.Suspended && enrollment.SuspendedUntil > DateTime.Now)
             {
-                return CourseStatus.Suspended;
+                return CourseEnrollmentStatus.Suspended;
             }
 
             if (enrollment.CompletedAt.HasValue)
             {
-                return CourseStatus.Completed; 
+                return CourseEnrollmentStatus.Completed; 
             }
 
-            return CourseStatus.InProgress; 
+            return CourseEnrollmentStatus.InProgress; 
         }
     }
 }

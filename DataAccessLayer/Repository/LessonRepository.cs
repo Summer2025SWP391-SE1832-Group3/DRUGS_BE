@@ -25,14 +25,16 @@ namespace DataAccessLayer.Repository
             return lesson;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            var lesson=await GetByIdAsync(id);
-            if (lesson != null)
+            var lesson = await GetByIdAsync(id);
+            if (lesson != null && lesson.IsActive)
             {
-                _context.Lessons.Remove(lesson);
+                lesson.IsActive = false;
                 await _context.SaveChangesAsync();
+                return true; 
             }
+            return false;
         }
 
         public async Task<List<Lesson>> GetByCourseIdAsync(int courseId)

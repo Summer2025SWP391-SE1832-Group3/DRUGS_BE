@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace DataAccessLayer.Repository
 {
@@ -86,14 +87,38 @@ namespace DataAccessLayer.Repository
                 .FirstOrDefaultAsync(a => a.AnswerId == answerId);  
         }
 
-        public async Task<List<Survey>> GetAllAsync()
+        public async Task<List<Survey>> GetAllAsync(string userRole)
         {
-            return await _context.Surveys
+            var query = _context.Surveys
                    .Include(s=>s.SurveyQuestions)
                    .ThenInclude(q=>q.SurveyAnswers)
-                   .ToListAsync();
-        }
+                   .AsQueryable();
+            if (userRole != "Manager")
+            {
+                query = query.Where(s => s.IsActive);
+            }
 
+            return await query.ToListAsync();
+
+        }
+        public async Task<List<Survey>> GetAllByTypeAsync(SurveyType? surveyType, string userRole)
+        {
+            var query = _context.Surveys
+                                .Include(s => s.SurveyQuestions)
+                                    .ThenInclude(q => q.SurveyAnswers)
+                                .AsQueryable();
+            if (userRole != "Manager")
+            {
+                query = query.Where(s => s.IsActive);
+            }
+
+            if (surveyType.HasValue)
+            {
+                query = query.Where(s => s.SurveyType == surveyType.Value);
+            }
+
+            return await query.ToListAsync();
+        }
         public async Task<List<SurveyQuestion>> GetAllQuestionsAsync(int surveyId)
         {
             return await _context.SurveyQuestions
@@ -144,13 +169,27 @@ namespace DataAccessLayer.Repository
         public async Task<List<SurveyResult>?> GetSurveyResultAsync(int surveyId, string userId)
         {
             return await _context.SurveyResults
-                 .Include(s => s.SurveyAnswerResults)
-                 .Include(s => s.Survey)
-                     .ThenInclude(s => s.SurveyQuestions)
-                         .ThenInclude(q => q.SurveyAnswers)
-                 .Include(s => s.User)
-                 .OrderByDescending(s => s.TakeAt)
-                 .ToListAsync();
+                                 .Where(s=>s.SurveyId==surveyId && s.UserId==userId)
+                                 .Include(s => s.SurveyAnswerResults)
+                                 .Include(s => s.Survey)
+                                     .ThenInclude(s => s.SurveyQuestions)
+                                         .ThenInclude(q => q.SurveyAnswers)
+                                 .Include(s => s.User)
+                                 .OrderByDescending(s => s.TakeAt)
+                                 .ToListAsync();
+        }
+
+        public async Task<List<SurveyResult>?> GetAddictionSurveyResultsAsync(string userId)
+        {
+            return await _context.SurveyResults
+                                 .Where(s => s.Survey.SurveyType == SurveyType.AddictionSurvey && s.UserId == userId)
+                                 .Include(s => s.SurveyAnswerResults)
+                                 .Include(s => s.Survey)
+                                     .ThenInclude(s => s.SurveyQuestions)
+                                         .ThenInclude(q => q.SurveyAnswers)
+                                 .Include(s => s.User)
+                                 .OrderByDescending(s => s.TakeAt)
+                                 .ToListAsync();
         }
         public async Task<Survey?> GetSurveyByCourseIdAsync(int courseId)
         {

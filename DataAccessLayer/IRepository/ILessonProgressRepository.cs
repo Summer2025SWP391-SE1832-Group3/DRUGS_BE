@@ -12,6 +12,7 @@ namespace DataAccessLayer.IRepository
     {
         Task<LessonProgress> UpdateLessonProgressAsync(string userId, int lessonId, bool isCompleted);
         Task<IEnumerable<LessonProgress>> GetLessonProgressByUserAndCourseAsync(string userId, int courseId);
+        Task<List<int>> GetCompletedLessonIdsByUserAndCourseAsync(string userId, int courseId);
     }
 
 }

@@ -42,7 +42,11 @@ namespace SWP391_Project.Controllers
         [Authorize(Roles = "Manager")]
         public async Task<IActionResult> DeleteLesson(int lessonId)
         {
-            await _lessonService.DeleteLessonAsync(lessonId);
+            var result = await _lessonService.DeleteLessonAsync(lessonId);
+            if (!result)
+            {
+                return NotFound(new { Message = "Lesson already deleted or not found!" });
+            }
             return Ok(new { Message = "Lesson deleted successfully!" });
         }
 

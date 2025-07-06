@@ -20,7 +20,6 @@ namespace SWP391_Project.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles ="Member,Staff")]
         public async Task<IActionResult> CreateComment(CommentCreateDto dto)
         {
             if (!ModelState.IsValid)
@@ -37,7 +36,6 @@ namespace SWP391_Project.Controllers
         }
 
         [HttpPut]
-        [Authorize(Roles = "Member,Staff")]//Just posted person can update
         public async Task<IActionResult> UpdateComment(CommentUpdateDto dto)
         {
             if (!ModelState.IsValid)

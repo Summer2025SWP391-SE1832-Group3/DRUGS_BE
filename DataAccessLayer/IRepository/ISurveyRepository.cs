@@ -12,7 +12,8 @@ namespace DataAccessLayer.IRepository
     {
         Task<Survey> CreateAsync(Survey survey);
         Task<Survey?> GetByIdAsync(int surveyId);
-        Task<List<Survey>> GetAllAsync();
+        Task<List<Survey>> GetAllAsync(string userRole);
+        Task<List<Survey>> GetAllByTypeAsync(SurveyType? surveyType, string userRole);
         Task<bool> UpdateAsync(Survey survey);
         Task<bool> DeleteAsync(Survey survey);
         Task<Survey> GetSurveyByCourseIdAsync(int courseId);
@@ -32,8 +33,8 @@ namespace DataAccessLayer.IRepository
         Task<SurveyResult> CreateSurveyResultAsync(SurveyResult result);
         Task<SurveyAnswerResult> CreateSurveyAnswerResultAsync(SurveyAnswerResult result);
         Task<List<SurveyAnswerResult>> GetSurveyAnswerResultAsync(int surveyResultId);
-
         Task<List<SurveyResult>?> GetSurveyResultAsync(int surveyId, string userId);
+        Task<List<SurveyResult>> GetAddictionSurveyResultsAsync(string userId);
 
     }
 }
