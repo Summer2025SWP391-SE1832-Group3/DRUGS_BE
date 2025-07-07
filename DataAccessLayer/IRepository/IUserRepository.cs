@@ -21,5 +21,7 @@ namespace DataAccessLayer.IRepository
         Task<IdentityResult> AdminUpdateUserAsync(string userId, RegisterDto updateDto, string? newRole = null);
         Task<IdentityResult> AdminDeleteUserAsync(string userId);
         Task<List<ApplicationUser>> AdminSearchUsersAsync(string? email, string? username, string? role);
+
+        Task<ApplicationUser?> GetByIdAsync(string userId);
     }
 }

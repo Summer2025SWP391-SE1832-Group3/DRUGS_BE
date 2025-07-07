@@ -224,6 +224,10 @@ namespace DataAccessLayer.Repository
             return users;
         }
 
+        public async Task<ApplicationUser?> GetByIdAsync(string userId)
+        {
+            return await _userManager.FindByIdAsync(userId);
+        }
 
     }
 }

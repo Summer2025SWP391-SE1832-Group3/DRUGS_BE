@@ -38,6 +38,7 @@ namespace DataAccessLayer.Data
         public DbSet<ConsultationReview> ConsultationReviews { get; set; }
         public DbSet<ConsultantWorkingHour> ConsultantWorkingHours { get; set; }
         public DbSet<Certificate> Certificates { get; set; }
+        public DbSet<CourseTestSurvey> CourseTestSurveys { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -291,6 +292,20 @@ namespace DataAccessLayer.Data
                   .WithMany(u => u.CourseEnrollments)
                   .HasForeignKey(c => c.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
+             });
+
+             builder.Entity<CourseTestSurvey>(entity =>
+             {
+                 entity.HasKey(e => e.Id);
+                 entity.HasOne(e => e.Course)
+                       .WithMany()
+                       .HasForeignKey(e => e.CourseId)
+                       .OnDelete(DeleteBehavior.Cascade);
+                 entity.HasOne(e => e.Survey)
+                       .WithMany()
+                       .HasForeignKey(e => e.SurveyId)
+                       .OnDelete(DeleteBehavior.Cascade);
+                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
              });
         }
     }
