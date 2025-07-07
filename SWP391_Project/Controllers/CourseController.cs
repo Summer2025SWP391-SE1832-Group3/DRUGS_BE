@@ -18,44 +18,6 @@ namespace SWP391_Project.Controllers
         {
             _courseService = courseService;
         }
-        [HttpPost]
-        [Authorize(Roles = "Manager")]
-        public async Task<IActionResult> CreateCourse([FromBody] CourseCreateDto courseCreateDto)
-        {
-            var course = await _courseService.CreateCourseAsync(courseCreateDto);
-            if (course == null)
-            {
-                return BadRequest("Failed to create course.");
-            }
-            return Ok(new { Message = "Course created successfully!", CourseId = course.Id });
-        }
-
-        [HttpGet("draft")]
-        [Authorize(Roles = "Staff,Manager")]
-        public async Task<IActionResult> GetDraftCourses()
-        {
-            var draftCourses = await _courseService.GetDraftCoursesAsync();
-            return Ok(draftCourses);
-        }
-
-        [HttpPut("approve/{courseId}")]
-        [Authorize(Roles = "Manager")]
-        public async Task<IActionResult> ApproveCourse(int courseId)
-        {
-            var course = await _courseService.GetCourseByCourseId(courseId);
-            if (course == null)
-                return NotFound("Course not found.");
-
-            if (course.Status != CourseStatus.Draft)
-                return BadRequest("Only Draft courses can be activated.");
-
-            if (!await _courseService.CanApproveCourseAsync(courseId))
-                return BadRequest("Course must have at least one lesson and one survey before activation.");
-
-            await _courseService.UpdateCourseStatusAsync(courseId, CourseStatus.Active);
-            return Ok(new { Message = "Course is now active and visible to members!" });
-        }
-
 
         [HttpGet("{courseId:int}")]
         public async Task<IActionResult> GetCourseById(int courseId)
@@ -97,7 +59,7 @@ namespace SWP391_Project.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var userRole = User.FindFirstValue(ClaimTypes.Role);
-            var courses = await _courseService.GetAllCoursesAsync(userRole, userId);
+            var courses = await _courseService.GetAllCoursesAsync(userId);
 
             return Ok(courses);
         }
@@ -123,31 +85,12 @@ namespace SWP391_Project.Controllers
             });
         }
 
-
-        [HttpPut("{courseId}")]
-        [Authorize(Roles = "Manager")]
-        public async Task<IActionResult> UpdateCourse(int courseId, [FromBody] CourseUpdateDto courseUpdateDto)
-        {
-            await _courseService.UpdateCourseAsync(courseId, courseUpdateDto);
-            return Ok(new { Message = "Course updated successfully!" });
-        }
-
-        [HttpDelete("{courseId}")]
-        [Authorize(Roles = "Manager")]
-        public async Task<IActionResult> DeleteCourse(int courseId)
-        {
-            await _courseService.DeleteCourseAsync(courseId);
-            return Ok(new { Message = "Course deleted successfully!" });
-        }
-
         [HttpGet("topic/{topic}")]
         public async Task<IActionResult> GetCoursesByTopic(CourseTopic topic)
         {
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var userRole = User.FindFirstValue(ClaimTypes.Role);
-
-            var courses = await _courseService.GetCoursesByTopicAsync(topic, userRole, userId);
+            var courses = await _courseService.GetCoursesByTopicAsync(topic,userId);
 
             return Ok(courses);
         }
@@ -159,9 +102,8 @@ namespace SWP391_Project.Controllers
             {
                 searchTerm = "";
             }
-            var userRole = User.FindFirstValue(ClaimTypes.Role);
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var courses = await _courseService.SearchCourseAsync(searchTerm, userRole, userId);
+            var courses = await _courseService.SearchCourseAsync(searchTerm, userId);
             return Ok(courses);
         }
 
@@ -183,14 +125,6 @@ namespace SWP391_Project.Controllers
             return Ok(new { Message = "Enrolled successfully!", CourseId = courseId });
         }
 
-        [HttpGet("enrollments/{courseId}")]
-        [Authorize(Roles = "Admin,Manager")]
-        public async Task<IActionResult> GetAllEnrollmentsForCourse(int courseId)
-        {
-            var enrollments = await _courseService.GetAllEnrollmentsForCourseAsync(courseId);
-            return Ok(enrollments);
-        }
-
         [HttpPut("progress/{lessonId}")]
         [Authorize(Roles = "Member")]
         public async Task<IActionResult> UpdateLessonProgress(int lessonId, bool isCompleted)
@@ -209,13 +143,6 @@ namespace SWP391_Project.Controllers
             return Ok(progress);
         }
 
-        [HttpGet("report/{courseId}")]
-        [Authorize(Roles = "Manager,Admin")]
-        public async Task<IActionResult> GetCourseReport(int courseId)
-        {
-            var report = await _courseService.GetCourseReportAsync(courseId);
-            return Ok(report);
-        }
 
         [HttpGet("lesson-progress-report/{courseId}")]
         [Authorize(Roles = "Manager, Admin")]
@@ -225,57 +152,8 @@ namespace SWP391_Project.Controllers
             return Ok(report);
         }
 
-        [HttpGet("completed-course/{courseId}")]
-        [Authorize(Roles = "Member,Manager")]
-        public async Task<IActionResult> GetCompletedCourseById(int courseId)
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var course = await _courseService.GetCompletedCourseDetailAsync(courseId, userId);
-            if (course == null)
-            {
-                return NotFound("You have not complete this course!");
-            }
-
-            return Ok(course);
-        }
-        [HttpGet("allCourses/Manager")]
-        [Authorize(Roles = "Manager")]
-        public async Task<IActionResult> GetCourses([FromQuery] string? status = null)
-        {
-            IEnumerable<CourseListDto> courses;
-
-            if (string.IsNullOrEmpty(status))
-            {
-                courses = await _courseService.GetAllCoursesForManagerAsync();
-            }
-            else
-            {
-                switch (status.ToLower())
-                {
-                    case "draft":
-                        courses = await _courseService.GetDraftCoursesAsync();
-                        break;
-                    case "active":
-                        courses = await _courseService.GetActiveCoursesAsync();
-                        break;
-                    case "inactive":
-                        courses = await _courseService.GetInactiveCoursesAsync();
-                        break;
-                    default:
-                        return BadRequest("Invalid status filter.");
-                }
-            }
-
-            return Ok(courses);
-        }
-        [HttpGet("courses_without_survey")]
-        [Authorize(Roles = "Manager,Staff")]
-        public async Task<IActionResult> GetCoursesWithoutSurveyOrInactiveSurvey()
-        {
-            var courses = await _courseService.GetCoursesWithoutSurveyOrInactiveSurveyAsync();
-            return Ok(courses);
-        }
+       
 
     }
 }

@@ -7,6 +7,7 @@ using DataAccessLayer.Dto.Survey;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
 using DataAccessLayer.Repository;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -55,13 +56,10 @@ namespace BusinessLayer.Service
         }
 
 
-        public async Task<IEnumerable<CourseWithEnrollmentStatusDto>> GetAllCoursesAsync(string? userRole, string userId)
+        public async Task<IEnumerable<CourseWithEnrollmentStatusDto>> GetAllCoursesAsync(string userId)
         {
             var courses=await _courseRepository.GetAllAsync();
-            if (userRole != "Manager")
-            {
-                courses = courses.Where(c => c.Status==CourseStatus.Active).ToList();
-            }
+            courses = courses.Where(c => c.Status==CourseStatus.Active).ToList();
             var result = new List<CourseWithEnrollmentStatusDto>();
 
             foreach (var course in courses)
@@ -81,25 +79,16 @@ namespace BusinessLayer.Service
             var courses = await _courseRepository.GetAllAsync();
             return _mapper.Map<List<CourseListDto>>(courses);
         }
-        public async Task<IEnumerable<CourseListDto>> GetActiveCoursesAsync()
+        public async Task<IEnumerable<CourseListDto>> GetCoursesByStatusAsync(CourseStatus? status = null)
         {
             var courses = await _courseRepository.GetAllAsync();
-            var activeCourses = courses.Where(c => c.Status == CourseStatus.Active).ToList();
-            return _mapper.Map<IEnumerable<CourseListDto>>(activeCourses);
+            if (status.HasValue)
+            {
+                courses = courses.Where(c => c.Status == status.Value).ToList();
+            }
+            return _mapper.Map<IEnumerable<CourseListDto>>(courses);
         }
 
-        public async Task<IEnumerable<CourseListDto>> GetInactiveCoursesAsync()
-        {
-            var courses = await _courseRepository.GetAllAsync();
-            var inactiveCourses = courses.Where(c => c.Status == CourseStatus.Inactive).ToList();
-            return _mapper.Map<IEnumerable<CourseListDto>>(inactiveCourses);
-        }
-        public async Task<IEnumerable<CourseListDto>> GetDraftCoursesAsync()
-        {
-            var courses = await _courseRepository.GetAllAsync();
-            var inactiveCourses = courses.Where(c => c.Status == CourseStatus.Draft).ToList();
-            return _mapper.Map<IEnumerable<CourseListDto>>(inactiveCourses);
-        }
 
         public async Task<bool> CanApproveCourseAsync(int courseId)
         {
@@ -132,6 +121,8 @@ namespace BusinessLayer.Service
         {
             var course = await _courseRepository.GetByIdAsync(courseId);
             if (course == null) return null;
+            if (userRole == "Member" && course.Status==CourseStatus.Inactive)
+                return null;
             var enrollment = await _courseEnrollmentRepository.GetEnrollmentByUserIdAndCourseIdAsync(userId, courseId);
             var isCourseCompleted = enrollment != null && enrollment.IsCompleted;
 
@@ -235,13 +226,10 @@ namespace BusinessLayer.Service
             return _mapper.Map<IEnumerable<CourseListDto>>(inProgressCourses);
         }
 
-        public async Task<IEnumerable<CourseWithEnrollmentStatusDto>> GetCoursesByTopicAsync(CourseTopic topic, string userRole, string userId)
+        public async Task<IEnumerable<CourseWithEnrollmentStatusDto>> GetCoursesByTopicAsync(CourseTopic topic, string userId)
         {
             var courses=await _courseRepository.GetByTopicAsync(topic);
-            if (userRole != "Manager")
-            {
-                courses = courses.Where(c => c.Status == CourseStatus.Active).ToList();
-            }
+            courses = courses.Where(c => c.Status == CourseStatus.Active).ToList();
             var result = new List<CourseWithEnrollmentStatusDto>();
 
             foreach (var course in courses)
@@ -255,6 +243,13 @@ namespace BusinessLayer.Service
             }
 
             return result;
+        }
+        public async Task<IEnumerable<CourseListDto>> GetCoursesByTopicForManagerAsync(CourseTopic topic, CourseStatus? status = null)
+        {
+            var courses = await _courseRepository.GetByTopicAsync(topic);
+            if (status.HasValue)
+                courses = courses.Where(c => c.Status == status.Value).ToList();
+            return _mapper.Map<IEnumerable<CourseListDto>>(courses);
         }
 
         public async Task UpdateCourseAsync(int courseId, CourseUpdateDto courseUpdateDto)
@@ -267,13 +262,10 @@ namespace BusinessLayer.Service
                 await _courseRepository.UpdateAsync(existCourse);
             }
         }
-        public async Task<IEnumerable<CourseWithEnrollmentStatusDto>> SearchCourseAsync(string searchTerm, string userRole,string userId)
+        public async Task<IEnumerable<CourseWithEnrollmentStatusDto>> SearchCourseAsync(string searchTerm,string userId)
         {
             var courses = await _courseRepository.SearchCoursesAsync(searchTerm);
-            if (userRole != "Manager")
-            {
-                courses = courses.Where(c => c.Status == CourseStatus.Active).ToList();
-            }
+            courses = courses.Where(c => c.Status == CourseStatus.Active).ToList();
             var result = new List<CourseWithEnrollmentStatusDto>();
 
             foreach (var course in courses)
@@ -287,6 +279,13 @@ namespace BusinessLayer.Service
             }
 
             return result;
+        }
+        public async Task<IEnumerable<CourseListDto>> SearchCourseForManagerAsync(string searchTerm, CourseStatus? status = null)
+        {
+            var courses = await _courseRepository.SearchCoursesAsync(searchTerm);
+            if (status.HasValue)
+                courses = courses.Where(c => c.Status == status.Value).ToList();
+            return _mapper.Map<IEnumerable<CourseListDto>>(courses);
         }
 
         //course-enrollment
@@ -364,7 +363,8 @@ namespace BusinessLayer.Service
                                           .GetCompletedLessonIdsByUserAndCourseAsync(userId, courseId);
             var course = await _courseRepository.GetByIdAsync(courseId);
             if (course == null) return null;
-            var lessonsDto = course.Lessions.Select(lesson => new LessonDto
+            var lessonsDto = course.Lessions.Where(lesson => lesson.IsActive|| (completedLessonIds.Contains(lesson.Id) && !lesson.IsActive))
+                                            .Select(lesson => new LessonDto
             {
                 Id = lesson.Id,
                 Title = lesson.Title,
