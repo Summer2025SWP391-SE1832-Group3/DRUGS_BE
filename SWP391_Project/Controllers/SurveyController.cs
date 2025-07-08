@@ -44,7 +44,7 @@ namespace SWP391_Project.Controllers
             var createdSurvey = await _surveyService.CreateSurveyWithQuestionAndAnswerAsync(dto,courseId);
             if (createdSurvey == null)
             {
-                return BadRequest("Failed to create survey.");
+                return BadRequest("Each course can only have one active CourseTest survey. Please delete the existing survey before creating a new one.");
             }
             else return Ok(new
             {
@@ -111,28 +111,51 @@ namespace SWP391_Project.Controllers
             return BadRequest("Failed to submit survey.");
         }
 
-        [HttpDelete("{surveyId:int}")]
+        [HttpPut("{surveyId:int}/status")]
         [Authorize(Roles = "Manager")]
-        public async Task<IActionResult> DeleteSurvey(int surveyId)
+        public async Task<IActionResult> ChangeSurveyStatus(int surveyId, [FromQuery] bool isActive)
         {
-            var result = await _surveyService.DeleteSurveyAsync(surveyId);
-            if (result)
+            var survey = await _surveyService.GetSurveyByIdAnyAsync(surveyId);
+            if (survey == null)
+                return NotFound("Survey not found.");
+            if (survey.SurveyType == SurveyType.CourseTest && survey.CourseId.HasValue)
             {
-                return Ok("Survey deleted successfully.");
+                var course = await _courseService.GetCourseByCourseId(survey.CourseId.Value);
+                if (course != null && course.Status == CourseStatus.Active && !isActive)
+                    return BadRequest("You cannot deactivate the survey as the course is active");
+                if (course != null && course.Status == CourseStatus.Inactive && isActive)
+                {
+                    return BadRequest("You cannot activate the survey as the course is inactive.");
+                }
+
+                if (isActive)
+                {
+                    var existingSurvey = await _surveyService.GetSurveyByCourseIdAsync(course.Id);
+                    if (existingSurvey != null && existingSurvey.IsActive)
+                    {
+                        return BadRequest("The course already has an active survey. Please deactivate the existing survey before activating a new one.");
+                    }
+                }
             }
-            return NotFound("Survey not found");
+
+            var result = await _surveyService.SetSurveyStatusAsync(surveyId, isActive);
+            if (result)
+                return Ok(isActive ? "Survey activated." : "Survey deactivated.");
+
+            return BadRequest("Failed to update survey status.");
         }
 
+        
         [HttpPut("{surveyId:int}")]
         [Authorize(Roles = "Staff,Manager")]
         public async Task<IActionResult> UpdateSurvey(int surveyId, [FromBody] SurveyUpdateWithQuesAndAnsDto surveyUpdateDto)
         {
-            var result = await _surveyService.UpdateSurveyAsync(surveyUpdateDto, surveyId);
-            if (result)
+            var (success, message) = await _surveyService.UpdateSurveyAsync(surveyUpdateDto, surveyId);
+            if (!success)
             {
-                return Ok("Survey updated successfully.");
+                return BadRequest(new { Message = message });
             }
-            return NotFound("Survey not found or could not be updated.");
+            return Ok(new { Message = message });
         }
 
         [HttpGet("{surveyId:int}/statistics")]

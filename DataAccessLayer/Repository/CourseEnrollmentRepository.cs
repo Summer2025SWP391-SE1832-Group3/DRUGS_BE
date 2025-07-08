@@ -32,7 +32,6 @@ namespace DataAccessLayer.Repository
             await _context.CourseEnrollments.AddAsync(enroll);
             await _context.SaveChangesAsync();
             return enroll;
-
         }
 
         public async Task<IEnumerable<CourseEnrollment>> GetEnrollmentsByCourseIdAsync(int courseId)

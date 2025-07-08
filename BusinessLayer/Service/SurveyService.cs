@@ -33,13 +33,13 @@ namespace BusinessLayer.Service
             return await _repository.DeleteAnswerAsync(answerId);
         }
 
-        public async Task<bool> DeleteSurveyAsync(int surveyId)
+        public async Task<bool> SetSurveyStatusAsync(int surveyId, bool isActive)
         {
-            var survey=await _repository.GetByIdAsync(surveyId);
-            if(survey==null) return false;
-            survey.IsActive = false;
-            survey.UpdatedAt= DateTime.Now;
-            return await _repository.DeleteAsync(survey);
+            var survey = await _repository.GetByIdAnyAsync(surveyId);
+            if (survey == null) return false;
+            survey.IsActive = isActive;
+            survey.UpdatedAt = DateTime.Now;
+            return await _repository.UpdateAsync(survey);
         }
 
         public async Task<bool> DeleteQuestionAsync(int questionId)
@@ -81,6 +81,23 @@ namespace BusinessLayer.Service
             return _mapper.Map<SurveyViewDto>(survey);
         }
 
+        public async Task<Survey?> GetSurveyByIdAnyAsync(int surveyId)
+        {
+            return await _repository.GetByIdAnyAsync(surveyId);
+        }
+
+        public async Task<bool> IsSurveyActiveAsync(int surveyId)
+        {
+            var survey = await _repository.GetByIdAnyAsync(surveyId);
+            if (survey == null) return false; 
+            return survey.IsActive; 
+        }
+        public async Task<Survey?> GetSurveyByCourseIdAsync(int courseId)
+        {
+            var survey = await _repository.GetSurveyByCourseIdAsync(courseId);
+            return survey;
+        }
+
         public async Task<Survey> CreateSurveyWithQuestionAndAnswerAsync(SurveyCreateWithQuesAndAnsDto dto, int? courseId)
         {
             if (courseId.HasValue)
@@ -104,7 +121,7 @@ namespace BusinessLayer.Service
 
             };
             var createdSurvey =await _repository.CreateAsync(survey);
-            if (courseId.HasValue)
+            if (courseId.HasValue && dto.SurveyType==SurveyType.CourseTest)
             {
                 var course = await _courseRepository.GetByIdAsync(courseId.Value);
                 if (course != null)
@@ -236,37 +253,39 @@ namespace BusinessLayer.Service
             return createdSurveyResult;
         }
 
-        public async Task<bool> UpdateSurveyAsync(SurveyUpdateWithQuesAndAnsDto surveyUpdateDto, int surveyId)
+        public async Task<(bool Success, string Message)> UpdateSurveyAsync(SurveyUpdateWithQuesAndAnsDto surveyUpdateDto, int surveyId)
         {
-            var survey=await _repository.GetByIdAsync(surveyId);
-            if(survey==null) return false;
-            bool hasResult =survey.SurveyResults!=null && survey.SurveyResults.Any();
+            var survey = await _repository.GetByIdAsync(surveyId);
+            if (survey == null)
+                return (false, "Survey not found.");
+
+            bool hasResult = survey.SurveyResults != null && survey.SurveyResults.Any();
             if (hasResult)
             {
-                survey.Description = surveyUpdateDto.Description;
-                survey.SurveyName = surveyUpdateDto.SurveyName;
-                survey.UpdatedAt= DateTime.Now; 
-                foreach (var questionDto in surveyUpdateDto.Questions)
-                {
-                    var question = survey.SurveyQuestions.FirstOrDefault(q=>q.QuestionId == questionDto.QuestionId);
-                    if (question != null)
-                    {
-                        question.QuestionText = questionDto.QuestionText;
-                        foreach (var answerDto in questionDto.AnswersDto)
-                        {
-                            var answer = question.SurveyAnswers.FirstOrDefault(a => a.AnswerId == answerDto.AnswerId);
-                            if (answer != null)
-                            {
-                                answer.AnswerText = answerDto.AnswerText;
-                                answer.IsCorrect = answerDto.IsCorrect;
-                                answer.Score = answerDto.Score;
-                            }
-
-                        }
-                    }
-                }
+                return (false, "This survey has already been attempted by users. You cannot update the survey.");
             }
-            return await _repository.UpdateAsync(survey);
+            survey.Description = surveyUpdateDto.Description;
+            survey.SurveyName = surveyUpdateDto.SurveyName;
+            survey.UpdatedAt = DateTime.Now;
+            survey.SurveyQuestions.Clear();
+            foreach (var questionDto in surveyUpdateDto.Questions)
+            {
+                var newQ = new SurveyQuestion
+                {
+                    SurveyId = survey.SurveyId,
+                    QuestionText = questionDto.QuestionText,
+                    SurveyAnswers = questionDto.AnswersDto.Select(ans => new SurveyAnswer
+                    {
+                        AnswerText = ans.AnswerText,
+                        IsCorrect = ans.IsCorrect ?? false,
+                        Score = ans.Score
+                    }).ToList()
+                };
+                survey.SurveyQuestions.Add(newQ);
+            }
+            await _repository.UpdateAsync(survey);
+            return (true, "Survey updated successfully!");
+            
         }
 
         public async Task<SurveyStatisticDto> GetSurveyStatisticAsync(int surveyId)

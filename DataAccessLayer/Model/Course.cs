@@ -29,7 +29,7 @@ namespace DataAccessLayer.Model
         //public bool IsActive { get; set; }
         public CourseTopic Topic { get; set; }
         public int? FinalExamSurveyId { get; set; }
-        public Survey? FinalExamSurvey { get; set; } 
+        public Survey? FinalExamSurvey { get; set; }
         public ICollection<Lesson> Lessions { get; set; }
         public ICollection<CourseEnrollment> CourseEnrollments { get; set; }
 

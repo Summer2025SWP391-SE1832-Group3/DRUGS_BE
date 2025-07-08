@@ -45,14 +45,23 @@ namespace BusinessLayer.Service
             return _mapper.Map<CourseDto>(createdCourse);
         }
 
-        public async Task DeleteCourseAsync(int courseId)
+        public async Task<bool> DeactivateCourseAsync(int courseId)
         {
             var course = await _courseRepository.GetByIdAsync(courseId);
-            if (course != null)
+            if (course == null)
             {
-                course.Status=CourseStatus.Inactive; 
-                await _courseRepository.UpdateAsync(course);  
+                return false;
             }
+
+            var enrollments = await _courseEnrollmentRepository.GetEnrollmentsByCourseIdAsync(courseId);
+            if (enrollments.Any(e => e.Status == EnrollmentStatus.InProgress))
+            {
+                return false; 
+            }
+            course.Status = CourseStatus.Inactive;
+            course.UpdatedAt = DateTime.Now;  
+            await _courseRepository.UpdateAsync(course);  
+            return true;
         }
 
 
@@ -95,7 +104,7 @@ namespace BusinessLayer.Service
             var course = await _courseRepository.GetByIdAsync(courseId);
             if (course == null) return false;
             if (course.Lessions == null || !course.Lessions.Any()) return false;
-            if (course.FinalExamSurveyId == null) return false;
+            if (course.FinalExamSurveyId == null || !await _surveyService.IsSurveyActiveAsync(course.FinalExamSurveyId.Value)) return false;
             return true;
         }
         public async Task UpdateCourseStatusAsync(int courseId, CourseStatus status)
@@ -223,7 +232,20 @@ namespace BusinessLayer.Service
                                                .Select(e => e.Course)
                                                .ToList();
 
-            return _mapper.Map<IEnumerable<CourseListDto>>(inProgressCourses);
+            var courseDtos= _mapper.Map<IEnumerable<CourseListDto>>(inProgressCourses);
+            foreach (var course in courseDtos)
+            {
+                if (course.Status==CourseStatus.Inactive)
+                {
+                    course.StatusMessage = "This course is no longer active. You can only view the content.";
+                }
+                else
+                {
+                    course.StatusMessage = "You can continue your course.";
+                }
+            }
+
+            return courseDtos;
         }
 
         public async Task<IEnumerable<CourseWithEnrollmentStatusDto>> GetCoursesByTopicAsync(CourseTopic topic, string userId)
@@ -345,7 +367,20 @@ namespace BusinessLayer.Service
                                               .Select(e => e.Course)
                                               .ToList();
 
-            return _mapper.Map<IEnumerable<CourseListDto>>(completedCourses);
+            var courseDtos= _mapper.Map<IEnumerable<CourseListDto>>(completedCourses);
+            foreach (var course in courseDtos)
+            {
+                if (course.Status==CourseStatus.Inactive)
+                {
+                    course.StatusMessage = "This course is no longer active.";
+                }
+                else
+                {
+                    course.StatusMessage = "You have completed this course.";
+                }
+            }
+
+            return courseDtos;
         }
 
         public async Task<CompletedCourseDetailDto> GetCompletedCourseDetailAsync(int courseId, string userId)
