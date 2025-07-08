@@ -144,14 +144,6 @@ namespace SWP391_Project.Controllers
         }
 
 
-        [HttpGet("lesson-progress-report/{courseId}")]
-        [Authorize(Roles = "Manager, Admin")]
-        public async Task<IActionResult> GetLessonProgressReport(int courseId)
-        {
-            var report = await _courseService.GetLessonProgressReportAsync(courseId);
-            return Ok(report);
-        }
-
         [HttpGet("completed-course/{courseId}")]
         [Authorize(Roles = "Member,Manager")]
         public async Task<IActionResult> GetCompletedCourseById(int courseId)
