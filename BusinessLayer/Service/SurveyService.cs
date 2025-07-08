@@ -201,22 +201,27 @@ namespace BusinessLayer.Service
                 TotalScore = totalScore,
                 TakeAt = DateTime.Now,
             };
+            
+
             if (survey.SurveyType == SurveyType.AddictionSurvey)
             {
-                if (totalScore < 10)
+                int maxScore = survey.SurveyQuestions.Sum(q => q.SurveyAnswers.Sum(a => a.Score.GetValueOrDefault()));
+                double percentage = (double)totalScore / maxScore * 100;
+
+                if (percentage <= 30)
                 {
                     surveyResult.RiskLevel = RiskLevel.Low;
-                    surveyResult.Recommendation = "No risk of addiction";
+                    surveyResult.Recommendation = "No risk of addiction. Recommend: Awareness Course.";
                 }
-                else if (totalScore < 20)
+                else if (percentage <= 60)
                 {
                     surveyResult.RiskLevel = RiskLevel.Medium;
-                    surveyResult.Recommendation = "At risk, should attend prevention course";
+                    surveyResult.Recommendation = "At risk. Recommend: Prevention Course.";
                 }
                 else
                 {
                     surveyResult.RiskLevel = RiskLevel.High;
-                    surveyResult.Recommendation = "High risk, should seek professional counseling";
+                    surveyResult.Recommendation = "High risk. Recommend: Refusal Course and should seek professional counseling.";
                 }
             }
             else if(survey.SurveyType == SurveyType.CourseTest)
