@@ -1,4 +1,5 @@
 ﻿using BusinessLayer.IService;
+using BusinessLayer.Service;
 using DataAccessLayer.Dto.Course;
 using DataAccessLayer.Model;
 using Microsoft.AspNetCore.Authorization;
@@ -57,12 +58,17 @@ namespace SWP391_Project.Controllers
         }
 
 
-        [HttpDelete("{courseId}")]
+        [HttpDelete("{courseId:int}")]
         [Authorize(Roles = "Manager")]
         public async Task<IActionResult> DeleteCourse(int courseId)
         {
-            await _courseService.DeleteCourseAsync(courseId);
-            return Ok(new { Message = "Course deleted successfully!" });
+            var result = await _courseService.DeactivateCourseAsync(courseId);
+            if (result)
+            {
+                return Ok("Course has been deactivated successfully.");
+            }
+
+            return BadRequest("Course cannot be deactivated because there are active enrollments.");
         }
 
         [HttpGet("draft")]
@@ -121,20 +127,7 @@ namespace SWP391_Project.Controllers
             return Ok(report);
         }
 
-        [HttpGet("completed-course/{courseId}")]
-        [Authorize(Roles = "Member,Manager")]
-        public async Task<IActionResult> GetCompletedCourseById(int courseId)
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var course = await _courseService.GetCompletedCourseDetailAsync(courseId, userId);
-            if (course == null)
-            {
-                return NotFound("You have not complete this course!");
-            }
-
-            return Ok(course);
-        }
 
     }
 }

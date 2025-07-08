@@ -40,12 +40,11 @@ namespace BusinessLayer.IService
 
         //Manager
         Task<CourseDto> CreateCourseAsync(CourseCreateDto courseCreateDto);
-
         Task<IEnumerable<CourseListDto>> GetAllCoursesForManagerAsync();
         Task<bool> CanApproveCourseAsync(int courseId);
         Task UpdateCourseStatusAsync(int courseId, CourseStatus status);
         Task UpdateCourseAsync(int courseId, CourseUpdateDto courseUpdateDto);
-        Task DeleteCourseAsync(int courseId);
+        Task<bool> DeactivateCourseAsync(int courseId);
         Task<IEnumerable<CourseListDto>> SearchCourseForManagerAsync(string searchTerm, CourseStatus? status = null);
         Task<IEnumerable<CourseListDto>> GetCoursesByTopicForManagerAsync(CourseTopic topic, CourseStatus? status = null);
 

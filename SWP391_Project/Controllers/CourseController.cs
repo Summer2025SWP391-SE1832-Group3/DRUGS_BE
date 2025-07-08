@@ -152,8 +152,21 @@ namespace SWP391_Project.Controllers
             return Ok(report);
         }
 
+        [HttpGet("completed-course/{courseId}")]
+        [Authorize(Roles = "Member,Manager")]
+        public async Task<IActionResult> GetCompletedCourseById(int courseId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-       
+            var course = await _courseService.GetCompletedCourseDetailAsync(courseId, userId);
+            if (course == null)
+            {
+                return NotFound("You have not complete this course!");
+            }
+
+            return Ok(course);
+        }
+
 
     }
 }

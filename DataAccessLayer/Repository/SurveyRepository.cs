@@ -61,11 +61,6 @@ namespace DataAccessLayer.Repository
             return await _context.SaveChangesAsync()>0;
         }
 
-        public async Task<bool> DeleteAsync(Survey survey)
-        {
-            _context.Surveys.Update(survey);
-            return await _context.SaveChangesAsync() > 0;
-        }
 
         public async Task<bool> DeleteQuestionAsync(int questionId)
         {
@@ -136,6 +131,15 @@ namespace DataAccessLayer.Repository
                 .FirstOrDefaultAsync(s => s.SurveyId == surveyId && s.IsActive==true);
         }
 
+        public async Task<Survey?> GetByIdAnyAsync(int surveyId)
+        {
+            return await _context.Surveys
+                .Include(s => s.SurveyResults)
+                .Include(s => s.SurveyQuestions)
+                    .ThenInclude(q => q.SurveyAnswers)
+                .FirstOrDefaultAsync(s => s.SurveyId == surveyId);
+        }
+
         public async Task<SurveyQuestion?> GetQuestionByIdAsync(int questionId)
         {
             return await _context.SurveyQuestions.FirstOrDefaultAsync(q=>q.QuestionId == questionId);
@@ -194,7 +198,7 @@ namespace DataAccessLayer.Repository
         public async Task<Survey?> GetSurveyByCourseIdAsync(int courseId)
         {
             return await _context.Surveys
-                .Where(s => s.CourseId == courseId)
+                .Where(s => s.CourseId == courseId && s.SurveyType == SurveyType.CourseTest && s.IsActive)
                 .FirstOrDefaultAsync();
         }
     }
