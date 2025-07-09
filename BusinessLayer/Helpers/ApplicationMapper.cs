@@ -2,6 +2,7 @@
 using DataAccessLayer.Dto.Account;
 using DataAccessLayer.Dto.BlogPost;
 using DataAccessLayer.Dto.Course;
+using DataAccessLayer.Dto.Feedback;
 using DataAccessLayer.Dto.Lesson;
 using DataAccessLayer.Dto.Survey;
 using DataAccessLayer.Model;
@@ -66,6 +67,11 @@ namespace BusinessLayer.Helpers
 
             CreateMap<CourseEnrollment, CourseEnrollmentDto>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.UserName));
+
+            CreateMap<Feedback, FeedbackViewDto>()
+           .ForMember(dest => dest.CreateBy, opt => opt.MapFrom(src => src.User.UserName))
+           .ForMember(dest => dest.CourseTitle, opt => opt.MapFrom(src => src.Course.Title))
+           .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
 
         }
     }

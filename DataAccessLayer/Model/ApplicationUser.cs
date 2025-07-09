@@ -29,6 +29,7 @@ namespace DataAccessLayer.Model
         public ICollection<ConsultationRequest> ConsultationRequestsAsConsultant { get; set; }
         public ICollection<ConsultantWorkingHour> WorkingHours { get; set; }
         public ICollection<Certificate> Certificates { get; set; }
+        public ICollection<Feedback> Feedbacks { get; set; }
 
     }
 }

@@ -147,6 +147,8 @@ builder.Services.AddScoped<ILessonProgressRepository, LessonProgressRepository>(
 builder.Services.AddScoped<ILessonRepository, LessonRepository>();
 builder.Services.AddScoped<ILessonService, LessonService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<IFeedbackService, FeedbackService>();
+builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 
 
 

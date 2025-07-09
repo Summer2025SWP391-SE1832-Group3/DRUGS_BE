@@ -25,15 +25,17 @@ namespace BusinessLayer.Service
         private readonly ILessonProgressRepository _lessonProgressRepository;
         private readonly ICourseReportRepository _courseReportRepository;
         private readonly ISurveyService _surveyService;
+        private readonly IFeedbackService _feedbackService;
 
         public CourseService(ICourseRepository courseRepository,IMapper mapper,ICourseEnrollmentRepository courseEnrollmentRepository,
-            ILessonProgressRepository lessonProgressRepository,ICourseReportRepository courseReportRepository,ISurveyService surveyService) {
+            ILessonProgressRepository lessonProgressRepository,ICourseReportRepository courseReportRepository,ISurveyService surveyService,IFeedbackService feedbackService) {
             _courseRepository = courseRepository;
             _mapper = mapper;
             _courseEnrollmentRepository= courseEnrollmentRepository;
             _lessonProgressRepository = lessonProgressRepository;
             _courseReportRepository = courseReportRepository;
             _surveyService = surveyService;
+            _feedbackService = feedbackService;
         }
 
         public async Task<CourseDto> CreateCourseAsync(CourseCreateDto courseCreateDto)
@@ -77,7 +79,7 @@ namespace BusinessLayer.Service
                 result.Add(new CourseWithEnrollmentStatusDto
                 {
                     Course = _mapper.Map<CourseListDto>(course),
-                    Status = status
+                    Status = status,
                 });
             }
 
@@ -342,7 +344,29 @@ namespace BusinessLayer.Service
         //statis
         public async Task<CourseReportDto> GetCourseReportAsync(int courseId)
         {
-            var report = await _courseReportRepository.GetCourseReportAsync(courseId);
+            var enrollments = await _courseReportRepository.GetEnrollmentsByCourseIdAsync(courseId);
+
+            var completedCount = enrollments.Count(e => e.IsCompleted);
+            var rating = await _feedbackService.GetAverageRatingAsync(courseId);
+            var feedbacks = await _feedbackService.GetFeedbacksByCourseIdAsync(courseId);
+            var totalFeedbacks = feedbacks.Count();
+            var feedbackDistribution = new Dictionary<int, int>();
+            for (int i = 1; i <= 5; i++)
+            {
+                feedbackDistribution[i] = feedbacks.Count(f => f.Rating == i);
+            }
+
+            var report = new CourseReportDto
+            {
+                CourseId = courseId,
+                TotalEnrollments = enrollments.Count(),
+                CompletedCount = completedCount,
+                PendingCount = enrollments.Count() - completedCount,
+                AverageRating = rating.AverageRating,
+                TotalFeedbacks = totalFeedbacks,
+                FeedbackDistribution = feedbackDistribution
+            };
+
             return report;
         }
 

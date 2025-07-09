@@ -13,8 +13,7 @@ namespace DataAccessLayer.Model
     {
         Awareness,         // Nhận thức 
         Prevention,        // Kỹ năng phòng tránh
-        Refusal,           // Từ chối
-        CommunityEducation // Giáo dục cộng đồng
+        Refusal,           // Từ chối   
     }
     public class Course{
         public int Id { get; set; }
@@ -32,6 +31,8 @@ namespace DataAccessLayer.Model
         public Survey? FinalExamSurvey { get; set; }
         public ICollection<Lesson> Lessions { get; set; }
         public ICollection<CourseEnrollment> CourseEnrollments { get; set; }
+        public ICollection<Feedback> Feedbacks { get; set; }
+
 
     }
 }
