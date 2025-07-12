@@ -126,7 +126,7 @@ namespace SWP391_Project.Controllers
                 if (course != null && course.Status == CourseStatus.Inactive && isActive)
                 {
                     return BadRequest("You cannot activate the survey as the course is inactive.");
-                }
+            }
 
                 if (isActive)
                 {
@@ -134,7 +134,7 @@ namespace SWP391_Project.Controllers
                     if (existingSurvey != null && existingSurvey.IsActive)
                     {
                         return BadRequest("The course already has an active survey. Please deactivate the existing survey before activating a new one.");
-                    }
+        }
                 }
             }
 
@@ -192,8 +192,28 @@ namespace SWP391_Project.Controllers
             }
 
             return Ok(surveyResults);
+            }
         }
-    }
 
+        //[HttpGet("{surveyId:int}/surveyResult/paginated")]
+        //public async Task<IActionResult> GetPaginatedUserSurveyResults(
+        //    int surveyId,
+        //    string userId,
+        //    [FromQuery] int page = 1,
+        //    [FromQuery] int pageSize = 10)
+        //{
+        //    try
+        //    {
+        //        if (page < 1) page = 1;
+        //        if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+        //        var result = await _surveyService.GetPaginatedUserSurveyResultsAsync(surveyId, userId, page, pageSize);
+        //        return Ok(result);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, "An error occurred while retrieving survey results");
+        //    }
+        //}
 
 }

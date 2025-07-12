@@ -23,6 +23,7 @@ namespace DataAccessLayer.IRepository
         Task<bool> DeleteAnswerAsync(int answerId);
         Task<SurveyAnswer> GetAnswerByIdAsync(int answerId);
 
+
         Task<SurveyQuestion> CreateQuestionAsync(SurveyQuestion question);
         Task<SurveyQuestion?> GetQuestionByIdAsync(int questionId);
         Task<List<SurveyQuestion>> GetAllQuestionsAsync(int surveyId);
@@ -32,6 +33,7 @@ namespace DataAccessLayer.IRepository
         Task<SurveyResult> CreateSurveyResultAsync(SurveyResult result);
         Task<SurveyAnswerResult> CreateSurveyAnswerResultAsync(SurveyAnswerResult result);
         Task<List<SurveyAnswerResult>> GetSurveyAnswerResultAsync(int surveyResultId);
+
         Task<List<SurveyResult>?> GetSurveyResultAsync(int surveyId, string userId);
         Task<List<SurveyResult>> GetAddictionSurveyResultsAsync(string userId);
 

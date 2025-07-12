@@ -15,6 +15,7 @@ namespace DataAccessLayer.Model
         public string? Recommendations { get; set; }
         public bool IsCompleted { get; set; } = false;
         
+        public string? GoogleMeetLink { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? UpdatedAt { get; set; }
         
@@ -22,5 +23,8 @@ namespace DataAccessLayer.Model
         [Required]
         public int ConsultationRequestId { get; set; }
         public ConsultationRequest ConsultationRequest { get; set; }
+        
+        // Navigation property to Review
+        public ConsultationReview? ConsultationReview { get; set; }
     }
 } 

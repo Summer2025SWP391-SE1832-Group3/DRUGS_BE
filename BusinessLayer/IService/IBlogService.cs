@@ -1,5 +1,6 @@
 ﻿using DataAccessLayer.Dto.BlogPost;
 using DataAccessLayer.Model;
+using BusinessLayer.Dto.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;

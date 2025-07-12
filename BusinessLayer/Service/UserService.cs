@@ -1,5 +1,7 @@
 using AutoMapper;
 using BusinessLayer.IService;
+using BusinessLayer.Dto.Common;
+using DataAccessLayer.Dto;
 using DataAccessLayer.Dto.Account;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;

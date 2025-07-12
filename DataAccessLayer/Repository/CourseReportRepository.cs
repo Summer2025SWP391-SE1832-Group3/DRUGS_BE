@@ -23,8 +23,8 @@ namespace DataAccessLayer.Repository
         public async Task<IEnumerable<CourseEnrollment>> GetEnrollmentsByCourseIdAsync(int courseId)
         {
             return await _context.CourseEnrollments
-                .Where(e => e.CourseId == courseId)
-                .ToListAsync();
+                                            .Where(e => e.CourseId == courseId)
+                                            .ToListAsync();
         }
 
         public async Task<LessonProgressReportDto> GetLessonProgressReportAsync(int courseId)

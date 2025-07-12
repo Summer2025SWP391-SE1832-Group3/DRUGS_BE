@@ -1,5 +1,6 @@
 using DataAccessLayer.Dto.Consultation;
 using DataAccessLayer.Model;
+using BusinessLayer.Dto.Common;
 
 namespace BusinessLayer.IService
 {
@@ -38,5 +39,11 @@ namespace BusinessLayer.IService
         Task<bool> IsConsultantAsync(string userId);
         Task<bool> CanAccessConsultationRequestAsync(int requestId, string currentUserId);
         Task<bool> IsConsultationRequestOverlappingAsync(string consultantId, DateTime requestedDate, int durationMinutes);
+
+        // Pagination methods
+        Task<PaginatedResult<ConsultationRequestViewDto>> GetPaginatedMyConsultationRequestsAsync(string userId, int page, int pageSize, ConsultationStatus? status = null);
+        Task<PaginatedResult<ConsultationRequestViewDto>> GetPaginatedConsultationRequestsForConsultantAsync(string consultantId, int page, int pageSize, ConsultationStatus? status = null);
+        Task<PaginatedResult<ConsultationRequestViewDto>> GetPaginatedAllConsultationRequestsAsync(string currentUserId, int page, int pageSize, string? userId = null, string? consultantId = null, ConsultationStatus? status = null, DateTime? fromDate = null, DateTime? toDate = null);
+        Task<PaginatedResult<ConsultationReviewViewDto>> GetPaginatedConsultantReviewsAsync(string consultantId, int page, int pageSize);
     }
 }

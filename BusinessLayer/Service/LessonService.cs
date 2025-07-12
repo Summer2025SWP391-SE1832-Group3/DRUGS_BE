@@ -72,6 +72,7 @@ namespace BusinessLayer.Service
             var lesson = new Lesson
             {
                 Title = lessonCreateDto.Title,
+
                 Content = lessonCreateDto.Content,
                 VideoUrl = videoUrl,  
                 CourseId = lessonCreateDto.CourseId

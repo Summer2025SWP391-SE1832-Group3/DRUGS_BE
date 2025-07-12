@@ -61,6 +61,11 @@ namespace DataAccessLayer.Repository
             return await _context.SaveChangesAsync()>0;
         }
 
+        public async Task<bool> DeleteAsync(Survey survey)
+        {
+            _context.Surveys.Update(survey);
+            return await _context.SaveChangesAsync() > 0;
+        }
 
         public async Task<bool> DeleteQuestionAsync(int questionId)
         {
@@ -110,7 +115,7 @@ namespace DataAccessLayer.Repository
             if (surveyType.HasValue)
             {
                 query = query.Where(s => s.SurveyType == surveyType.Value);
-            }
+        }
 
             return await query.ToListAsync();
         }
@@ -187,13 +192,13 @@ namespace DataAccessLayer.Repository
         {
             return await _context.SurveyResults
                                  .Where(s => s.Survey.SurveyType == SurveyType.AddictionSurvey && s.UserId == userId)
-                                 .Include(s => s.SurveyAnswerResults)
-                                 .Include(s => s.Survey)
-                                     .ThenInclude(s => s.SurveyQuestions)
-                                         .ThenInclude(q => q.SurveyAnswers)
-                                 .Include(s => s.User)
-                                 .OrderByDescending(s => s.TakeAt)
-                                 .ToListAsync();
+                 .Include(s => s.SurveyAnswerResults)
+                 .Include(s => s.Survey)
+                     .ThenInclude(s => s.SurveyQuestions)
+                         .ThenInclude(q => q.SurveyAnswers)
+                 .Include(s => s.User)
+                 .OrderByDescending(s => s.TakeAt)
+                 .ToListAsync();
         }
         public async Task<Survey?> GetSurveyByCourseIdAsync(int courseId)
         {

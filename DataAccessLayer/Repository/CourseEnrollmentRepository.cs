@@ -17,7 +17,7 @@ namespace DataAccessLayer.Repository
 
         public CourseEnrollmentRepository(ApplicationDBContext context) {
             _context = context;
-        }   
+        }
         public async Task<CourseEnrollment> EnrollInCourseAsync(string userId, int courseId)
         {
             var enroll = new CourseEnrollment
@@ -27,11 +27,12 @@ namespace DataAccessLayer.Repository
                 EnrolledAt = DateTime.Now,
                 Status = EnrollmentStatus.InProgress,
                 IsCompleted = false
-
+                
             };
             await _context.CourseEnrollments.AddAsync(enroll);
             await _context.SaveChangesAsync();
             return enroll;
+
         }
 
         public async Task<IEnumerable<CourseEnrollment>> GetEnrollmentsByCourseIdAsync(int courseId)

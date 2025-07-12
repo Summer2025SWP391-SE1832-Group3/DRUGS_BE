@@ -18,5 +18,19 @@ namespace BusinessLayer.IService
         Task<ConsultantWorkingHour> UpdateWorkingHourAsync(string consultantId, int workingHourId, ConsultantWorkingHour workingHour);
         Task<bool> DeleteWorkingHourAsync(string consultantId, int workingHourId);
         Task<bool> IsWorkingHourOverlappingAsync(string consultantId, DayOfWeek dayOfWeek, TimeSpan startTime, TimeSpan endTime, int? excludeId = null);
+        
+        // New methods for slot management
+        Task<IEnumerable<ConsultantWorkingHour>> GetAvailableSlotsAsync(string consultantId, DateTime fromDate, DateTime toDate);
+        Task<IEnumerable<ConsultantWorkingHour>> GenerateSlotsForDateRangeAsync(string consultantId, DateTime fromDate, DateTime toDate, int slotDurationMinutes = 60);
+        Task<bool> BookSlotAsync(int slotId, int consultationRequestId);
+        Task<bool> CancelSlotAsync(int slotId);
+        Task<bool> CompleteSlotAsync(int slotId);
+        Task<object> GetSlotConfigurationAsync(string consultantId);
+        
+        // Auto slot management
+        Task<IEnumerable<ConsultantWorkingHour>> GetAvailableSlotsWithAutoGenerationAsync(string consultantId, DateTime fromDate, DateTime toDate, int slotDurationMinutes = 60);
+        Task<int> AutoGenerateSlotsForFutureWeeksAsync(string consultantId, int weeksAhead = 4, int slotDurationMinutes = 60);
+        Task<int> CleanupOldSlotsAsync(int daysToKeep = 30);
+        Task<int> AutoGenerateSlotsForAllConsultantsAsync(int weeksAhead = 4, int slotDurationMinutes = 60);
     }
 } 
