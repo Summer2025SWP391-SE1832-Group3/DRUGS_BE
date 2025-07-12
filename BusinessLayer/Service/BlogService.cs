@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BusinessLayer.IService;
+using BusinessLayer.Dto.Common;
 using DataAccessLayer.Dto.BlogPost;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;

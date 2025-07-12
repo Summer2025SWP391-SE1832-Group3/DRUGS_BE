@@ -182,6 +182,24 @@ namespace SWP391_Project.Controllers
             return Ok(blogs);
         }
 
+        [HttpGet("{userId}")]
+        [Authorize(Roles = "Staff,Manager")]
+        public async Task<IActionResult> GetByUserId(string userId)
+        {
+            var curentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isStaff = User.IsInRole("Staff");
+            if (isStaff && curentUserId != userId)
+            {
+                return Forbid();
+            }
+            var blogs = await _blogService.GetBlogByUserIdAsync(userId);
+            if (blogs == null || blogs.Count == 0)
+            {
+                return NotFound(new { message = "No blogs found" });
+            }
+            return Ok(blogs);
+        }
+
         [HttpPost("approve/{id:int}")]
         [Authorize(Roles = "Manager")]
         public async Task<IActionResult> Approve(int id)

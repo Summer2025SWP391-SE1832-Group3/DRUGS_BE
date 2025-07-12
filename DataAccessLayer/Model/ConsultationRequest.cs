@@ -29,7 +29,6 @@ namespace DataAccessLayer.Model
         public DateTime? ScheduledDate { get; set; }
         public int DurationMinutes { get; set; } = 60;
         
-        public string? GoogleMeetLink { get; set; }
         public string? Notes { get; set; }
         
         public ConsultationStatus Status { get; set; } = ConsultationStatus.Pending;

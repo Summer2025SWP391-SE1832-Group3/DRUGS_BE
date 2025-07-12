@@ -12,7 +12,6 @@ namespace DataAccessLayer.Dto.Consultation
         public DateTime RequestedDate { get; set; }
         public DateTime? ScheduledDate { get; set; }
         public int DurationMinutes { get; set; }
-        public string? GoogleMeetLink { get; set; }
         public string? Notes { get; set; }
         public ConsultationStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }

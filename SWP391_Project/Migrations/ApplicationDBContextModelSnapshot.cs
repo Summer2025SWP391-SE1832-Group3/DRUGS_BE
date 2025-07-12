@@ -249,9 +249,20 @@ namespace SWP391_Project.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("ConsultantId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("ConsultationRequestId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
 
                     b.Property<int>("DayOfWeek")
                         .HasColumnType("int");
@@ -259,12 +270,27 @@ namespace SWP391_Project.Migrations
                     b.Property<TimeSpan>("EndTime")
                         .HasColumnType("time");
 
+                    b.Property<DateTime?>("SlotDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<TimeSpan>("StartTime")
                         .HasColumnType("time");
 
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("ApplicationUserId");
+
                     b.HasIndex("ConsultantId");
+
+                    b.HasIndex("ConsultationRequestId");
 
                     b.ToTable("ConsultantWorkingHours");
                 });
@@ -299,9 +325,6 @@ namespace SWP391_Project.Migrations
 
                     b.Property<int>("DurationMinutes")
                         .HasColumnType("int");
-
-                    b.Property<string>("GoogleMeetLink")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
@@ -391,6 +414,9 @@ namespace SWP391_Project.Migrations
 
                     b.Property<DateTime?>("EndTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("GoogleMeetLink")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("bit");
@@ -513,6 +539,90 @@ namespace SWP391_Project.Migrations
 
                     b.Property<string>("ReviewText")
                         .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Topic")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Courses");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.CourseEnrollment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EnrolledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CourseEnrollments");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.CourseTestSurvey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<int>("SurveyId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("SurveyId");
+
+                    b.ToTable("CourseTestSurveys");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.Lesson", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -975,13 +1085,24 @@ namespace SWP391_Project.Migrations
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultantWorkingHour", b =>
                 {
-                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "Consultant")
+                    b.HasOne("DataAccessLayer.Model.ApplicationUser", null)
                         .WithMany("WorkingHours")
+                        .HasForeignKey("ApplicationUserId");
+
+                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "Consultant")
+                        .WithMany()
                         .HasForeignKey("ConsultantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("DataAccessLayer.Model.ConsultationRequest", "ConsultationRequest")
+                        .WithMany()
+                        .HasForeignKey("ConsultationRequestId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Consultant");
+
+                    b.Navigation("ConsultationRequest");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationRequest", b =>
@@ -1013,7 +1134,7 @@ namespace SWP391_Project.Migrations
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationReview", b =>
                 {
                     b.HasOne("DataAccessLayer.Model.ConsultationSession", "ConsultationSession")
-                        .WithOne()
+                        .WithOne("ConsultationReview")
                         .HasForeignKey("DataAccessLayer.Model.ConsultationReview", "ConsultationSessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

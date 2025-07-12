@@ -20,7 +20,7 @@ namespace BusinessLayer.IService
         Task<Survey?> GetSurveyByCourseIdAsync(int courseId);
         Task<List<SurveyAnswer>> GetAllAnswersByQuestionIdAsync(int questionId);
         Task<bool> DeleteAnswerAsync(int answerId);
-        
+
         Task<List<SurveyQuestion>> GetAllQuestionsBySurveyIdAsync(int surveyId);
         Task<bool> DeleteQuestionAsync(int questionId);
 

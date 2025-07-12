@@ -13,5 +13,8 @@ namespace DataAccessLayer.Dto.Consultation
         
         [MaxLength(2000)]
         public string? Recommendations { get; set; }
+        
+        [MaxLength(500)]
+        public string? GoogleMeetLink { get; set; }
     }
 } 

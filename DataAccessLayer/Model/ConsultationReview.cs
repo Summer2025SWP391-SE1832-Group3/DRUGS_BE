@@ -17,7 +17,6 @@ namespace DataAccessLayer.Model
         
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         
-        // Foreign Key
         [Required]
         public int ConsultationSessionId { get; set; }
         public ConsultationSession ConsultationSession { get; set; }

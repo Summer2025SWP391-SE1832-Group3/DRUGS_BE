@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BusinessLayer.IService;
+using BusinessLayer.Dto.Common;
 using DataAccessLayer.Dto.Survey;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
@@ -231,6 +232,7 @@ namespace BusinessLayer.Service
                 if (totalScore >= requiredScore)
                 {
                     surveyResult.ResultStatus = "Pass";
+                    surveyResult.Recommendation = "Pass";
                     if (survey.CourseId.HasValue) {
                         var courseId = survey.CourseId.Value;
                         await _courseEnrollmentRepository.UpdateStatus(userId, courseId);
@@ -268,28 +270,33 @@ namespace BusinessLayer.Service
             {
                 return (false, "This survey has already been attempted by users. You cannot update the survey.");
             }
-            survey.Description = surveyUpdateDto.Description;
-            survey.SurveyName = surveyUpdateDto.SurveyName;
+                survey.Description = surveyUpdateDto.Description;
+                survey.SurveyName = surveyUpdateDto.SurveyName;
             survey.UpdatedAt = DateTime.Now;
             survey.SurveyQuestions.Clear();
-            foreach (var questionDto in surveyUpdateDto.Questions)
-            {
-                var newQ = new SurveyQuestion
+                foreach (var questionDto in surveyUpdateDto.Questions)
                 {
+                var newQ = new SurveyQuestion
+                    {
                     SurveyId = survey.SurveyId,
                     QuestionText = questionDto.QuestionText,
                     SurveyAnswers = questionDto.AnswersDto.Select(ans => new SurveyAnswer
-                    {
+                        {
                         AnswerText = ans.AnswerText,
                         IsCorrect = ans.IsCorrect ?? false,
                         Score = ans.Score
                     }).ToList()
                 };
                 survey.SurveyQuestions.Add(newQ);
-            }
+                            }
             await _repository.UpdateAsync(survey);
             return (true, "Survey updated successfully!");
-            
+
+                        }
+                    }
+                }
+            }
+            return await _repository.UpdateAsync(survey);
         }
 
         public async Task<SurveyStatisticDto> GetSurveyStatisticAsync(int surveyId)
@@ -323,7 +330,7 @@ namespace BusinessLayer.Service
             return surveyStatistic;
 
         }
-        
+
         public async Task<List<SurveyResultDto>> GetUserSurveyResultAsync(int surveyId, string userId)
         {
             var surveyResults =await _repository.GetSurveyResultAsync(surveyId, userId);
@@ -373,11 +380,11 @@ namespace BusinessLayer.Service
                 TotalScore = latestSurveyResult.TotalScore,
                 Recommendation = latestSurveyResult.Recommendation,
                 Questions = latestSurveyResult.Survey.SurveyQuestions.Select(q => new SurveyQuestionResultDto
-                {
+            {
                     QuestionId = q.QuestionId,
                     QuestionText = q.QuestionText,
                     Answers = q.SurveyAnswers.Select(a => new SurveyAnswerResultDto
-                    {
+            {
                         AnswerId = a.AnswerId,
                         AnswerText = a.AnswerText,
                         IsCorrect = a.IsCorrect,
@@ -390,7 +397,7 @@ namespace BusinessLayer.Service
             return surveyResultDto;
         }
         public async Task<List<SurveyResultDto>> GetAddictionSurveyResultsAsync(string userId)
-        {
+                {
             var surveyResults = await _repository.GetAddictionSurveyResultsAsync(userId);
             if (surveyResults == null || !surveyResults.Any()) return new List<SurveyResultDto>();
             var surveyResultDtos = surveyResults.Select(surveyResult => new SurveyResultDto
