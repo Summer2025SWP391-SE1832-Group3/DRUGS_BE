@@ -272,32 +272,26 @@ namespace BusinessLayer.Service
             }
                 survey.Description = surveyUpdateDto.Description;
                 survey.SurveyName = surveyUpdateDto.SurveyName;
-            survey.UpdatedAt = DateTime.Now;
-            survey.SurveyQuestions.Clear();
-                foreach (var questionDto in surveyUpdateDto.Questions)
-                {
-                var newQ = new SurveyQuestion
+                survey.UpdatedAt = DateTime.Now;
+                survey.SurveyQuestions.Clear();
+                    foreach (var questionDto in surveyUpdateDto.Questions)
                     {
-                    SurveyId = survey.SurveyId,
-                    QuestionText = questionDto.QuestionText,
-                    SurveyAnswers = questionDto.AnswersDto.Select(ans => new SurveyAnswer
+                    var newQ = new SurveyQuestion
                         {
-                        AnswerText = ans.AnswerText,
-                        IsCorrect = ans.IsCorrect ?? false,
-                        Score = ans.Score
-                    }).ToList()
-                };
-                survey.SurveyQuestions.Add(newQ);
-                            }
-            await _repository.UpdateAsync(survey);
-            return (true, "Survey updated successfully!");
-
-                        }
-                    }
-                }
+                        SurveyId = survey.SurveyId,
+                        QuestionText = questionDto.QuestionText,
+                        SurveyAnswers = questionDto.AnswersDto.Select(ans => new SurveyAnswer
+                            {
+                            AnswerText = ans.AnswerText,
+                            IsCorrect = ans.IsCorrect ?? false,
+                            Score = ans.Score
+                        }).ToList()
+                    };
+                    survey.SurveyQuestions.Add(newQ);
+                                }
+                await _repository.UpdateAsync(survey);
+                return (true, "Survey updated successfully!");
             }
-            return await _repository.UpdateAsync(survey);
-        }
 
         public async Task<SurveyStatisticDto> GetSurveyStatisticAsync(int surveyId)
         {

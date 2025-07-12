@@ -195,25 +195,25 @@ namespace SWP391_Project.Controllers
             }
         }
 
-        [HttpGet("{surveyId:int}/surveyResult/paginated")]
-        public async Task<IActionResult> GetPaginatedUserSurveyResults(
-            int surveyId,
-            string userId,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10)
-        {
-            try
-            {
-                if (page < 1) page = 1;
-                if (pageSize < 1 || pageSize > 100) pageSize = 10;
+        //[HttpGet("{surveyId:int}/surveyResult/paginated")]
+        //public async Task<IActionResult> GetPaginatedUserSurveyResults(
+        //    int surveyId,
+        //    string userId,
+        //    [FromQuery] int page = 1,
+        //    [FromQuery] int pageSize = 10)
+        //{
+        //    try
+        //    {
+        //        if (page < 1) page = 1;
+        //        if (pageSize < 1 || pageSize > 100) pageSize = 10;
 
-                var result = await _surveyService.GetPaginatedUserSurveyResultsAsync(surveyId, userId, page, pageSize);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, "An error occurred while retrieving survey results");
-            }
-        }
-    }
+        //        var result = await _surveyService.GetPaginatedUserSurveyResultsAsync(surveyId, userId, page, pageSize);
+        //        return Ok(result);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, "An error occurred while retrieving survey results");
+        //    }
+        //}
+
 }

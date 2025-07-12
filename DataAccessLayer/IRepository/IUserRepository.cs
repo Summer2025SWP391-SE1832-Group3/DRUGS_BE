@@ -23,6 +23,6 @@ namespace DataAccessLayer.IRepository
         Task<IdentityResult> AdminDeleteUserAsync(string userId);
         Task<List<ApplicationUser>> AdminSearchUsersAsync(string? email, string? username, string? role);
 
-        Task<ApplicationUser?> GetByIdAsync(string userId);
+        //Task<ApplicationUser?> GetByIdAsync(string userId);
     }
 }

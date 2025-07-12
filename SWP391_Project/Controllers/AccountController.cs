@@ -429,50 +429,50 @@ namespace SWP391_Project.Controllers
         }
 
         // Pagination endpoints
-        [HttpGet("admin/paginated-users")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetPaginatedUsers(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? searchTerm = null,
-            [FromQuery] string? role = null,
-            [FromQuery] string? status = null)
-        {
-            try
-            {
-                if (page < 1) page = 1;
-                if (pageSize < 1 || pageSize > 100) pageSize = 10;
+        //[HttpGet("admin/paginated-users")]
+        //[Authorize(Roles = "Admin")]
+        //public async Task<IActionResult> GetPaginatedUsers(
+        //    [FromQuery] int page = 1,
+        //    [FromQuery] int pageSize = 10,
+        //    [FromQuery] string? searchTerm = null,
+        //    [FromQuery] string? role = null,
+        //    [FromQuery] string? status = null)
+        //{
+        //    try
+        //    {
+        //        if (page < 1) page = 1;
+        //        if (pageSize < 1 || pageSize > 100) pageSize = 10;
 
-                var result = await _userService.GetPaginatedUsersAsync(page, pageSize, searchTerm, role, status);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving paginated users");
-                return StatusCode(500, "An error occurred while retrieving users");
-            }
-        }
+        //        var result = await _userService.GetPaginatedUsersAsync(page, pageSize, searchTerm, role, status);
+        //        return Ok(result);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error retrieving paginated users");
+        //        return StatusCode(500, "An error occurred while retrieving users");
+        //    }
+        //}
 
-        [HttpGet("admin/paginated-consultants")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetPaginatedConsultants(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? searchTerm = null)
-        {
-            try
-            {
-                if (page < 1) page = 1;
-                if (pageSize < 1 || pageSize > 100) pageSize = 10;
+        //[HttpGet("admin/paginated-consultants")]
+        //[Authorize(Roles = "Admin")]
+        //public async Task<IActionResult> GetPaginatedConsultants(
+        //    [FromQuery] int page = 1,
+        //    [FromQuery] int pageSize = 10,
+        //    [FromQuery] string? searchTerm = null)
+        //{
+        //    try
+        //    {
+        //        if (page < 1) page = 1;
+        //        if (pageSize < 1 || pageSize > 100) pageSize = 10;
 
-                var result = await _userService.GetPaginatedConsultantsAsync(page, pageSize, searchTerm);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving paginated consultants");
-                return StatusCode(500, "An error occurred while retrieving consultants");
-            }
-        }
+        //        var result = await _userService.GetPaginatedConsultantsAsync(page, pageSize, searchTerm);
+        //        return Ok(result);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error retrieving paginated consultants");
+        //        return StatusCode(500, "An error occurred while retrieving consultants");
+        //    }
+        //}
     }
 }
