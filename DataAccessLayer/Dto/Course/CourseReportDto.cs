@@ -12,5 +12,8 @@ namespace DataAccessLayer.Dto.Course
         public int TotalEnrollments { get; set; }
         public int CompletedCount { get; set; }
         public int PendingCount { get; set; }
+        public int TotalFeedbacks { get; set; }
+        public double AverageRating { get; set; }
+        public Dictionary<int, int> FeedbackDistribution { get; set; }
     }
 }

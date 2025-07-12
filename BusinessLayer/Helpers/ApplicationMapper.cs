@@ -2,6 +2,7 @@
 using DataAccessLayer.Dto.Account;
 using DataAccessLayer.Dto.BlogPost;
 using DataAccessLayer.Dto.Course;
+using DataAccessLayer.Dto.Feedback;
 using DataAccessLayer.Dto.Lesson;
 using DataAccessLayer.Dto.Survey;
 using DataAccessLayer.Model;
@@ -19,6 +20,7 @@ namespace BusinessLayer.Helpers
         public ApplicationMapper() 
         {
             CreateMap<ApplicationUser, AccountViewDto>();
+            CreateMap<ApplicationUser,AccountDto>();
             CreateMap<Blog, BlogViewDto>()
                 .ForMember(dest => dest.PostedBy, opt => opt.MapFrom(src => src.PostedBy.UserName))
                 .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.Comments.Select(c => new CommentViewDto
@@ -57,6 +59,7 @@ namespace BusinessLayer.Helpers
             CreateMap<CourseUpdateDto, Course>();
             CreateMap<Course, CourseListDto>();
 
+            CreateMap<Lesson, LessonViewDto>();
             CreateMap<Lesson, LessonDto>();
             CreateMap<LessonCreateDto,Lesson>();
             CreateMap<LessonUpdateDto, Lesson>();
@@ -64,6 +67,11 @@ namespace BusinessLayer.Helpers
 
             CreateMap<CourseEnrollment, CourseEnrollmentDto>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.UserName));
+
+            CreateMap<Feedback, FeedbackViewDto>()
+           .ForMember(dest => dest.CreateBy, opt => opt.MapFrom(src => src.User.UserName))
+           .ForMember(dest => dest.CourseTitle, opt => opt.MapFrom(src => src.Course.Title))
+           .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
 
         }
     }

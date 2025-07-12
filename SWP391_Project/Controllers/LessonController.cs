@@ -19,7 +19,7 @@ namespace SWP391_Project.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Staff")]
+        [Authorize(Roles = "Staff,Manager")]
         public async Task<IActionResult> CreateLesson([FromForm] LessonCreateDto lessonCreateDto)
         {
             var lesson = await _lessonService.CreateLessonAsync(lessonCreateDto);
@@ -31,7 +31,7 @@ namespace SWP391_Project.Controllers
         }
 
         [HttpPut("{lessonId}")]
-        [Authorize(Roles = "Staff")]
+        [Authorize(Roles = "Staff,Manager")]
         public async Task<IActionResult> UpdateLesson(int lessonId, [FromForm] LessonUpdateDto lessonUpdateDto)
         {
             await _lessonService.UpdateLessonAsync(lessonId, lessonUpdateDto);
@@ -42,7 +42,11 @@ namespace SWP391_Project.Controllers
         [Authorize(Roles = "Manager")]
         public async Task<IActionResult> DeleteLesson(int lessonId)
         {
-            await _lessonService.DeleteLessonAsync(lessonId);
+            var result = await _lessonService.DeleteLessonAsync(lessonId);
+            if (!result)
+            {
+                return NotFound(new { Message = "Lesson already deleted or not found!" });
+            }
             return Ok(new { Message = "Lesson deleted successfully!" });
         }
 

@@ -6,6 +6,7 @@ using DataAccessLayer.Dto.Lesson;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
 using DataAccessLayer.Repository;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -29,7 +30,7 @@ namespace BusinessLayer.Service
             _logger = logger;
             _cloudinary= cloudinary;
         }
-        public async Task<LessonDto> CreateLessonAsync(LessonCreateDto lessonCreateDto)
+        public async Task<LessonViewDto> CreateLessonAsync(LessonCreateDto lessonCreateDto)
         {
             string videoUrl = null;
             if (lessonCreateDto.Video != null)
@@ -71,7 +72,6 @@ namespace BusinessLayer.Service
             var lesson = new Lesson
             {
                 Title = lessonCreateDto.Title,
-
                 Content = lessonCreateDto.Content,
                 VideoUrl = videoUrl,  
                 CourseId = lessonCreateDto.CourseId
@@ -79,24 +79,24 @@ namespace BusinessLayer.Service
 
             var createdLesson = await _lessonRepository.AddAsync(lesson);
 
-            return _mapper.Map<LessonDto>(createdLesson);
+            return _mapper.Map<LessonViewDto>(createdLesson);
         }
 
-        public async Task DeleteLessonAsync(int lessonId)
+        public async Task<bool> DeleteLessonAsync(int lessonId)
         {
-             await _lessonRepository.DeleteAsync(lessonId);
+            return await _lessonRepository.DeleteAsync(lessonId);
         }
 
-        public async Task<LessonDto> GetLessonByIdAsync(int lessonId)
+        public async Task<LessonViewDto> GetLessonByIdAsync(int lessonId)
         {
             var lesson = await _lessonRepository.GetByIdAsync(lessonId);
-            return _mapper.Map<LessonDto>(lesson);
+            return _mapper.Map<LessonViewDto>(lesson);
         }
 
-        public async Task<IEnumerable<LessonDto>> GetLessonsByCourseIdAsync(int courseId)
+        public async Task<IEnumerable<LessonViewDto>> GetLessonsByCourseIdAsync(int courseId)
         {
             var lessons=await _lessonRepository.GetByCourseIdAsync(courseId);
-            return _mapper.Map<IEnumerable<LessonDto>>(lessons);
+            return _mapper.Map<IEnumerable<LessonViewDto>>(lessons);
         }
 
         public async Task UpdateLessonAsync(int lessonId, LessonUpdateDto lessonUpdateDto)

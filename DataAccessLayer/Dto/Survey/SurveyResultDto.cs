@@ -16,6 +16,8 @@ namespace DataAccessLayer.Dto.Survey
         public string ExcutedBy { get; set; }
         public DateTime SubmittedAt { get; set; }
         public int TotalScore { get; set; }
+        public string? ResultStatus { get; set; }
+        public SurveyType SurveyType { get; set; }
         public string Recommendation { get; set; } 
         public List<SurveyQuestionResultDto> Questions { get; set; } =new List<SurveyQuestionResultDto>();
     }

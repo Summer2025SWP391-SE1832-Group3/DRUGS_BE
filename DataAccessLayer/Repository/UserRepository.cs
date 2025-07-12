@@ -159,6 +159,10 @@ namespace DataAccessLayer.Repository
         {
             return await _userManager.Users.FirstOrDefaultAsync(u=>u.UserName==username);
         }
+        public async Task<ApplicationUser> GetByIdAsync(string userId)
+        {
+            return await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);  
+        }
 
         public async Task<bool> CheckPassword(ApplicationUser user, string password)
         {

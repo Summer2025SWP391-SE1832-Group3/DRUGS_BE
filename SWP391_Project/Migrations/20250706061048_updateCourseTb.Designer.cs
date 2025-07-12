@@ -4,6 +4,7 @@ using DataAccessLayer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SWP391_Project.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250706061048_updateCourseTb")]
+    partial class updateCourseTb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -491,46 +494,6 @@ namespace SWP391_Project.Migrations
                     b.ToTable("CourseEnrollments");
                 });
 
-            modelBuilder.Entity("DataAccessLayer.Model.Feedback", b =>
-                {
-                    b.Property<int>("FeedbackId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FeedbackId"));
-
-                    b.Property<int>("CourseId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("Rating")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ReviewText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("FeedbackId");
-
-                    b.HasIndex("CourseId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Feedbacks");
-                });
-
             modelBuilder.Entity("DataAccessLayer.Model.Lesson", b =>
                 {
                     b.Property<int>("Id")
@@ -544,9 +507,6 @@ namespace SWP391_Project.Migrations
 
                     b.Property<int>("CourseId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -778,31 +738,31 @@ namespace SWP391_Project.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "f254b70a-d47a-4fe0-a533-05e1d9769f1a",
+                            Id = "aa8a859a-5360-49e8-b1c5-1907306907de",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "f4b6b13c-2a14-4afb-b2e3-bc9707dc1bd9",
+                            Id = "8c36ab28-44df-4165-b20e-20823c0fef04",
                             Name = "Staff",
                             NormalizedName = "STAFF"
                         },
                         new
                         {
-                            Id = "bbe7b526-ec23-4560-ae67-90f68a7b784d",
+                            Id = "095efa74-1d3f-4181-bd38-bce79ff3c32f",
                             Name = "Manager",
                             NormalizedName = "MANAGER"
                         },
                         new
                         {
-                            Id = "67fdb094-bb75-46fd-920c-b6814ec488a4",
+                            Id = "de9fb8bc-e392-4586-8d6e-a6249a21b8c9",
                             Name = "Consultant",
                             NormalizedName = "CONSULTANT"
                         },
                         new
                         {
-                            Id = "dfac90f4-705c-4b70-8b57-4230e5c96854",
+                            Id = "e935ff99-230b-4aef-9e54-31e748fec369",
                             Name = "Member",
                             NormalizedName = "MEMBER"
                         });
@@ -1051,25 +1011,6 @@ namespace SWP391_Project.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("DataAccessLayer.Model.Feedback", b =>
-                {
-                    b.HasOne("DataAccessLayer.Model.Course", "Course")
-                        .WithMany("Feedbacks")
-                        .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "User")
-                        .WithMany("Feedbacks")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Course");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("DataAccessLayer.Model.Lesson", b =>
                 {
                     b.HasOne("DataAccessLayer.Model.Course", "Course")
@@ -1245,8 +1186,6 @@ namespace SWP391_Project.Migrations
 
                     b.Navigation("CourseEnrollments");
 
-                    b.Navigation("Feedbacks");
-
                     b.Navigation("SurveyResults");
 
                     b.Navigation("WorkingHours");
@@ -1267,8 +1206,6 @@ namespace SWP391_Project.Migrations
             modelBuilder.Entity("DataAccessLayer.Model.Course", b =>
                 {
                     b.Navigation("CourseEnrollments");
-
-                    b.Navigation("Feedbacks");
 
                     b.Navigation("FinalExamSurvey");
 

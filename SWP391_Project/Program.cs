@@ -14,14 +14,12 @@ using Microsoft.OpenApi.Models;
 using SWP391_Project.Middleware;
 using System.Text;
 using System.Text.Json.Serialization;
-using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
-
-DotNetEnv.Env.Load();
 builder.Services.AddSingleton(provider =>
 {
-    var cloudinaryUrl = Environment.GetEnvironmentVariable("CLOUDINARY_URL");
+    var configuration = provider.GetRequiredService<IConfiguration>();
+    var cloudinaryUrl = configuration["CLOUDINARY_URL"];
     if (string.IsNullOrEmpty(cloudinaryUrl))    
     {
         throw new Exception("CLOUDINARY_URL is not set.");
@@ -149,6 +147,8 @@ builder.Services.AddScoped<ILessonProgressRepository, LessonProgressRepository>(
 builder.Services.AddScoped<ILessonRepository, LessonRepository>();
 builder.Services.AddScoped<ILessonService, LessonService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<IFeedbackService, FeedbackService>();
+builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 
 
 
