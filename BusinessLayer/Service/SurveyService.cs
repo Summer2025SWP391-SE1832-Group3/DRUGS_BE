@@ -231,7 +231,6 @@ namespace BusinessLayer.Service
                 if (totalScore >= requiredScore)
                 {
                     surveyResult.ResultStatus = "Pass";
-                    surveyResult.Recommendation = "Pass";
                     if (survey.CourseId.HasValue) {
                         var courseId = survey.CourseId.Value;
                         await _courseEnrollmentRepository.UpdateStatus(userId, courseId);
@@ -324,7 +323,7 @@ namespace BusinessLayer.Service
             return surveyStatistic;
 
         }
-
+        
         public async Task<List<SurveyResultDto>> GetUserSurveyResultAsync(int surveyId, string userId)
         {
             var surveyResults =await _repository.GetSurveyResultAsync(surveyId, userId);
@@ -335,6 +334,8 @@ namespace BusinessLayer.Service
                 SurveyId = surveyResult.SurveyId,
                 SurveyName = surveyResult.Survey.SurveyName,
                 ExcutedBy = surveyResult.User.UserName,
+                ResultStatus=surveyResult.ResultStatus,
+                SurveyType=surveyResult.Survey.SurveyType,
                 SubmittedAt = surveyResult.TakeAt,
                 TotalScore = surveyResult.TotalScore,
                 Recommendation = surveyResult.Recommendation,
