@@ -28,9 +28,9 @@ namespace DataAccessLayer.Repository
         public async Task<bool> DeleteAsync(int id)
         {
             var lesson = await GetByIdAsync(id);
-            if (lesson != null && lesson.IsActive)
+            if (lesson != null)
             {
-                lesson.IsActive = false;
+                _context.Lessons.Remove(lesson);
                 await _context.SaveChangesAsync();
                 return true; 
             }

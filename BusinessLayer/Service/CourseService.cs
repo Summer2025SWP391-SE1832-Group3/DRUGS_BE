@@ -152,7 +152,7 @@ namespace BusinessLayer.Service
                     };
                 }
                 var progress = await _lessonProgressRepository.GetLessonProgressByUserAndCourseAsync(userId, courseId);
-                var lessonsDto = course.Lessions.Where(lesson=>lesson.IsActive).Select(lesson =>
+                var lessonsDto = course.Lessions.Select(lesson =>
                 {
                     var lessonProgress = progress.FirstOrDefault(p => p.LessonId == lesson.Id);
                     return new LessonDto
@@ -161,7 +161,6 @@ namespace BusinessLayer.Service
                         Title = lesson.Title,
                         Content = lesson.Content,
                         VideoUrl = lesson.VideoUrl,
-                        IsActive=lesson.IsActive,
                         IsCompleted = lessonProgress != null && lessonProgress.IsCompleted
                     };
                 }).ToList();
@@ -207,7 +206,6 @@ namespace BusinessLayer.Service
                         Content = lesson.Content,
                         VideoUrl = lesson.VideoUrl,
                         IsCompleted = true,
-                        IsActive=lesson.IsActive,
                     };
                 }).ToList();
                 var finalExamSurvey = course.FinalExamSurvey;
@@ -422,15 +420,16 @@ namespace BusinessLayer.Service
                                           .GetCompletedLessonIdsByUserAndCourseAsync(userId, courseId);
             var course = await _courseRepository.GetByIdAsync(courseId);
             if (course == null) return null;
-            var lessonsDto = course.Lessions.Where(lesson => lesson.IsActive|| (completedLessonIds.Contains(lesson.Id) && !lesson.IsActive))
-                                            .Select(lesson => new LessonDto
-            {
+            //var lessonsDto = course.Lessions.Where(lesson => lesson.IsActive || (completedLessonIds.Contains(lesson.Id) && !lesson.IsActive))
+            //                                .Select(lesson => new LessonDto
+            //{
+            var lessonsDto = course.Lessions.Select(lesson => new LessonDto
+                                           {
                 Id = lesson.Id,
                 Title = lesson.Title,
                 Content = lesson.Content,
                 VideoUrl = lesson.VideoUrl,
                 IsCompleted = completedLessonIds.Contains(lesson.Id),
-                IsActive = lesson.IsActive,
             }).ToList();
 
             var lastSurveyResult = await _surveyService.GetUserSurveyResultNewestAsync(course.FinalExamSurveyId.Value, userId);
