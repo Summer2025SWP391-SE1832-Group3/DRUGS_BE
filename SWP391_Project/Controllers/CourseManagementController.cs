@@ -43,7 +43,7 @@ namespace SWP391_Project.Controllers
                 return BadRequest("Only Draft courses can be activated.");
 
             if (!await _courseService.CanApproveCourseAsync(courseId))
-                return BadRequest("Course must have at least one lesson and one survey before activation.");
+                return BadRequest("Course must have at least one lesson and one active survey before activation.");
 
             await _courseService.UpdateCourseStatusAsync(courseId, CourseStatus.Active);
             return Ok(new { Message = "Course is now active and visible to members!" });
