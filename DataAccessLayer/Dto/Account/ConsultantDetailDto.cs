@@ -12,5 +12,9 @@ namespace DataAccessLayer.Dto.Account
         public string Gender { get; set; }
         public IEnumerable<ConsultantWorkingHour> WorkingHours { get; set; }
         public IEnumerable<Certificate> Certificates { get; set; }
+        public string Status { get; set; }
+        public int TotalConsultations { get; set; }
+        public double AverageRating { get; set; }
+        public int FeedbackCount { get; set; }
     }
 } 

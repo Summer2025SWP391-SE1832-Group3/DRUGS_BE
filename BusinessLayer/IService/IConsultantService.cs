@@ -32,5 +32,12 @@ namespace BusinessLayer.IService
         Task<int> AutoGenerateSlotsForFutureWeeksAsync(string consultantId, int weeksAhead = 4, int slotDurationMinutes = 60);
         Task<int> CleanupOldSlotsAsync(int daysToKeep = 30);
         Task<int> AutoGenerateSlotsForAllConsultantsAsync(int weeksAhead = 4, int slotDurationMinutes = 60);
+        
+        // --- CONSULTANT ADVANCED METHODS ---
+        Task<IEnumerable<ConsultantViewDto>> GetConsultantsByStatusAsync(string status);
+        Task<IEnumerable<ConsultantViewDto>> GetTopConsultantsByPerformanceAsync(int topN);
+        Task<IEnumerable<ConsultantViewDto>> GetTopConsultantsByRatingAsync(int topN);
+        Task<bool> UpdateConsultantStatusAsync(string consultantId, string status);
+        Task<bool> UpdateConsultantPerformanceAsync(string consultantId, int totalConsultations, double averageRating, int feedbackCount);
     }
 } 

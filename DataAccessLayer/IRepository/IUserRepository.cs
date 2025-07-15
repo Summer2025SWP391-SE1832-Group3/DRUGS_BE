@@ -23,6 +23,13 @@ namespace DataAccessLayer.IRepository
         Task<IdentityResult> AdminDeleteUserAsync(string userId);
         Task<List<ApplicationUser>> AdminSearchUsersAsync(string? email, string? username, string? role);
 
+        // --- CONSULTANT ADVANCED METHODS ---
+        Task<List<ApplicationUser>> GetConsultantsByStatusAsync(string status);
+        Task<List<ApplicationUser>> GetTopConsultantsByPerformanceAsync(int topN);
+        Task<List<ApplicationUser>> GetTopConsultantsByRatingAsync(int topN);
+        Task UpdateConsultantStatusAsync(string consultantId, string status);
+        Task UpdateConsultantPerformanceAsync(string consultantId, int totalConsultations, double averageRating, int feedbackCount);
+
         //Task<ApplicationUser?> GetByIdAsync(string userId);
     }
 }

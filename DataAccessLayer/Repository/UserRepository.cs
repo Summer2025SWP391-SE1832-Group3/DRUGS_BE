@@ -228,6 +228,50 @@ namespace DataAccessLayer.Repository
             return users;
         }
 
+        // --- CONSULTANT ADVANCED METHODS ---
+        public async Task<List<ApplicationUser>> GetConsultantsByStatusAsync(string status)
+        {
+            return await _userManager.Users.Where(u => u.Status == status && _userManager.IsInRoleAsync(u, "Consultant").Result).ToListAsync();
+        }
 
+        public async Task<List<ApplicationUser>> GetTopConsultantsByPerformanceAsync(int topN)
+        {
+            return await _userManager.Users
+                .Where(u => _userManager.IsInRoleAsync(u, "Consultant").Result)
+                .OrderByDescending(u => u.TotalConsultations)
+                .Take(topN)
+                .ToListAsync();
+        }
+
+        public async Task<List<ApplicationUser>> GetTopConsultantsByRatingAsync(int topN)
+        {
+            return await _userManager.Users
+                .Where(u => _userManager.IsInRoleAsync(u, "Consultant").Result)
+                .OrderByDescending(u => u.AverageRating)
+                .Take(topN)
+                .ToListAsync();
+        }
+
+        public async Task UpdateConsultantStatusAsync(string consultantId, string status)
+        {
+            var user = await _userManager.FindByIdAsync(consultantId);
+            if (user != null)
+            {
+                user.Status = status;
+                await _userManager.UpdateAsync(user);
+            }
+        }
+
+        public async Task UpdateConsultantPerformanceAsync(string consultantId, int totalConsultations, double averageRating, int feedbackCount)
+        {
+            var user = await _userManager.FindByIdAsync(consultantId);
+            if (user != null)
+            {
+                user.TotalConsultations = totalConsultations;
+                user.AverageRating = averageRating;
+                user.FeedbackCount = feedbackCount;
+                await _userManager.UpdateAsync(user);
+            }
+        }
     }
 }

@@ -363,5 +363,107 @@ namespace BusinessLayer.Service
             
             return totalSlotsGenerated;
         }
+
+        // --- CONSULTANT ADVANCED METHODS ---
+        public async Task<IEnumerable<ConsultantViewDto>> GetConsultantsByStatusAsync(string status)
+        {
+            var users = await _userManager.Users.Where(u => u.Status == status).ToListAsync();
+            var consultants = new List<ConsultantViewDto>();
+            foreach (var user in users)
+            {
+                if (await _userManager.IsInRoleAsync(user, "Consultant"))
+                {
+                    consultants.Add(new ConsultantViewDto
+                    {
+                        Id = user.Id,
+                        FullName = user.FullName,
+                        Email = user.Email,
+                        PhoneNumber = user.PhoneNumber,
+                        Gender = user.Gender,
+                        Status = user.Status,
+                        TotalConsultations = user.TotalConsultations,
+                        AverageRating = user.AverageRating,
+                        FeedbackCount = user.FeedbackCount
+                    });
+                }
+            }
+            return consultants;
+        }
+
+        public async Task<IEnumerable<ConsultantViewDto>> GetTopConsultantsByPerformanceAsync(int topN)
+        {
+            var users = await _userManager.Users.OrderByDescending(u => u.TotalConsultations).ToListAsync();
+            var consultants = new List<ConsultantViewDto>();
+            int count = 0;
+            foreach (var user in users)
+            {
+                if (await _userManager.IsInRoleAsync(user, "Consultant"))
+                {
+                    consultants.Add(new ConsultantViewDto
+                    {
+                        Id = user.Id,
+                        FullName = user.FullName,
+                        Email = user.Email,
+                        PhoneNumber = user.PhoneNumber,
+                        Gender = user.Gender,
+                        Status = user.Status,
+                        TotalConsultations = user.TotalConsultations,
+                        AverageRating = user.AverageRating,
+                        FeedbackCount = user.FeedbackCount
+                    });
+                    count++;
+                    if (count >= topN) break;
+                }
+            }
+            return consultants;
+        }
+
+        public async Task<IEnumerable<ConsultantViewDto>> GetTopConsultantsByRatingAsync(int topN)
+        {
+            var users = await _userManager.Users.OrderByDescending(u => u.AverageRating).ToListAsync();
+            var consultants = new List<ConsultantViewDto>();
+            int count = 0;
+            foreach (var user in users)
+            {
+                if (await _userManager.IsInRoleAsync(user, "Consultant"))
+                {
+                    consultants.Add(new ConsultantViewDto
+                    {
+                        Id = user.Id,
+                        FullName = user.FullName,
+                        Email = user.Email,
+                        PhoneNumber = user.PhoneNumber,
+                        Gender = user.Gender,
+                        Status = user.Status,
+                        TotalConsultations = user.TotalConsultations,
+                        AverageRating = user.AverageRating,
+                        FeedbackCount = user.FeedbackCount
+                    });
+                    count++;
+                    if (count >= topN) break;
+                }
+            }
+            return consultants;
+        }
+
+        public async Task<bool> UpdateConsultantStatusAsync(string consultantId, string status)
+        {
+            var user = await _userManager.FindByIdAsync(consultantId);
+            if (user == null) return false;
+            user.Status = status;
+            await _userManager.UpdateAsync(user);
+            return true;
+        }
+
+        public async Task<bool> UpdateConsultantPerformanceAsync(string consultantId, int totalConsultations, double averageRating, int feedbackCount)
+        {
+            var user = await _userManager.FindByIdAsync(consultantId);
+            if (user == null) return false;
+            user.TotalConsultations = totalConsultations;
+            user.AverageRating = averageRating;
+            user.FeedbackCount = feedbackCount;
+            await _userManager.UpdateAsync(user);
+            return true;
+        }
     }
 } 

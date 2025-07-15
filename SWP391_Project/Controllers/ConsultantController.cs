@@ -229,5 +229,33 @@ namespace SWP391_Project.Controllers
             if (result) return Ok(new { Message = "Slot completed successfully." });
             return BadRequest(new { Message = "Failed to complete slot." });
         }
+
+        [HttpPut("{id}/status")]
+        [Authorize(Roles = "Admin,Consultant")]
+        public async Task<IActionResult> UpdateConsultantStatus(string id, [FromBody] string status)
+        {
+            var isAdmin = User.IsInRole("Admin");
+            var consultantId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (!isAdmin && consultantId != id) return Forbid();
+            var result = await _consultantService.UpdateConsultantStatusAsync(id, status);
+            if (result) return Ok(new { Message = "Status updated." });
+            return BadRequest(new { Message = "Failed to update status." });
+        }
+
+        [HttpGet("top-performance")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetTopConsultantsByPerformance([FromQuery] int topN = 5)
+        {
+            var consultants = await _consultantService.GetTopConsultantsByPerformanceAsync(topN);
+            return Ok(consultants);
+        }
+
+        [HttpGet("top-rating")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetTopConsultantsByRating([FromQuery] int topN = 5)
+        {
+            var consultants = await _consultantService.GetTopConsultantsByRatingAsync(topN);
+            return Ok(consultants);
+        }
     }
 } 
