@@ -39,5 +39,11 @@ namespace BusinessLayer.IService
         Task<IEnumerable<ConsultantViewDto>> GetTopConsultantsByRatingAsync(int topN);
         Task<bool> UpdateConsultantStatusAsync(string consultantId, string status);
         Task<bool> UpdateConsultantPerformanceAsync(string consultantId, int totalConsultations, double averageRating, int feedbackCount);
+        
+        // --- FEEDBACK FOR CONSULTANT ---
+        Task<bool> AddConsultantFeedbackAsync(string consultantId, string userId, int rating, string reviewText);
+        Task<IEnumerable<DataAccessLayer.Dto.Feedback.FeedbackViewDto>> GetConsultantFeedbacksAsync(string consultantId);
+
+        Task<PaginatedResult<ConsultantViewDto>> GetPagedConsultantsAsync(int page, int pageSize);
     }
 } 

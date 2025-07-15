@@ -24,10 +24,10 @@ namespace SWP391_Project.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<ActionResult<IEnumerable<ConsultantViewDto>>> GetAllConsultants()
+        public async Task<ActionResult> GetAllConsultants([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var consultants = await _consultantService.GetAllConsultantsAsync();
-            return Ok(consultants);
+            var result = await _consultantService.GetPagedConsultantsAsync(page, pageSize);
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
@@ -256,6 +256,24 @@ namespace SWP391_Project.Controllers
         {
             var consultants = await _consultantService.GetTopConsultantsByRatingAsync(topN);
             return Ok(consultants);
+        }
+
+        [HttpPost("{id}/feedback")]
+        [Authorize(Roles = "Member")]
+        public async Task<IActionResult> AddConsultantFeedback(string id, [FromBody] DataAccessLayer.Dto.Feedback.FeedbackDto dto)
+        {
+            var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            var result = await _consultantService.AddConsultantFeedbackAsync(id, userId, dto.Rating, dto.ReviewText);
+            if (result) return Ok(new { Message = "Feedback submitted." });
+            return BadRequest(new { Message = "Failed to submit feedback." });
+        }
+
+        [HttpGet("{id}/feedback")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetConsultantFeedbacks(string id)
+        {
+            var feedbacks = await _consultantService.GetConsultantFeedbacksAsync(id);
+            return Ok(feedbacks);
         }
     }
 } 

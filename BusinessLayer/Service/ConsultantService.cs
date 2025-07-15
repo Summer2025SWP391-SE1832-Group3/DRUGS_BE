@@ -465,5 +465,91 @@ namespace BusinessLayer.Service
             await _userManager.UpdateAsync(user);
             return true;
         }
+
+        // --- FEEDBACK FOR CONSULTANT ---
+        public async Task<bool> AddConsultantFeedbackAsync(string consultantId, string userId, int rating, string reviewText)
+        {
+            // Check if consultant exists
+            var consultant = await _userManager.FindByIdAsync(consultantId);
+            if (consultant == null) return false;
+
+            // Tạo feedback mới
+            var feedback = new DataAccessLayer.Model.Feedback
+            {
+                ConsultantId = consultantId,
+                UserId = userId,
+                Rating = rating,
+                ReviewText = reviewText,
+                CreatedAt = DateTime.Now,
+                IsActive = true
+            };
+            _context.Feedbacks.Add(feedback);
+            await _context.SaveChangesAsync();
+
+            // Cập nhật điểm trung bình và số lượng feedback
+            var feedbacks = _context.Feedbacks.Where(f => f.ConsultantId == consultantId && f.IsActive);
+            consultant.FeedbackCount = feedbacks.Count();
+            consultant.AverageRating = feedbacks.Any() ? feedbacks.Average(f => f.Rating) : 0.0;
+            await _userManager.UpdateAsync(consultant);
+            return true;
+        }
+
+        public async Task<IEnumerable<DataAccessLayer.Dto.Feedback.FeedbackViewDto>> GetConsultantFeedbacksAsync(string consultantId)
+        {
+            var feedbacks = await _context.Feedbacks
+                .Where(f => f.ConsultantId == consultantId && f.IsActive)
+                .Include(f => f.User)
+                .ToListAsync();
+            return feedbacks.Select(f => new DataAccessLayer.Dto.Feedback.FeedbackViewDto
+            {
+                FeedbackId = f.FeedbackId,
+                CreateBy = f.User?.FullName ?? "",
+                ConsultantId = f.ConsultantId,
+                ConsultantName = f.Consultant?.FullName ?? "",
+                CourseId = f.CourseId,
+                CourseTitle = f.Course?.ToString() ?? "",
+                Rating = f.Rating,
+                ReviewText = f.ReviewText,
+                CreatedAt = f.CreatedAt,
+                IsActive = f.IsActive
+            });
+        }
+
+        public async Task<PaginatedResult<ConsultantViewDto>> GetPagedConsultantsAsync(int page, int pageSize)
+        {
+            var query = _userManager.Users.AsQueryable();
+            var consultants = new List<ApplicationUser>();
+            foreach (var user in query)
+            {
+                if (await _userManager.IsInRoleAsync(user, "Consultant"))
+                {
+                    consultants.Add(user);
+                }
+            }
+            var totalCount = consultants.Count;
+            var pagedConsultants = consultants
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(user => new ConsultantViewDto
+                {
+                    Id = user.Id,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    Gender = user.Gender,
+                    Status = user.Status,
+                    TotalConsultations = user.TotalConsultations,
+                    AverageRating = user.AverageRating,
+                    FeedbackCount = user.FeedbackCount
+                })
+                .ToList();
+            return new PaginatedResult<ConsultantViewDto>
+            {
+                Items = pagedConsultants,
+                TotalCount = totalCount,
+                CurrentPage = page,
+                PageSize = pageSize
+            };
+        }
     }
 } 
