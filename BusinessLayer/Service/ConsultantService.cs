@@ -24,11 +24,15 @@ namespace BusinessLayer.Service
         public async Task<IEnumerable<ConsultantListItemDto>> GetAllConsultantsAsync()
         {
             var users = await _userManager.GetUsersInRoleAsync("Consultant");
-            return users.Select(u => new ConsultantListItemDto
-            {
-                Id = u.Id,
-                FullName = u.FullName,
-                Rating = 0
+            var profiles = await _context.ConsultantProfiles.ToListAsync();
+            return users.Select(u => {
+                var profile = profiles.FirstOrDefault(p => p.ConsultantId == u.Id);
+                return new ConsultantListItemDto
+                {
+                    Id = u.Id,
+                    FullName = u.FullName,
+                    Rating = profile?.AverageRating ?? 0
+                };
             });
         }
         public async Task<ConsultantDetailDto?> GetConsultantDetailAsync(string consultantId)
@@ -36,7 +40,9 @@ namespace BusinessLayer.Service
             var user = await _userManager.FindByIdAsync(consultantId);
             if (user == null)
                 return null;
+            var profile = await _context.ConsultantProfiles.FindAsync(consultantId);
             var certs = await _context.Certificates.Where(c => c.ApplicationUserId == user.Id).ToListAsync();
+            var workingHours = await _context.ConsultantWorkingHours.Where(w => w.ConsultantId == user.Id).ToListAsync();
             return new ConsultantDetailDto
             {
                 Id = user.Id,
@@ -44,7 +50,16 @@ namespace BusinessLayer.Service
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 Gender = user.Gender,
-                WorkingHours = await _context.ConsultantWorkingHours.Where(w => w.ConsultantId == user.Id).ToListAsync(),
+                Status = profile?.Status ?? "Active",
+                AverageRating = profile?.AverageRating ?? 0,
+                FeedbackCount = profile?.FeedbackCount ?? 0,
+                TotalConsultations = profile?.TotalConsultations ?? 0,
+                WorkingHours = workingHours.Select(w => new ConsultantWorkingHourDto
+                {
+                    Date = w.SlotDate ?? DateTime.MinValue,
+                    StartTime = w.StartTime,
+                    EndTime = w.EndTime
+                }),
                 Certificates = certs.Select(c => new CertificateDto
                 {
                     Name = c.Name,
@@ -71,7 +86,7 @@ namespace BusinessLayer.Service
                     _context.Certificates.Add(new Certificate
                     {
                         Name = cert.Name ?? string.Empty,
-                        IssuingOrganization = cert.IssuingOrganization ?? string.Empty,
+                        IssuingOrganization = cert.Issuer ?? string.Empty,
                         DateIssued = cert.DateIssued ?? DateTime.Now,
                         ApplicationUserId = user.Id
                     });
@@ -93,6 +108,8 @@ namespace BusinessLayer.Service
         }
         public async Task<bool> AddCertificateAsync(string consultantId, CertificateDto dto)
         {
+            if (dto.DateIssued > DateTime.Now)
+                throw new ArgumentException("Ngày cấp không được lớn hơn ngày hiện tại.");
             var cert = new Certificate
             {
                 Name = dto.Name ?? string.Empty,
@@ -106,6 +123,8 @@ namespace BusinessLayer.Service
         }
         public async Task<bool> UpdateCertificateAsync(string consultantId, int certificateId, CertificateDto dto)
         {
+            if (dto.DateIssued > DateTime.Now)
+                throw new ArgumentException("Ngày cấp không được lớn hơn ngày hiện tại.");
             var cert = await _context.Certificates.FirstOrDefaultAsync(c => c.Id == certificateId && c.ApplicationUserId == consultantId);
             if (cert == null) return false;
             cert.Name = dto.Name ?? cert.Name;
@@ -127,39 +146,58 @@ namespace BusinessLayer.Service
             var hours = await _context.ConsultantWorkingHours.Where(w => w.ConsultantId == consultantId).ToListAsync();
             return hours.Select(w => new ConsultantWorkingHourDto
             {
-                DayOfWeek = w.DayOfWeek,
+                Date = w.SlotDate ?? DateTime.MinValue,
                 StartTime = w.StartTime,
                 EndTime = w.EndTime
             });
         }
-        public async Task<bool> AddWorkingHourAsync(string consultantId, ConsultantWorkingHourDto dto)
+        public async Task<bool> AddWorkingHourByDateAsync(string consultantId, DateTime date, TimeSpan? startTime, TimeSpan? endTime)
         {
-            var hour = new ConsultantWorkingHour
+            if (startTime == null || endTime == null || startTime >= endTime)
+                throw new ArgumentException("Start time must be less than end time.");
+            
+            var oldSlots = _context.ConsultantWorkingHours.Where(w => w.ConsultantId == consultantId && w.SlotDate == date);
+            _context.ConsultantWorkingHours.RemoveRange(oldSlots);
+           
+            for (var t = startTime.Value; t + TimeSpan.FromHours(1) <= endTime.Value; t += TimeSpan.FromHours(1))
             {
-                ConsultantId = consultantId,
-                DayOfWeek = dto.DayOfWeek,
-                StartTime = dto.StartTime ?? TimeSpan.Zero,
-                EndTime = dto.EndTime ?? TimeSpan.Zero
-            };
-            _context.ConsultantWorkingHours.Add(hour);
+                var slot = new ConsultantWorkingHour
+                {
+                    ConsultantId = consultantId,
+                    SlotDate = date,
+                    DayOfWeek = date.DayOfWeek,
+                    StartTime = t,
+                    EndTime = t + TimeSpan.FromHours(1),
+                    Status = WorkingHourStatus.Available,
+                    CreatedAt = DateTime.Now
+                };
+                _context.ConsultantWorkingHours.Add(slot);
+            }
             await _context.SaveChangesAsync();
             return true;
         }
-        public async Task<bool> UpdateWorkingHourAsync(string consultantId, int workingHourId, ConsultantWorkingHourDto dto)
+        public async Task<bool> UpdateWorkingHourByDateAsync(string consultantId, DateTime date, TimeSpan? startTime, TimeSpan? endTime)
         {
-            var hour = await _context.ConsultantWorkingHours.FirstOrDefaultAsync(w => w.Id == workingHourId && w.ConsultantId == consultantId);
-            if (hour == null) return false;
-            hour.DayOfWeek = dto.DayOfWeek;
-            hour.StartTime = dto.StartTime ?? hour.StartTime;
-            hour.EndTime = dto.EndTime ?? hour.EndTime;
-            await _context.SaveChangesAsync();
-            return true;
-        }
-        public async Task<bool> DeleteWorkingHourAsync(string consultantId, int workingHourId)
-        {
-            var hour = await _context.ConsultantWorkingHours.FirstOrDefaultAsync(w => w.Id == workingHourId && w.ConsultantId == consultantId);
-            if (hour == null) return false;
-            _context.ConsultantWorkingHours.Remove(hour);
+            if (startTime == null || endTime == null || startTime >= endTime)
+                throw new ArgumentException("Start time must be less than end time.");
+            // Xóa toàn bộ slot cũ trong ngày này
+            var oldSlots = _context.ConsultantWorkingHours.Where(w => w.ConsultantId == consultantId && w.SlotDate == date);
+            _context.ConsultantWorkingHours.RemoveRange(oldSlots);
+            // Tạo lại từng slot 1 tiếng, mỗi slot 1 bản ghi
+            for (var t = startTime.Value; t + TimeSpan.FromHours(1) <= endTime.Value; t += TimeSpan.FromHours(1))
+            {
+                var slot = new ConsultantWorkingHour
+                {
+                    ConsultantId = consultantId,
+                    SlotDate = date,
+                    DayOfWeek = date.DayOfWeek,
+                    StartTime = t,
+                    EndTime = t + TimeSpan.FromHours(1),
+                    Status = WorkingHourStatus.Available,
+                    CreatedAt = DateTime.Now
+                };
+                _context.ConsultantWorkingHours.Add(slot);
+            }
             await _context.SaveChangesAsync();
             return true;
         }

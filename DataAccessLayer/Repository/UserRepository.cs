@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DataAccessLayer.Data;
 
 namespace DataAccessLayer.Repository
 {
@@ -17,11 +18,13 @@ namespace DataAccessLayer.Repository
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ApplicationDBContext _context;
         
-        public UserRepository(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<IdentityRole> roleManager) {
+        public UserRepository(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<IdentityRole> roleManager, ApplicationDBContext context) {
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
+            _context = context;
         }
         public async Task<IdentityResult> CreateAsync(CreateAccountDto model, string role)
         {
@@ -231,46 +234,59 @@ namespace DataAccessLayer.Repository
         // --- CONSULTANT ADVANCED METHODS ---
         public async Task<List<ApplicationUser>> GetConsultantsByStatusAsync(string status)
         {
-            return await _userManager.Users.Where(u => u.Status == status && _userManager.IsInRoleAsync(u, "Consultant").Result).ToListAsync();
+            // Join ConsultantProfile with ApplicationUser to get consultants by status
+            var consultantIds = await _context.ConsultantProfiles
+                .Where(p => p.Status == status)
+                .Select(p => p.ConsultantId)
+                .ToListAsync();
+            return await _userManager.Users
+                .Where(u => consultantIds.Contains(u.Id) && _userManager.IsInRoleAsync(u, "Consultant").Result)
+                .ToListAsync();
         }
 
         public async Task<List<ApplicationUser>> GetTopConsultantsByPerformanceAsync(int topN)
         {
-            return await _userManager.Users
-                .Where(u => _userManager.IsInRoleAsync(u, "Consultant").Result)
-                .OrderByDescending(u => u.TotalConsultations)
+            // Join ConsultantProfile with ApplicationUser to get top consultants by TotalConsultations
+            var topConsultantProfiles = await _context.ConsultantProfiles
+                .OrderByDescending(p => p.TotalConsultations)
                 .Take(topN)
+                .ToListAsync();
+            var consultantIds = topConsultantProfiles.Select(p => p.ConsultantId).ToList();
+            return await _userManager.Users
+                .Where(u => consultantIds.Contains(u.Id) && _userManager.IsInRoleAsync(u, "Consultant").Result)
                 .ToListAsync();
         }
 
         public async Task<List<ApplicationUser>> GetTopConsultantsByRatingAsync(int topN)
         {
-            return await _userManager.Users
-                .Where(u => _userManager.IsInRoleAsync(u, "Consultant").Result)
-                .OrderByDescending(u => u.AverageRating)
+            // Lấy top consultant theo rating từ bảng ConsultantProfile
+            var topConsultantProfiles = await _context.ConsultantProfiles
+                .OrderByDescending(p => p.AverageRating)
                 .Take(topN)
                 .ToListAsync();
+            var consultantIds = topConsultantProfiles.Select(p => p.ConsultantId).ToList();
+            return await _userManager.Users.Where(u => consultantIds.Contains(u.Id)).ToListAsync();
         }
 
         public async Task UpdateConsultantStatusAsync(string consultantId, string status)
         {
-            var user = await _userManager.FindByIdAsync(consultantId);
-            if (user != null)
+            var profile = await _context.ConsultantProfiles.FindAsync(consultantId);
+            if (profile != null)
             {
-                user.Status = status;
-                await _userManager.UpdateAsync(user);
+                profile.Status = status;
+                await _context.SaveChangesAsync();
             }
         }
 
         public async Task UpdateConsultantPerformanceAsync(string consultantId, int totalConsultations, double averageRating, int feedbackCount)
         {
-            var user = await _userManager.FindByIdAsync(consultantId);
-            if (user != null)
+            var profile = await _context.ConsultantProfiles.FindAsync(consultantId);
+            if (profile != null)
             {
-                user.TotalConsultations = totalConsultations;
-                user.AverageRating = averageRating;
-                user.FeedbackCount = feedbackCount;
-                await _userManager.UpdateAsync(user);
+                profile.TotalConsultations = totalConsultations;
+                profile.AverageRating = averageRating;
+                profile.FeedbackCount = feedbackCount;
+                await _context.SaveChangesAsync();
             }
         }
     }

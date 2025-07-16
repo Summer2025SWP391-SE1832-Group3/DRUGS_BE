@@ -39,19 +39,12 @@ namespace DataAccessLayer.Data
         public DbSet<ConsultationReview> ConsultationReviews { get; set; }
         public DbSet<ConsultantWorkingHour> ConsultantWorkingHours { get; set; }
         public DbSet<Certificate> Certificates { get; set; }
+        public DbSet<ConsultantProfile> ConsultantProfiles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            var roles = new List<IdentityRole>{
-                new IdentityRole{Name="Admin",NormalizedName="ADMIN"},
-                new IdentityRole{Name="Staff", NormalizedName="STAFF"},
-                new IdentityRole{Name="Manager", NormalizedName="MANAGER"},
-                new IdentityRole{Name="Consultant", NormalizedName="CONSULTANT"},
-                new IdentityRole{Name="Member", NormalizedName="MEMBER"},
-            };
-            builder.Entity<IdentityRole>().HasData(roles);
-
+         
             builder.Entity<Blog>(entity =>
             {
                 entity.HasKey(b => b.BlogId);

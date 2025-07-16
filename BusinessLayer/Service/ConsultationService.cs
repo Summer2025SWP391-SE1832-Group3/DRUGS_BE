@@ -87,7 +87,7 @@ namespace BusinessLayer.Service
             _logger.LogInformation("Created request with ID: {RequestId}", createdRequest.Id);
 
             // Book the slot
-            availableSlot.Status = WorkingHourStatus.Booked;
+            availableSlot.Status = WorkingHourStatus.Pending;
             availableSlot.ConsultationRequestId = createdRequest.Id;
             availableSlot.UpdatedAt = DateTime.Now;
             await _context.SaveChangesAsync();
@@ -305,6 +305,14 @@ namespace BusinessLayer.Service
             request.UpdatedAt = DateTime.Now;
             await _consultationRepository.UpdateConsultationRequestAsync(request);
 
+            // Tăng TotalConsultations cho consultant
+            var profile = await _context.ConsultantProfiles.FindAsync(request.ConsultantId);
+            if (profile != null)
+            {
+                profile.TotalConsultations += 1;
+                await _context.SaveChangesAsync();
+            }
+
             var updatedSession = await _consultationRepository.UpdateConsultationSessionAsync(session);
             return MapToConsultationSessionViewDto(updatedSession);
         }
@@ -460,6 +468,46 @@ namespace BusinessLayer.Service
             return availableSlot == null;
         }
 
+        public async Task<bool> ConfirmConsultationAsync(string consultantId, int consultationId)
+        {
+            // Tìm request và slot liên quan
+            var request = await _context.ConsultationRequests.FindAsync(consultationId);
+            if (request == null || request.ConsultantId != consultantId)
+                return false;
+            var slot = await _context.ConsultantWorkingHours.FirstOrDefaultAsync(s => s.Id == request.ConsultantWorkingHourId);
+            if (slot == null)
+                return false;
+            // Chỉ cho xác nhận nếu slot đang Pending
+            if (slot.Status != WorkingHourStatus.Pending)
+                return false;
+            slot.Status = WorkingHourStatus.Booked;
+            slot.UpdatedAt = DateTime.Now;
+            request.Status = ConsultationStatus.Approved;
+            request.UpdatedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> RejectConsultationAsync(string consultantId, int consultationId)
+        {
+            var request = await _context.ConsultationRequests.FindAsync(consultationId);
+            if (request == null || request.ConsultantId != consultantId)
+                return false;
+            var slot = await _context.ConsultantWorkingHours.FirstOrDefaultAsync(s => s.Id == request.ConsultantWorkingHourId);
+            if (slot == null)
+                return false;
+            // Chỉ cho từ chối nếu slot đang Pending
+            if (slot.Status != WorkingHourStatus.Pending)
+                return false;
+            slot.Status = WorkingHourStatus.Rejected;
+            slot.ConsultationRequestId = null;
+            slot.UpdatedAt = DateTime.Now;
+            request.Status = ConsultationStatus.Rejected;
+            request.UpdatedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         // Private mapping methods
         private async Task<ConsultationRequestViewDto> MapToConsultationRequestViewDtoAsync(ConsultationRequest request)
         {
@@ -547,10 +595,102 @@ namespace BusinessLayer.Service
             };
         }
 
-        public Task<IEnumerable<AvailableSlotDto>> GetAvailableSlotsAsync(string consultantId, DateTime from, DateTime to) => throw new NotImplementedException();
-        public Task<bool> BookConsultationAsync(string memberId, string consultantId, ConsultationBookingDto dto) => throw new NotImplementedException();
-        public Task<IEnumerable<ConsultationBookingDto>> GetMyBookingsAsync(string memberId) => throw new NotImplementedException();
-        public Task<bool> FeedbackConsultantAsync(string memberId, int consultationId, ConsultationFeedbackDto dto) => throw new NotImplementedException();
-        public Task<bool> ConfirmConsultationAsync(string consultantId, int consultationId) => throw new NotImplementedException();
+        public async Task<IEnumerable<AvailableSlotDto>> GetAvailableSlotsAsync(string consultantId, DateTime date)
+        {
+            // Lấy tất cả slot đã tạo trong ngày
+            var slots = await _context.ConsultantWorkingHours
+                .Where(s => s.ConsultantId == consultantId && s.SlotDate == date.Date)
+                .OrderBy(s => s.StartTime)
+                .ToListAsync();
+            return slots.Select(s => new AvailableSlotDto
+            {
+                SlotId = s.Id,
+                StartTime = (s.SlotDate ?? DateTime.MinValue).Date + s.StartTime,
+                EndTime = (s.SlotDate ?? DateTime.MinValue).Date + s.EndTime,
+                ConsultantId = consultantId,
+                Status = s.Status.ToString()
+            });
+        }
+        public async Task<bool> BookConsultationAsync(string memberId, string consultantId, int slotId)
+        {
+            
+            var slot = await _context.ConsultantWorkingHours.FirstOrDefaultAsync(s => s.Id == slotId && s.ConsultantId == consultantId);
+            if (slot == null || slot.Status != WorkingHourStatus.Available)
+                return false; 
+            
+            var request = new ConsultationRequest
+            {
+                Title = "Booking",
+                Description = "Booking slot",
+                Category = "General",
+                RequestedDate = (slot.SlotDate ?? DateTime.MinValue).Date + slot.StartTime,
+                DurationMinutes = (int)(slot.EndTime - slot.StartTime).TotalMinutes,
+                UserId = memberId,
+                ConsultantId = consultantId,
+                Status = ConsultationStatus.Pending,
+                ConsultantWorkingHourId = slot.Id,
+                CreatedAt = DateTime.Now
+            };
+            _context.ConsultationRequests.Add(request);
+
+            // Lưu request trước để lấy Id thật
+            await _context.SaveChangesAsync();
+
+            // Cập nhật trạng thái slot và gán ConsultationRequestId đúng
+            slot.Status = WorkingHourStatus.Pending;
+            slot.ConsultationRequestId = request.Id;
+            slot.UpdatedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        public async Task<IEnumerable<ConsultationBookingDto>> GetMyBookingsAsync(string memberId)
+        {
+            var requests = await _context.ConsultationRequests
+                .Where(r => r.UserId == memberId)
+                .OrderByDescending(r => r.RequestedDate)
+                .ToListAsync();
+            return requests.Select(r => new ConsultationBookingDto
+            {
+                Id = r.Id,
+                ConsultantId = r.ConsultantId,
+                MemberId = r.UserId,
+                StartTime = r.RequestedDate,
+                EndTime = r.RequestedDate.AddMinutes(r.DurationMinutes),
+                Status = r.Status.ToString()
+            });
+        }
+        public async Task<bool> FeedbackConsultantAsync(string memberId, int consultationId, ConsultationFeedbackDto dto)
+        {
+            // Tìm request
+            var request = await _context.ConsultationRequests.FindAsync(consultationId);
+            if (request == null || request.UserId != memberId || request.Status != ConsultationStatus.Completed)
+                return false;
+            
+            var exist = await _context.Feedbacks.FirstOrDefaultAsync(f => f.UserId == memberId && f.ConsultantId == request.ConsultantId);
+            if (exist != null) return false;
+          
+            var feedback = new Feedback
+            {
+                ConsultantId = request.ConsultantId,
+                UserId = memberId,
+                Rating = dto.Rating,
+                ReviewText = dto.Comment,
+                CreatedAt = DateTime.Now,
+                IsActive = true
+            };
+            _context.Feedbacks.Add(feedback);
+            await _context.SaveChangesAsync();
+      
+            var profile = await _context.ConsultantProfiles.FindAsync(request.ConsultantId);
+            if (profile != null)
+            {
+                var allFeedbacks = await _context.Feedbacks.Where(f => f.ConsultantId == request.ConsultantId && f.IsActive).ToListAsync();
+                profile.FeedbackCount = allFeedbacks.Count;
+                profile.AverageRating = allFeedbacks.Count > 0 ? allFeedbacks.Average(f => f.Rating) : 0;
+                await _context.SaveChangesAsync();
+            }
+            return true;
+        }
     }
 }

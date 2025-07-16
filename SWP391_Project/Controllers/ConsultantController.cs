@@ -4,6 +4,8 @@ using DataAccessLayer.Dto.Account;
 using DataAccessLayer.Dto.Consultation;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using System.Collections.Generic;
+using System;
 
 namespace SWP391_Project.Controllers
 {
@@ -98,37 +100,44 @@ namespace SWP391_Project.Controllers
             return Ok(hours);
         }
 
-        // POST: api/consultant/workinghours
-        [HttpPost("workinghours")]
+        // POST: api/consultant/workinghours/range
+        [HttpPost("workinghours/range")]
         [Authorize(Roles = "Consultant")]
-        public async Task<IActionResult> AddWorkingHour([FromBody] ConsultantWorkingHourDto dto)
+        public async Task<IActionResult> AddWorkingHoursRange([FromBody] WorkingHourRangeDto dto)
         {
             var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (consultantId == null) return Unauthorized();
-            var result = await _consultantService.AddWorkingHourAsync(consultantId, dto);
-            return Ok(result);
+            var days = (dto.ToDate - dto.FromDate).Days;
+            for (int i = 0; i <= days; i++)
+            {
+                var date = dto.FromDate.AddDays(i);
+                await _consultantService.AddWorkingHourByDateAsync(consultantId, date, dto.StartTime, dto.EndTime);
+            }
+            return Ok(true);
         }
 
-        // PUT: api/consultant/workinghours/{workingHourId}
-        [HttpPut("workinghours/{workingHourId}")]
+        // PUT: api/consultant/workinghours/{date}
+        [HttpPut("workinghours/{date}")]
         [Authorize(Roles = "Consultant")]
-        public async Task<IActionResult> UpdateWorkingHour(int workingHourId, [FromBody] ConsultantWorkingHourDto dto)
+        public async Task<IActionResult> UpdateWorkingHourByDate(DateTime date, [FromBody] WorkingHourUpdateDto dto)
         {
             var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (consultantId == null) return Unauthorized();
-            var result = await _consultantService.UpdateWorkingHourAsync(consultantId, workingHourId, dto);
+            var result = await _consultantService.UpdateWorkingHourByDateAsync(consultantId, date, dto.StartTime, dto.EndTime);
             return Ok(result);
         }
+    }
 
-        // DELETE: api/consultant/workinghours/{workingHourId}
-        [HttpDelete("workinghours/{workingHourId}")]
-        [Authorize(Roles = "Consultant")]
-        public async Task<IActionResult> DeleteWorkingHour(int workingHourId)
-        {
-            var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (consultantId == null) return Unauthorized();
-            var result = await _consultantService.DeleteWorkingHourAsync(consultantId, workingHourId);
-            return Ok(result);
-        }
+    public class WorkingHourRangeDto
+    {
+        public DateTime FromDate { get; set; }
+        public DateTime ToDate { get; set; }
+        public TimeSpan? StartTime { get; set; }
+        public TimeSpan? EndTime { get; set; }
+    }
+    public class WorkingHourUpdateDto
+    {
+        public TimeSpan? StartTime { get; set; }
+        public TimeSpan? EndTime { get; set; }
     }
 }

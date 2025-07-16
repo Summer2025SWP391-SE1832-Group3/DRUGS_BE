@@ -15,8 +15,7 @@ namespace BusinessLayer.IService
         Task<bool> UpdateCertificateAsync(string consultantId, int certificateId, CertificateDto dto);
         Task<bool> DeleteCertificateAsync(string consultantId, int certificateId);
         Task<IEnumerable<ConsultantWorkingHourDto>> GetWorkingHoursAsync(string consultantId);
-        Task<bool> AddWorkingHourAsync(string consultantId, ConsultantWorkingHourDto dto);
-        Task<bool> UpdateWorkingHourAsync(string consultantId, int workingHourId, ConsultantWorkingHourDto dto);
-        Task<bool> DeleteWorkingHourAsync(string consultantId, int workingHourId);
+        Task<bool> AddWorkingHourByDateAsync(string consultantId, DateTime date, TimeSpan? startTime, TimeSpan? endTime);
+        Task<bool> UpdateWorkingHourByDateAsync(string consultantId, DateTime date, TimeSpan? startTime, TimeSpan? endTime);
     }
 } 

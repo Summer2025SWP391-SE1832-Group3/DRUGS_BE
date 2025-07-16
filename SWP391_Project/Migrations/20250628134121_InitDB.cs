@@ -602,18 +602,6 @@ namespace SWP391_Project.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.InsertData(
-                table: "AspNetRoles",
-                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
-                values: new object[,]
-                {
-                    { "0a49ac77-5e14-474d-9e28-a4b3e7575e23", null, "Member", "MEMBER" },
-                    { "7fa2eb48-5e2a-4d32-98c7-84cff2b3d57c", null, "Staff", "STAFF" },
-                    { "8be4c3b0-7246-45fa-9284-0ea0e9c8836e", null, "Admin", "ADMIN" },
-                    { "97e4a983-27d8-455f-81b9-bf3917f242c7", null, "Manager", "MANAGER" },
-                    { "fc326226-433d-4a35-8175-d19ac0b62e23", null, "Consultant", "CONSULTANT" }
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",

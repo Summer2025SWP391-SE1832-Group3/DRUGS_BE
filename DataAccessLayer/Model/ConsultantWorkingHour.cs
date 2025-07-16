@@ -6,9 +6,11 @@ namespace DataAccessLayer.Model
     public enum WorkingHourStatus
     {
         Available,
+        Pending,    
         Booked,
         Completed,
-        Cancelled
+        Cancelled,
+        Rejected   
     }
 
     public class ConsultantWorkingHour

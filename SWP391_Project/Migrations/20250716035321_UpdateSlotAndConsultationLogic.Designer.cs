@@ -4,6 +4,7 @@ using DataAccessLayer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SWP391_Project.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250716035321_UpdateSlotAndConsultationLogic")]
+    partial class UpdateSlotAndConsultationLogic
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -29,6 +32,9 @@ namespace SWP391_Project.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
+
+                    b.Property<double>("AverageRating")
+                        .HasColumnType("float");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -46,6 +52,9 @@ namespace SWP391_Project.Migrations
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<int>("FeedbackCount")
+                        .HasColumnType("int");
 
                     b.Property<string>("FullName")
                         .HasColumnType("nvarchar(max)");
@@ -81,6 +90,13 @@ namespace SWP391_Project.Migrations
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TotalConsultations")
+                        .HasColumnType("int");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
@@ -239,29 +255,6 @@ namespace SWP391_Project.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Comments");
-                });
-
-            modelBuilder.Entity("DataAccessLayer.Model.ConsultantProfile", b =>
-                {
-                    b.Property<string>("ConsultantId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<double>("AverageRating")
-                        .HasColumnType("float");
-
-                    b.Property<int>("FeedbackCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TotalConsultations")
-                        .HasColumnType("int");
-
-                    b.HasKey("ConsultantId");
-
-                    b.ToTable("ConsultantProfiles");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultantWorkingHour", b =>
@@ -833,31 +826,31 @@ namespace SWP391_Project.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "cd59809a-42d7-4d69-a376-1e319938b44f",
+                            Id = "4abb9925-fae4-4305-ab0a-36bbd0616ff1",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "c2e41c61-5cb7-451f-b502-83ab631ec3ae",
+                            Id = "87665a29-c900-4826-bafb-872d4a85defd",
                             Name = "Staff",
                             NormalizedName = "STAFF"
                         },
                         new
                         {
-                            Id = "4aaf1c49-01fb-4faf-9c72-09622a6e7e7e",
+                            Id = "55c7b8a3-7eb1-4999-887f-9cc50366d139",
                             Name = "Manager",
                             NormalizedName = "MANAGER"
                         },
                         new
                         {
-                            Id = "49363975-d085-4cb7-9119-4fa15ea6629a",
+                            Id = "32c7e296-4e4e-43fe-a9cc-6e2e073408c4",
                             Name = "Consultant",
                             NormalizedName = "CONSULTANT"
                         },
                         new
                         {
-                            Id = "b14d08e7-92a1-4538-991b-6b55173b9a49",
+                            Id = "875a06bf-69ca-4af2-82fa-792426d4b55e",
                             Name = "Member",
                             NormalizedName = "MEMBER"
                         });
@@ -1026,17 +1019,6 @@ namespace SWP391_Project.Migrations
                     b.Navigation("Blog");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("DataAccessLayer.Model.ConsultantProfile", b =>
-                {
-                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "Consultant")
-                        .WithMany()
-                        .HasForeignKey("ConsultantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Consultant");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultantWorkingHour", b =>
