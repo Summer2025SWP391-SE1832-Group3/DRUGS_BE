@@ -316,10 +316,6 @@ namespace DataAccessLayer.Data
                     .HasForeignKey(cwh => cwh.ConsultantId)
                     .OnDelete(DeleteBehavior.Cascade);
                     
-                entity.HasOne(cwh => cwh.ConsultationRequest)
-                    .WithMany()
-                    .HasForeignKey(cwh => cwh.ConsultationRequestId)
-                                         .OnDelete(DeleteBehavior.SetNull);
              });
              
              builder.Entity<Course>(entity =>

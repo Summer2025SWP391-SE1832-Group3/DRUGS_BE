@@ -317,9 +317,6 @@ namespace SWP391_Project.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int?>("ConsultationRequestId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -350,8 +347,6 @@ namespace SWP391_Project.Migrations
                     b.HasIndex("ApplicationUserId");
 
                     b.HasIndex("ConsultantId");
-
-                    b.HasIndex("ConsultationRequestId");
 
                     b.ToTable("ConsultantWorkingHours");
                 });
@@ -1070,14 +1065,7 @@ namespace SWP391_Project.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DataAccessLayer.Model.ConsultationRequest", "ConsultationRequest")
-                        .WithMany()
-                        .HasForeignKey("ConsultationRequestId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("Consultant");
-
-                    b.Navigation("ConsultationRequest");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationRequest", b =>

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SWP391_Project.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20250716103747_RemoveApplicationUserIdFromConsultantWorkingHours")]
-    partial class RemoveApplicationUserIdFromConsultantWorkingHours
+    [Migration("20250712152123_UpdateConsulsionTb")]
+    partial class UpdateConsulsionTb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -91,6 +91,9 @@ namespace SWP391_Project.Migrations
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<int?>("YearsOfExperience")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -239,70 +242,6 @@ namespace SWP391_Project.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Comments");
-                });
-
-            modelBuilder.Entity("DataAccessLayer.Model.ConsultantFeedback", b =>
-                {
-                    b.Property<int>("ConsultantFeedbackId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ConsultantFeedbackId"));
-
-                    b.Property<string>("ConsultantId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("Rating")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ReviewText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("ConsultantFeedbackId");
-
-                    b.HasIndex("ConsultantId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ConsultantFeedbacks");
-                });
-
-            modelBuilder.Entity("DataAccessLayer.Model.ConsultantProfile", b =>
-                {
-                    b.Property<string>("ConsultantId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<double>("AverageRating")
-                        .HasColumnType("float");
-
-                    b.Property<int>("FeedbackCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TotalConsultations")
-                        .HasColumnType("int");
-
-                    b.HasKey("ConsultantId");
-
-                    b.ToTable("ConsultantProfiles");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultantWorkingHour", b =>
@@ -589,7 +528,7 @@ namespace SWP391_Project.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FeedbackId"));
 
-                    b.Property<int?>("CourseId")
+                    b.Property<int>("CourseId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
@@ -864,6 +803,38 @@ namespace SWP391_Project.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "e2e7fe74-cfc1-484e-8dbd-141aa79a2913",
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "b7b29921-44be-471c-89c5-5c2875cba655",
+                            Name = "Staff",
+                            NormalizedName = "STAFF"
+                        },
+                        new
+                        {
+                            Id = "280aee5a-cc6f-4e38-a1e3-9c74257230e8",
+                            Name = "Manager",
+                            NormalizedName = "MANAGER"
+                        },
+                        new
+                        {
+                            Id = "cda350e0-9284-4e67-a4b7-19d984a42b0f",
+                            Name = "Consultant",
+                            NormalizedName = "CONSULTANT"
+                        },
+                        new
+                        {
+                            Id = "400eda71-0746-4481-b09d-b7d45800d46c",
+                            Name = "Member",
+                            NormalizedName = "MEMBER"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -1031,36 +1002,6 @@ namespace SWP391_Project.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("DataAccessLayer.Model.ConsultantFeedback", b =>
-                {
-                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "Consultant")
-                        .WithMany()
-                        .HasForeignKey("ConsultantId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Consultant");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("DataAccessLayer.Model.ConsultantProfile", b =>
-                {
-                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "Consultant")
-                        .WithMany()
-                        .HasForeignKey("ConsultantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Consultant");
-                });
-
             modelBuilder.Entity("DataAccessLayer.Model.ConsultantWorkingHour", b =>
                 {
                     b.HasOne("DataAccessLayer.Model.ApplicationUser", null)
@@ -1155,7 +1096,8 @@ namespace SWP391_Project.Migrations
                     b.HasOne("DataAccessLayer.Model.Course", "Course")
                         .WithMany("Feedbacks")
                         .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("DataAccessLayer.Model.ApplicationUser", "User")
                         .WithMany("Feedbacks")

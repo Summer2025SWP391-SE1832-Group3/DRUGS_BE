@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SWP391_Project.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20250716084921_AddConsultantFeedbackAndRecentChanges")]
-    partial class AddConsultantFeedbackAndRecentChanges
+    [Migration("20250716123739_InitConsultantAndConsultationAll")]
+    partial class InitConsultantAndConsultationAll
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -91,9 +91,6 @@ namespace SWP391_Project.Migrations
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
-
-                    b.Property<int?>("YearsOfExperience")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -323,9 +320,6 @@ namespace SWP391_Project.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int?>("ConsultationRequestId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -356,8 +350,6 @@ namespace SWP391_Project.Migrations
                     b.HasIndex("ApplicationUserId");
 
                     b.HasIndex("ConsultantId");
-
-                    b.HasIndex("ConsultationRequestId");
 
                     b.ToTable("ConsultantWorkingHours");
                 });
@@ -592,10 +584,6 @@ namespace SWP391_Project.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FeedbackId"));
 
-                    b.Property<string>("ConsultantId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<int?>("CourseId")
                         .HasColumnType("int");
 
@@ -620,8 +608,6 @@ namespace SWP391_Project.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("FeedbackId");
-
-                    b.HasIndex("ConsultantId");
 
                     b.HasIndex("CourseId");
 
@@ -1082,14 +1068,7 @@ namespace SWP391_Project.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DataAccessLayer.Model.ConsultationRequest", "ConsultationRequest")
-                        .WithMany()
-                        .HasForeignKey("ConsultationRequestId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("Consultant");
-
-                    b.Navigation("ConsultationRequest");
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationRequest", b =>
@@ -1161,12 +1140,6 @@ namespace SWP391_Project.Migrations
 
             modelBuilder.Entity("DataAccessLayer.Model.Feedback", b =>
                 {
-                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "Consultant")
-                        .WithMany()
-                        .HasForeignKey("ConsultantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("DataAccessLayer.Model.Course", "Course")
                         .WithMany("Feedbacks")
                         .HasForeignKey("CourseId")
@@ -1177,8 +1150,6 @@ namespace SWP391_Project.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Consultant");
 
                     b.Navigation("Course");
 

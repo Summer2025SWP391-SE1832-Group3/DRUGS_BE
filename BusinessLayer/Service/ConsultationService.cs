@@ -88,7 +88,6 @@ namespace BusinessLayer.Service
 
             // Book the slot
             availableSlot.Status = WorkingHourStatus.Pending;
-            availableSlot.ConsultationRequestId = createdRequest.Id;
             availableSlot.UpdatedAt = DateTime.Now;
             await _context.SaveChangesAsync();
 
@@ -500,7 +499,6 @@ namespace BusinessLayer.Service
             if (slot.Status != WorkingHourStatus.Pending)
                 return false;
             slot.Status = WorkingHourStatus.Rejected;
-            slot.ConsultationRequestId = null;
             slot.UpdatedAt = DateTime.Now;
             request.Status = ConsultationStatus.Rejected;
             request.UpdatedAt = DateTime.Now;
@@ -649,7 +647,6 @@ namespace BusinessLayer.Service
 
             // Cập nhật trạng thái slot và gán ConsultationRequestId đúng
             slot.Status = WorkingHourStatus.Pending;
-            slot.ConsultationRequestId = request.Id;
             slot.UpdatedAt = DateTime.Now;
 
             await _context.SaveChangesAsync();

@@ -99,6 +99,18 @@ namespace SWP391_Project.Migrations
                         principalColumn: "Id");
                 });
 
+            migrationBuilder.InsertData(
+                table: "AspNetRoles",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[,]
+                {
+                    { "02f78fca-1094-4ba9-9fe2-9d97916a5e07", null, "Manager", "MANAGER" },
+                    { "12f1e9de-6c21-4b70-b6b7-edbd882b43ae", null, "Staff", "STAFF" },
+                    { "3f627e1b-4413-4c8b-a3fa-411f37ab93cd", null, "Consultant", "CONSULTANT" },
+                    { "9431d884-f57c-492c-8cc9-f1d5e1ebf8f1", null, "Member", "MEMBER" },
+                    { "d0c69b57-2c53-459a-b7ec-c59d25e37ac9", null, "Admin", "ADMIN" }
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_LessonProgresses_CourseEnrollmentId",
                 table: "LessonProgresses",
@@ -199,6 +211,18 @@ namespace SWP391_Project.Migrations
                         column: x => x.LessonId,
                         principalTable: "Lessions",
                         principalColumn: "Id");
+                });
+
+            migrationBuilder.InsertData(
+                table: "AspNetRoles",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[,]
+                {
+                    { "0a49ac77-5e14-474d-9e28-a4b3e7575e23", null, "Member", "MEMBER" },
+                    { "7fa2eb48-5e2a-4d32-98c7-84cff2b3d57c", null, "Staff", "STAFF" },
+                    { "8be4c3b0-7246-45fa-9284-0ea0e9c8836e", null, "Admin", "ADMIN" },
+                    { "97e4a983-27d8-455f-81b9-bf3917f242c7", null, "Manager", "MANAGER" },
+                    { "fc326226-433d-4a35-8175-d19ac0b62e23", null, "Consultant", "CONSULTANT" }
                 });
 
             migrationBuilder.CreateIndex(

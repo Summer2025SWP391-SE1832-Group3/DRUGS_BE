@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -62,4 +62,4 @@ namespace SWP391_Project.Migrations
                 name: "Feedbacks");
         }
     }
-} 
+}
