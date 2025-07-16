@@ -111,5 +111,61 @@ namespace SWP391_Project.Controllers
 
             return Ok(result);
         }
+
+        // PUT: api/consultation/session/{sessionId}/complete
+        [HttpPut("session/{sessionId}/complete")]
+        [Authorize(Roles = "Consultant")]
+        public async Task<IActionResult> CompleteSession(int sessionId)
+        {
+            var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (consultantId == null) return Unauthorized();
+            var result = await _consultationService.CompleteConsultationSessionAsync(sessionId, consultantId);
+            return Ok(result);
+        }
+
+        // POST: api/consultation/session
+        [HttpPost("session")]
+        [Authorize(Roles = "Consultant")]
+        public async Task<IActionResult> CreateSession([FromBody] ConsultationSessionCreateDto dto, [FromQuery] int requestId)
+        {
+            var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (consultantId == null) return Unauthorized();
+            var result = await _consultationService.CreateConsultationSessionAsync(requestId, dto, consultantId);
+            return Ok(result);
+        }
+
+        // GET: api/consultation/session/by-request/{requestId}
+        [HttpGet("session/by-request/{requestId}")]
+        [Authorize(Roles = "Member,Consultant")]
+        public async Task<IActionResult> GetSessionByRequest(int requestId)
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
+            var session = await _consultationService.GetConsultationSessionAsync(requestId, userId);
+            if (session == null) return NotFound();
+            return Ok(session);
+        }
+
+        // PUT: api/consultation/session/{sessionId}
+        [HttpPut("session/{sessionId}")]
+        [Authorize(Roles = "Consultant")]
+        public async Task<IActionResult> UpdateSession(int sessionId, [FromBody] ConsultationSessionCreateDto dto)
+        {
+            var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (consultantId == null) return Unauthorized();
+            var result = await _consultationService.UpdateConsultationSessionAsync(sessionId, dto, consultantId);
+            return Ok(result);
+        }
+
+        // DELETE: api/consultation/session/{sessionId}
+        [HttpDelete("session/{sessionId}")]
+        [Authorize(Roles = "Consultant")]
+        public async Task<IActionResult> DeleteSession(int sessionId)
+        {
+            var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (consultantId == null) return Unauthorized();
+            var result = await _consultationService.DeleteConsultationSessionAsync(sessionId, consultantId);
+            return Ok(result);
+        }
     }
 } 

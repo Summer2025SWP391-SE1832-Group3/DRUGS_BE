@@ -508,6 +508,17 @@ namespace BusinessLayer.Service
             return true;
         }
 
+        public async Task<bool> DeleteConsultationSessionAsync(int sessionId, string currentUserId)
+        {
+            var session = await _consultationRepository.GetConsultationSessionByIdAsync(sessionId);
+            if (session == null) return false;
+            var request = session.ConsultationRequest;
+            if (request == null || request.ConsultantId != currentUserId) return false;
+            _context.ConsultationSessions.Remove(session);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         // Private mapping methods
         private async Task<ConsultationRequestViewDto> MapToConsultationRequestViewDtoAsync(ConsultationRequest request)
         {
@@ -662,15 +673,16 @@ namespace BusinessLayer.Service
         }
         public async Task<bool> FeedbackConsultantAsync(string memberId, int consultationId, ConsultationFeedbackDto dto)
         {
-            // Tìm request
+           
             var request = await _context.ConsultationRequests.FindAsync(consultationId);
             if (request == null || request.UserId != memberId || request.Status != ConsultationStatus.Completed)
                 return false;
             
-            var exist = await _context.Feedbacks.FirstOrDefaultAsync(f => f.UserId == memberId && f.ConsultantId == request.ConsultantId);
+           
+            var exist = await _context.ConsultantFeedbacks.FirstOrDefaultAsync(f => f.UserId == memberId && f.ConsultantId == request.ConsultantId);
             if (exist != null) return false;
           
-            var feedback = new Feedback
+            var feedback = new ConsultantFeedback
             {
                 ConsultantId = request.ConsultantId,
                 UserId = memberId,
@@ -679,13 +691,13 @@ namespace BusinessLayer.Service
                 CreatedAt = DateTime.Now,
                 IsActive = true
             };
-            _context.Feedbacks.Add(feedback);
+            _context.ConsultantFeedbacks.Add(feedback);
             await _context.SaveChangesAsync();
       
             var profile = await _context.ConsultantProfiles.FindAsync(request.ConsultantId);
             if (profile != null)
             {
-                var allFeedbacks = await _context.Feedbacks.Where(f => f.ConsultantId == request.ConsultantId && f.IsActive).ToListAsync();
+                var allFeedbacks = await _context.ConsultantFeedbacks.Where(f => f.ConsultantId == request.ConsultantId && f.IsActive).ToListAsync();
                 profile.FeedbackCount = allFeedbacks.Count;
                 profile.AverageRating = allFeedbacks.Count > 0 ? allFeedbacks.Average(f => f.Rating) : 0;
                 await _context.SaveChangesAsync();

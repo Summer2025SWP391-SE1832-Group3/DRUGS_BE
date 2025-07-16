@@ -12,5 +12,10 @@ namespace BusinessLayer.IService
         Task<bool> FeedbackConsultantAsync(string memberId, int consultationId, ConsultationFeedbackDto dto);
         Task<bool> ConfirmConsultationAsync(string consultantId, int consultationId);
         Task<bool> RejectConsultationAsync(string consultantId, int consultationId);
+        Task<ConsultationSessionViewDto> CompleteConsultationSessionAsync(int sessionId, string currentUserId);
+        Task<ConsultationSessionViewDto> CreateConsultationSessionAsync(int requestId, ConsultationSessionCreateDto dto, string currentUserId);
+        Task<ConsultationSessionViewDto?> GetConsultationSessionAsync(int requestId, string currentUserId);
+        Task<ConsultationSessionViewDto> UpdateConsultationSessionAsync(int sessionId, ConsultationSessionCreateDto dto, string currentUserId);
+        Task<bool> DeleteConsultationSessionAsync(int sessionId, string currentUserId);
     }
 }

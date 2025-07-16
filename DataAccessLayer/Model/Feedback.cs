@@ -18,7 +18,5 @@ namespace DataAccessLayer.Model
         public bool IsActive { get; set; }
         public Course Course { get; set; }
         public ApplicationUser User { get; set; }
-        public string ConsultantId { get; set; }
-        public ApplicationUser Consultant { get; set; }
     }
 }

@@ -62,21 +62,5 @@ namespace DataAccessLayer.Repository
                 .Where(f => f.FeedbackId == feedbackId)
                 .FirstOrDefaultAsync();
         }
-
-        public async Task<IEnumerable<Feedback>> GetFeedbacksByConsultantIdAsync(string consultantId)
-        {
-            return await _context.Feedbacks
-                .Include(f => f.User)
-                .Include(f => f.Consultant)
-                .Where(f => f.ConsultantId == consultantId && f.IsActive)
-                .ToListAsync();
-        }
-
-        public async Task<Feedback> GetFeedbackByConsultantAndUserAsync(string consultantId, string userId)
-        {
-            return await _context.Feedbacks
-                .Where(f => f.ConsultantId == consultantId && f.UserId == userId)
-                .FirstOrDefaultAsync();
-        }
     }
 }

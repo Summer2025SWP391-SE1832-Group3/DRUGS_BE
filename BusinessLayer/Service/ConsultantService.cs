@@ -62,6 +62,7 @@ namespace BusinessLayer.Service
                 }),
                 Certificates = certs.Select(c => new CertificateDto
                 {
+                    Id = c.Id,
                     Name = c.Name,
                     IssuingOrganization = c.IssuingOrganization,
                     DateIssued = c.DateIssued
