@@ -32,6 +32,7 @@ namespace DataAccessLayer.Data
         public DbSet<LessonProgress> LessonProgresses { get; set; }
 
         public DbSet<Feedback> Feedbacks { get; set; }
+        public DbSet<ConsultantFeedback> ConsultantFeedbacks { get; set; }
 
         // New consultation DbSets
         public DbSet<ConsultationRequest> ConsultationRequests { get; set; }
@@ -39,19 +40,12 @@ namespace DataAccessLayer.Data
         public DbSet<ConsultationReview> ConsultationReviews { get; set; }
         public DbSet<ConsultantWorkingHour> ConsultantWorkingHours { get; set; }
         public DbSet<Certificate> Certificates { get; set; }
+        public DbSet<ConsultantProfile> ConsultantProfiles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            var roles = new List<IdentityRole>{
-                new IdentityRole{Name="Admin",NormalizedName="ADMIN"},
-                new IdentityRole{Name="Staff", NormalizedName="STAFF"},
-                new IdentityRole{Name="Manager", NormalizedName="MANAGER"},
-                new IdentityRole{Name="Consultant", NormalizedName="CONSULTANT"},
-                new IdentityRole{Name="Member", NormalizedName="MEMBER"},
-            };
-            builder.Entity<IdentityRole>().HasData(roles);
-
+         
             builder.Entity<Blog>(entity =>
             {
                 entity.HasKey(b => b.BlogId);
@@ -322,10 +316,6 @@ namespace DataAccessLayer.Data
                     .HasForeignKey(cwh => cwh.ConsultantId)
                     .OnDelete(DeleteBehavior.Cascade);
                     
-                entity.HasOne(cwh => cwh.ConsultationRequest)
-                    .WithMany()
-                    .HasForeignKey(cwh => cwh.ConsultationRequestId)
-                                         .OnDelete(DeleteBehavior.SetNull);
              });
              
              builder.Entity<Course>(entity =>
@@ -381,6 +371,18 @@ namespace DataAccessLayer.Data
                 entity.HasOne(f => f.Course)
                     .WithMany(c => c.Feedbacks)
                     .HasForeignKey(f => f.CourseId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            builder.Entity<ConsultantFeedback>(entity =>
+            {
+                entity.HasKey(f => f.ConsultantFeedbackId);
+                entity.HasOne(f => f.User)
+                    .WithMany()
+                    .HasForeignKey(f => f.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(f => f.Consultant)
+                    .WithMany()
+                    .HasForeignKey(f => f.ConsultantId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

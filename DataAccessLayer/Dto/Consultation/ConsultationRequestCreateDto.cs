@@ -11,11 +11,11 @@ namespace DataAccessLayer.Dto.Consultation
         
         [Required]
         [MaxLength(2000)]
-        public string Description { get; set; }
+        public string? Description { get; set; }
         
         [Required]
         [MaxLength(100)]
-        public string Category { get; set; }
+        public string? Category { get; set; }
         
         [Required]
         public DateTime RequestedDate { get; set; }
@@ -27,6 +27,6 @@ namespace DataAccessLayer.Dto.Consultation
         public string? Notes { get; set; }
         
         [Required]
-        public string ConsultantId { get; set; }
+        public string? ConsultantId { get; set; }
     }
 } 

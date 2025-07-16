@@ -17,8 +17,6 @@ namespace DataAccessLayer.Model
         public string? Gender { get; set; }
         [PersonalData]
         public DateTime CreatedAt { get; set; } 
-        [PersonalData]
-        public int? YearsOfExperience { get; set; }
         public bool IsActive { get; set; } = true;
         public ICollection<Blog> BlogsPosted { get; set; }
         public ICollection<Blog> BlogsApproved { get; set; }
@@ -30,6 +28,5 @@ namespace DataAccessLayer.Model
         public ICollection<ConsultantWorkingHour> WorkingHours { get; set; }
         public ICollection<Certificate> Certificates { get; set; }
         public ICollection<Feedback> Feedbacks { get; set; }
-
     }
 }

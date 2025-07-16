@@ -2,35 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using DataAccessLayer.Dto.Account;
-using DataAccessLayer.Model;
 
 namespace BusinessLayer.IService
 {
     public interface IConsultantService
     {
-        Task<IEnumerable<ConsultantViewDto>> GetAllConsultantsAsync();
-        Task<ConsultantDetailDto> GetConsultantDetailAsync(string consultantId);
-        Task<IEnumerable<ConsultantWorkingHour>> GetWorkingHoursAsync(string consultantId);
-        Task<IEnumerable<Certificate>> GetCertificatesAsync(string consultantId);
-        Task<bool> AddOrUpdateCertificateAsync(string consultantId, CertificateDto certificateDto, int? certificateId = null);
+        Task<IEnumerable<ConsultantListItemDto>> GetAllConsultantsAsync();
+        Task<ConsultantDetailDto?> GetConsultantDetailAsync(string consultantId);
+        Task<bool> UpdateProfileAsync(string consultantId, ConsultantProfileUpdateDto dto);
+        Task<IEnumerable<CertificateViewDto>> GetCertificatesAsync(string consultantId);
+        Task<bool> AddCertificateAsync(string consultantId, CertificateDto dto);
+        Task<bool> UpdateCertificateAsync(string consultantId, int certificateId, CertificateDto dto);
         Task<bool> DeleteCertificateAsync(string consultantId, int certificateId);
-        Task<ConsultantWorkingHour> AddWorkingHourAsync(string consultantId, ConsultantWorkingHour workingHour);
-        Task<ConsultantWorkingHour> UpdateWorkingHourAsync(string consultantId, int workingHourId, ConsultantWorkingHour workingHour);
-        Task<bool> DeleteWorkingHourAsync(string consultantId, int workingHourId);
-        Task<bool> IsWorkingHourOverlappingAsync(string consultantId, DayOfWeek dayOfWeek, TimeSpan startTime, TimeSpan endTime, int? excludeId = null);
-        
-        // New methods for slot management
-        Task<IEnumerable<ConsultantWorkingHour>> GetAvailableSlotsAsync(string consultantId, DateTime fromDate, DateTime toDate);
-        Task<IEnumerable<ConsultantWorkingHour>> GenerateSlotsForDateRangeAsync(string consultantId, DateTime fromDate, DateTime toDate, int slotDurationMinutes = 60);
-        Task<bool> BookSlotAsync(int slotId, int consultationRequestId);
-        Task<bool> CancelSlotAsync(int slotId);
-        Task<bool> CompleteSlotAsync(int slotId);
-        Task<object> GetSlotConfigurationAsync(string consultantId);
-        
-        // Auto slot management
-        Task<IEnumerable<ConsultantWorkingHour>> GetAvailableSlotsWithAutoGenerationAsync(string consultantId, DateTime fromDate, DateTime toDate, int slotDurationMinutes = 60);
-        Task<int> AutoGenerateSlotsForFutureWeeksAsync(string consultantId, int weeksAhead = 4, int slotDurationMinutes = 60);
-        Task<int> CleanupOldSlotsAsync(int daysToKeep = 30);
-        Task<int> AutoGenerateSlotsForAllConsultantsAsync(int weeksAhead = 4, int slotDurationMinutes = 60);
+        Task<IEnumerable<ConsultantWorkingHourDto>> GetWorkingHoursAsync(string consultantId);
+        Task<bool> AddWorkingHourByDateAsync(string consultantId, DateTime date, TimeSpan? startTime, TimeSpan? endTime);
+        Task<bool> UpdateWorkingHourByDateAsync(string consultantId, DateTime date, TimeSpan? startTime, TimeSpan? endTime);
     }
 } 

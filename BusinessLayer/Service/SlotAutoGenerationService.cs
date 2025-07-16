@@ -30,8 +30,7 @@ namespace BusinessLayer.Service
             {
                 try
                 {
-                    await GenerateSlotsForAllConsultants();
-                    _logger.LogInformation("Auto-generated slots for all consultants");
+                   
                 }
                 catch (Exception ex)
                 {
@@ -40,15 +39,6 @@ namespace BusinessLayer.Service
 
                 await Task.Delay(_period, stoppingToken);
             }
-        }
-
-        private async Task GenerateSlotsForAllConsultants()
-        {
-            using var scope = _serviceProvider.CreateScope();
-            var consultantService = scope.ServiceProvider.GetRequiredService<IConsultantService>();
-
-            var slotsGenerated = await consultantService.AutoGenerateSlotsForAllConsultantsAsync(weeksAhead: 4, slotDurationMinutes: 60);
-            _logger.LogInformation("Generated {SlotsGenerated} slots for all consultants", slotsGenerated);
         }
     }
 } 

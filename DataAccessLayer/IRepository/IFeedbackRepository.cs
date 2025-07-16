@@ -16,6 +16,5 @@ namespace DataAccessLayer.IRepository
         Task<bool> DeleteAsync(int feedbackId);
         Task<IEnumerable<Feedback>> GetFeedbacksByCourseIdAsync(int courseId);
         Task<Feedback> GetFeedbackByIdAsync(int feedbackId);
-
     }
 }
