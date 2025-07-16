@@ -241,6 +241,47 @@ namespace SWP391_Project.Migrations
                     b.ToTable("Comments");
                 });
 
+            modelBuilder.Entity("DataAccessLayer.Model.ConsultantFeedback", b =>
+                {
+                    b.Property<int>("ConsultantFeedbackId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ConsultantFeedbackId"));
+
+                    b.Property<string>("ConsultantId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReviewText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("ConsultantFeedbackId");
+
+                    b.HasIndex("ConsultantId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ConsultantFeedbacks");
+                });
+
             modelBuilder.Entity("DataAccessLayer.Model.ConsultantProfile", b =>
                 {
                     b.Property<string>("ConsultantId")
@@ -829,38 +870,6 @@ namespace SWP391_Project.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = "cd59809a-42d7-4d69-a376-1e319938b44f",
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
-                        },
-                        new
-                        {
-                            Id = "c2e41c61-5cb7-451f-b502-83ab631ec3ae",
-                            Name = "Staff",
-                            NormalizedName = "STAFF"
-                        },
-                        new
-                        {
-                            Id = "4aaf1c49-01fb-4faf-9c72-09622a6e7e7e",
-                            Name = "Manager",
-                            NormalizedName = "MANAGER"
-                        },
-                        new
-                        {
-                            Id = "49363975-d085-4cb7-9119-4fa15ea6629a",
-                            Name = "Consultant",
-                            NormalizedName = "CONSULTANT"
-                        },
-                        new
-                        {
-                            Id = "b14d08e7-92a1-4538-991b-6b55173b9a49",
-                            Name = "Member",
-                            NormalizedName = "MEMBER"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -1024,6 +1033,25 @@ namespace SWP391_Project.Migrations
                         .IsRequired();
 
                     b.Navigation("Blog");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DataAccessLayer.Model.ConsultantFeedback", b =>
+                {
+                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "Consultant")
+                        .WithMany()
+                        .HasForeignKey("ConsultantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DataAccessLayer.Model.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Consultant");
 
                     b.Navigation("User");
                 });

@@ -32,6 +32,7 @@ namespace DataAccessLayer.Data
         public DbSet<LessonProgress> LessonProgresses { get; set; }
 
         public DbSet<Feedback> Feedbacks { get; set; }
+        public DbSet<ConsultantFeedback> ConsultantFeedbacks { get; set; }
 
         // New consultation DbSets
         public DbSet<ConsultationRequest> ConsultationRequests { get; set; }
@@ -374,6 +375,18 @@ namespace DataAccessLayer.Data
                 entity.HasOne(f => f.Course)
                     .WithMany(c => c.Feedbacks)
                     .HasForeignKey(f => f.CourseId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            builder.Entity<ConsultantFeedback>(entity =>
+            {
+                entity.HasKey(f => f.ConsultantFeedbackId);
+                entity.HasOne(f => f.User)
+                    .WithMany()
+                    .HasForeignKey(f => f.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(f => f.Consultant)
+                    .WithMany()
+                    .HasForeignKey(f => f.ConsultantId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
