@@ -10,7 +10,7 @@ namespace BusinessLayer.IService
         Task<IEnumerable<ConsultantListItemDto>> GetAllConsultantsAsync();
         Task<ConsultantDetailDto?> GetConsultantDetailAsync(string consultantId);
         Task<bool> UpdateProfileAsync(string consultantId, ConsultantProfileUpdateDto dto);
-        Task<IEnumerable<CertificateDto>> GetCertificatesAsync(string consultantId);
+        Task<IEnumerable<CertificateViewDto>> GetCertificatesAsync(string consultantId);
         Task<bool> AddCertificateAsync(string consultantId, CertificateDto dto);
         Task<bool> UpdateCertificateAsync(string consultantId, int certificateId, CertificateDto dto);
         Task<bool> DeleteCertificateAsync(string consultantId, int certificateId);

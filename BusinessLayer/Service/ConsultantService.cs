@@ -96,11 +96,12 @@ namespace BusinessLayer.Service
             await _context.SaveChangesAsync();
             return true;
         }
-        public async Task<IEnumerable<CertificateDto>> GetCertificatesAsync(string consultantId)
+        public async Task<IEnumerable<CertificateViewDto>> GetCertificatesAsync(string consultantId)
         {
             var certs = await _context.Certificates.Where(c => c.ApplicationUserId == consultantId).ToListAsync();
-            return certs.Select(c => new CertificateDto
+            return certs.Select(c => new CertificateViewDto
             {
+                Id = c.Id,
                 Name = c.Name,
                 IssuingOrganization = c.IssuingOrganization,
                 DateIssued = c.DateIssued
