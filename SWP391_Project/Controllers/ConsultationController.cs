@@ -1,9 +1,10 @@
+using Microsoft.AspNetCore.Mvc;
 using BusinessLayer.IService;
 using DataAccessLayer.Dto.Consultation;
-using DataAccessLayer.Model;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using DataAccessLayer.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace SWP391_Project.Controllers
 {
@@ -12,570 +13,159 @@ namespace SWP391_Project.Controllers
     public class ConsultationController : ControllerBase
     {
         private readonly IConsultationService _consultationService;
-        private readonly ILogger<ConsultationController> _logger;
-
-        public ConsultationController(IConsultationService consultationService, ILogger<ConsultationController> logger)
+        private readonly ApplicationDBContext _context;
+        public ConsultationController(IConsultationService consultationService, ApplicationDBContext context)
         {
             _consultationService = consultationService;
-            _logger = logger;
+            _context = context;
         }
 
-        // === CONSULTATION REQUEST ENDPOINTS ===
-
-        [HttpPost("requests")]
-        [Authorize]
-        public async Task<ActionResult<ConsultationRequestViewDto>> CreateConsultationRequest([FromBody] ConsultationRequestCreateDto dto)
+        // GET: api/consultant/{id}/available-slots
+        [HttpGet("/api/consultant/{id}/available-slots")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAvailableSlots(string id, [FromQuery] DateTime date)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                // Additional validation
-                if (string.IsNullOrWhiteSpace(dto.Title))
-                {
-                    return BadRequest(new { message = "Title is required" });
-                }
-
-                if (string.IsNullOrWhiteSpace(dto.Description))
-                {
-                    return BadRequest(new { message = "Description is required" });
-                }
-
-                if (string.IsNullOrWhiteSpace(dto.Category))
-                {
-                    return BadRequest(new { message = "Category is required" });
-                }
-
-                if (string.IsNullOrWhiteSpace(dto.ConsultantId))
-                {
-                    return BadRequest(new { message = "Consultant ID is required" });
-                }
-
-                if (dto.RequestedDate < DateTime.Today)
-                {
-                    return BadRequest(new { message = "Requested date cannot be in the past. Please select today or a future date." });
-                }
-
-                if (dto.DurationMinutes < 30 || dto.DurationMinutes > 180)
-                {
-                    return BadRequest(new { message = "Duration must be between 30 and 180 minutes" });
-                }
-
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized(new { message = "User not authenticated" });
-                }
-
-                var result = await _consultationService.CreateConsultationRequestAsync(dto, userId);
-                
-                _logger.LogInformation("Consultation request created successfully. RequestId: {RequestId}, UserId: {UserId}", result.Id, userId);
-                return CreatedAtAction(nameof(GetConsultationRequest), new { id = result.Id }, result);
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogWarning("Failed to create consultation request: {Message}", ex.Message);
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating consultation request");
-                return StatusCode(500, new { message = "An error occurred while creating the consultation request" });
-            }
+            var slots = await _consultationService.GetAvailableSlotsAsync(id, date);
+            return Ok(slots);
         }
 
-        [HttpGet("requests/{id}")]
-        [Authorize]
-        public async Task<ActionResult<ConsultationRequestViewDto>> GetConsultationRequest(int id)
+        // POST: api/consultation/booking
+        [HttpPost("booking")]
+        [Authorize(Roles = "Member")]
+        public async Task<IActionResult> BookConsultation([FromBody] ConsultationBookingRequestDto dto)
         {
-            try
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.GetConsultationRequestByIdAsync(id, userId);
-                
-                if (result == null)
-                    return NotFound(new { message = "Consultation request not found" });
-                
-                return Ok(result);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogWarning("Unauthorized access to consultation request {RequestId}: {Message}", id, ex.Message);
-                return Forbid();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving consultation request {RequestId}", id);
-                return StatusCode(500, new { message = "An error occurred while retrieving the consultation request" });
-            }
+            var memberId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (memberId == null) return Unauthorized();
+            var result = await _consultationService.BookConsultationAsync(memberId, dto.ConsultantId, dto.SlotId);
+            return Ok(result);
         }
 
-        [HttpGet("requests/my")]
-        [Authorize]
-        public async Task<ActionResult<IEnumerable<ConsultationRequestViewDto>>> GetMyConsultationRequests()
+        // GET: api/consultation/my-bookings
+        [HttpGet("my-bookings")]
+        [Authorize(Roles = "Member")]
+        public async Task<IActionResult> GetMyBookings()
         {
-            try
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.GetMyConsultationRequestsAsync(userId);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving consultation requests for user {UserId}", User.FindFirstValue(ClaimTypes.NameIdentifier));
-                return StatusCode(500, new { message = "An error occurred while retrieving consultation requests" });
-            }
+            var memberId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (memberId == null) return Unauthorized();
+            var bookings = await _consultationService.GetMyBookingsAsync(memberId);
+            return Ok(bookings);
         }
 
-        [HttpGet("requests/consultant")]
+        // POST: api/consultation/{id}/feedback
+        [HttpPost("{id}/feedback")]
+        [Authorize(Roles = "Member")]
+        public async Task<IActionResult> FeedbackConsultant(int id, [FromBody] ConsultationFeedbackDto dto)
+        {
+            var memberId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (memberId == null) return Unauthorized();
+            var result = await _consultationService.FeedbackConsultantAsync(memberId, id, dto);
+            return Ok(result);
+        }
+
+        // PUT: api/consultation/{id}/confirm
+        [HttpPut("/api/consultation/{id}/confirm")]
         [Authorize(Roles = "Consultant")]
-        public async Task<ActionResult<IEnumerable<ConsultationRequestViewDto>>> GetConsultationRequestsForConsultant()
+        public async Task<IActionResult> ConfirmConsultation(int id)
         {
-            try
-            {
-                var consultantId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.GetConsultationRequestsForConsultantAsync(consultantId);
-                return Ok(result);
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogWarning("Failed to get consultation requests for consultant: {Message}", ex.Message);
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving consultation requests for consultant {ConsultantId}", User.FindFirstValue(ClaimTypes.NameIdentifier));
-                return StatusCode(500, new { message = "An error occurred while retrieving consultation requests" });
-            }
+            var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (consultantId == null) return Unauthorized();
+            var result = await _consultationService.ConfirmConsultationAsync(consultantId, id);
+            if (!result) return BadRequest("Cannot confirm this consultation.");
+            return Ok(true);
         }
 
-        [HttpGet("requests")]
-        [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<IEnumerable<ConsultationRequestViewDto>>> GetAllConsultationRequests()
-        {
-            try
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.GetAllConsultationRequestsAsync(userId);
-                return Ok(result);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogWarning("Unauthorized access to all consultation requests: {Message}", ex.Message);
-                return Forbid();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving all consultation requests");
-                return StatusCode(500, new { message = "An error occurred while retrieving consultation requests" });
-            }
-        }
-
-        [HttpPut("requests/{id}/status")]
-        [Authorize(Roles = "Consultant,Admin")]
-        public async Task<ActionResult<ConsultationRequestViewDto>> UpdateConsultationRequestStatus(int id, [FromBody] ConsultationRequestUpdateDto dto)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.UpdateConsultationRequestStatusAsync(id, dto, userId);
-                
-                _logger.LogInformation("Consultation request status updated. RequestId: {RequestId}, NewStatus: {Status}, UpdatedBy: {UserId}", 
-                    id, dto.Status, userId);
-                return Ok(result);
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogWarning("Failed to update consultation request status: {Message}", ex.Message);
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogWarning("Unauthorized access to update consultation request {RequestId}: {Message}", id, ex.Message);
-                return Forbid();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating consultation request status {RequestId}", id);
-                return StatusCode(500, new { message = "An error occurred while updating the consultation request" });
-            }
-        }
-
-        [HttpDelete("requests/{id}")]
-        [Authorize]
-        public async Task<ActionResult> DeleteConsultationRequest(int id)
-        {
-            try
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.DeleteConsultationRequestAsync(id, userId);
-                
-                if (!result)
-                    return NotFound(new { message = "Consultation request not found" });
-                
-                _logger.LogInformation("Consultation request deleted. RequestId: {RequestId}, DeletedBy: {UserId}", id, userId);
-                return Ok(new { message = "Consultation request deleted successfully" });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogWarning("Unauthorized access to delete consultation request {RequestId}: {Message}", id, ex.Message);
-                return Forbid();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting consultation request {RequestId}", id);
-                return StatusCode(500, new { message = "An error occurred while deleting the consultation request" });
-            }
-        }
-
-        // === CONSULTATION SESSION ENDPOINTS ===
-
-        [HttpPost("requests/{requestId}/sessions")]
+        // PUT: api/consultation/{id}/reject
+        [HttpPut("/api/consultation/{id}/reject")]
         [Authorize(Roles = "Consultant")]
-        public async Task<ActionResult<ConsultationSessionViewDto>> CreateConsultationSession(int requestId, [FromBody] ConsultationSessionCreateDto dto)
+        public async Task<IActionResult> RejectConsultation(int id)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.CreateConsultationSessionAsync(requestId, dto, userId);
-                
-                _logger.LogInformation("Consultation session created. RequestId: {RequestId}, SessionId: {SessionId}, ConsultantId: {ConsultantId}", 
-                    requestId, result.Id, userId);
-                return CreatedAtAction(nameof(GetConsultationSession), new { requestId }, result);
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogWarning("Failed to create consultation session: {Message}", ex.Message);
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogWarning("Unauthorized access to create consultation session: {Message}", ex.Message);
-                return Forbid();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating consultation session for request {RequestId}", requestId);
-                return StatusCode(500, new { message = "An error occurred while creating the consultation session" });
-            }
+            var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (consultantId == null) return Unauthorized();
+            var result = await _consultationService.RejectConsultationAsync(consultantId, id);
+            if (!result) return BadRequest("Cannot reject this consultation.");
+            return Ok(true);
         }
 
-        [HttpGet("requests/{requestId}/sessions")]
-        [Authorize]
-        public async Task<ActionResult<ConsultationSessionViewDto>> GetConsultationSession(int requestId)
-        {
-            try
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.GetConsultationSessionAsync(requestId, userId);
-                
-                if (result == null)
-                    return NotFound(new { message = "Consultation session not found" });
-                
-                return Ok(result);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogWarning("Unauthorized access to consultation session: {Message}", ex.Message);
-                return Forbid();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving consultation session for request {RequestId}", requestId);
-                return StatusCode(500, new { message = "An error occurred while retrieving the consultation session" });
-            }
-        }
-
-        [HttpPut("sessions/{sessionId}")]
+        // GET: api/consultation/my-requests
+        [HttpGet("my-requests")]
         [Authorize(Roles = "Consultant")]
-        public async Task<ActionResult<ConsultationSessionViewDto>> UpdateConsultationSession(int sessionId, [FromBody] ConsultationSessionCreateDto dto)
+        public async Task<IActionResult> GetMyConsultationRequests()
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+            var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (consultantId == null) return Unauthorized();
 
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.UpdateConsultationSessionAsync(sessionId, dto, userId);
-                
-                _logger.LogInformation("Consultation session updated. SessionId: {SessionId}, ConsultantId: {ConsultantId}", sessionId, userId);
-                return Ok(result);
-            }
-            catch (InvalidOperationException ex)
+            var requests = await _context.ConsultationRequests
+                .Where(r => r.ConsultantId == consultantId)
+                .OrderByDescending(r => r.RequestedDate)
+                .ToListAsync();
+
+            var result = requests.Select(r => new ConsultationBookingDto
             {
-                _logger.LogWarning("Failed to update consultation session: {Message}", ex.Message);
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogWarning("Unauthorized access to update consultation session: {Message}", ex.Message);
-                return Forbid();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating consultation session {SessionId}", sessionId);
-                return StatusCode(500, new { message = "An error occurred while updating the consultation session" });
-            }
+                Id = r.Id,
+                ConsultantId = r.ConsultantId,
+                MemberId = r.UserId,
+                StartTime = r.RequestedDate,
+                EndTime = r.RequestedDate.AddMinutes(r.DurationMinutes),
+                Status = r.Status.ToString()
+            });
+
+            return Ok(result);
         }
 
-        [HttpPost("sessions/{sessionId}/complete")]
+        // PUT: api/consultation/session/{sessionId}/complete
+        [HttpPut("session/{sessionId}/complete")]
         [Authorize(Roles = "Consultant")]
-        public async Task<ActionResult<ConsultationSessionViewDto>> CompleteConsultationSession(int sessionId)
+        public async Task<IActionResult> CompleteSession(int sessionId)
         {
-            try
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.CompleteConsultationSessionAsync(sessionId, userId);
-                
-                _logger.LogInformation("Consultation session completed. SessionId: {SessionId}, ConsultantId: {ConsultantId}", sessionId, userId);
-                return Ok(result);
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogWarning("Failed to complete consultation session: {Message}", ex.Message);
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogWarning("Unauthorized access to complete consultation session: {Message}", ex.Message);
-                return Forbid();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error completing consultation session {SessionId}", sessionId);
-                return StatusCode(500, new { message = "An error occurred while completing the consultation session" });
-            }
+            var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (consultantId == null) return Unauthorized();
+            var result = await _consultationService.CompleteConsultationSessionAsync(sessionId, consultantId);
+            return Ok(result);
         }
 
-        // === CONSULTATION REVIEW ENDPOINTS ===
-
-        [HttpPost("sessions/{sessionId}/reviews")]
-        [Authorize]
-        public async Task<ActionResult<ConsultationReviewViewDto>> CreateConsultationReview(int sessionId, [FromBody] ConsultationReviewCreateDto dto)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.CreateConsultationReviewAsync(sessionId, dto, userId);
-                
-                _logger.LogInformation("Consultation review created. SessionId: {SessionId}, ReviewId: {ReviewId}, UserId: {UserId}", 
-                    sessionId, result.Id, userId);
-                return CreatedAtAction(nameof(GetConsultationReview), new { sessionId }, result);
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogWarning("Failed to create consultation review: {Message}", ex.Message);
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogWarning("Unauthorized access to create consultation review: {Message}", ex.Message);
-                return Forbid();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating consultation review for session {SessionId}", sessionId);
-                return StatusCode(500, new { message = "An error occurred while creating the consultation review" });
-            }
-        }
-
-        [HttpGet("sessions/{sessionId}/reviews")]
-        [Authorize]
-        public async Task<ActionResult<ConsultationReviewViewDto>> GetConsultationReview(int sessionId)
-        {
-            try
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.GetConsultationReviewAsync(sessionId, userId);
-                
-                if (result == null)
-                    return NotFound(new { message = "Consultation review not found" });
-                
-                return Ok(result);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogWarning("Unauthorized access to consultation review: {Message}", ex.Message);
-                return Forbid();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving consultation review for session {SessionId}", sessionId);
-                return StatusCode(500, new { message = "An error occurred while retrieving the consultation review" });
-            }
-        }
-
-        [HttpGet("consultants/{consultantId}/reviews")]
+        // POST: api/consultation/session
+        [HttpPost("session")]
         [Authorize(Roles = "Consultant")]
-        public async Task<ActionResult<IEnumerable<ConsultationReviewViewDto>>> GetConsultantReviews(string consultantId)
+        public async Task<IActionResult> CreateSession([FromBody] ConsultationSessionCreateDto dto, [FromQuery] int requestId)
         {
-            try
-            {
-                var result = await _consultationService.GetConsultantReviewsAsync(consultantId);
-                return Ok(result);
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogWarning("Failed to get consultant reviews: {Message}", ex.Message);
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving reviews for consultant {ConsultantId}", consultantId);
-                return StatusCode(500, new { message = "An error occurred while retrieving consultant reviews" });
-            }
+            var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (consultantId == null) return Unauthorized();
+            var result = await _consultationService.CreateConsultationSessionAsync(requestId, dto, consultantId);
+            return Ok(result);
         }
 
-        // === SEARCH ENDPOINTS ===
-
-        [HttpGet("requests/search")]
-        [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<IEnumerable<ConsultationRequestViewDto>>> SearchConsultationRequests(
-            [FromQuery] string? userId = null,
-            [FromQuery] string? consultantId = null,
-            [FromQuery] ConsultationStatus? status = null,
-            [FromQuery] DateTime? fromDate = null,
-            [FromQuery] DateTime? toDate = null)
+        // GET: api/consultation/session/by-request/{requestId}
+        [HttpGet("session/by-request/{requestId}")]
+        [Authorize(Roles = "Member,Consultant")]
+        public async Task<IActionResult> GetSessionByRequest(int requestId)
         {
-            try
-            {
-                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.SearchConsultationRequestsAsync(
-                    currentUserId, userId, consultantId, status, fromDate, toDate);
-                return Ok(result);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogWarning("Unauthorized access to search consultation requests: {Message}", ex.Message);
-                return Forbid();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error searching consultation requests");
-                return StatusCode(500, new { message = "An error occurred while searching consultation requests" });
-            }
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
+            var session = await _consultationService.GetConsultationSessionAsync(requestId, userId);
+            if (session == null) return NotFound();
+            return Ok(session);
         }
 
-        // Pagination endpoints
-        [HttpGet("requests/my/paginated")]
-        [Authorize]
-        public async Task<ActionResult> GetPaginatedMyConsultationRequests(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] ConsultationStatus? status = null)
-        {
-            try
-            {
-                if (page < 1) page = 1;
-                if (pageSize < 1 || pageSize > 100) pageSize = 10;
-
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.GetPaginatedMyConsultationRequestsAsync(userId, page, pageSize, status);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving paginated my consultation requests");
-                return StatusCode(500, new { message = "An error occurred while retrieving consultation requests" });
-            }
-        }
-
-        [HttpGet("requests/consultant/paginated")]
+        // PUT: api/consultation/session/{sessionId}
+        [HttpPut("session/{sessionId}")]
         [Authorize(Roles = "Consultant")]
-        public async Task<ActionResult> GetPaginatedConsultationRequestsForConsultant(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] ConsultationStatus? status = null)
+        public async Task<IActionResult> UpdateSession(int sessionId, [FromBody] ConsultationSessionCreateDto dto)
         {
-            try
-            {
-                if (page < 1) page = 1;
-                if (pageSize < 1 || pageSize > 100) pageSize = 10;
-
-                var consultantId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.GetPaginatedConsultationRequestsForConsultantAsync(consultantId, page, pageSize, status);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving paginated consultation requests for consultant");
-                return StatusCode(500, new { message = "An error occurred while retrieving consultation requests" });
-            }
+            var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (consultantId == null) return Unauthorized();
+            var result = await _consultationService.UpdateConsultationSessionAsync(sessionId, dto, consultantId);
+            return Ok(result);
         }
 
-        [HttpGet("requests/paginated")]
-        [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> GetPaginatedAllConsultationRequests(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? userId = null,
-            [FromQuery] string? consultantId = null,
-            [FromQuery] ConsultationStatus? status = null,
-            [FromQuery] DateTime? fromDate = null,
-            [FromQuery] DateTime? toDate = null)
-        {
-            try
-            {
-                if (page < 1) page = 1;
-                if (pageSize < 1 || pageSize > 100) pageSize = 10;
-
-                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var result = await _consultationService.GetPaginatedAllConsultationRequestsAsync(
-                    currentUserId, page, pageSize, userId, consultantId, status, fromDate, toDate);
-                return Ok(result);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogWarning("Unauthorized access to paginated consultation requests: {Message}", ex.Message);
-                return Forbid();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving paginated all consultation requests");
-                return StatusCode(500, new { message = "An error occurred while retrieving consultation requests" });
-            }
-        }
-
-        [HttpGet("consultants/{consultantId}/reviews/paginated")]
+        // DELETE: api/consultation/session/{sessionId}
+        [HttpDelete("session/{sessionId}")]
         [Authorize(Roles = "Consultant")]
-        public async Task<ActionResult> GetPaginatedConsultantReviews(
-            string consultantId,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> DeleteSession(int sessionId)
         {
-            try
-            {
-                if (page < 1) page = 1;
-                if (pageSize < 1 || pageSize > 100) pageSize = 10;
-
-                var result = await _consultationService.GetPaginatedConsultantReviewsAsync(consultantId, page, pageSize);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving paginated consultant reviews for consultant {ConsultantId}", consultantId);
-                return StatusCode(500, new { message = "An error occurred while retrieving consultant reviews" });
-            }
+            var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (consultantId == null) return Unauthorized();
+            var result = await _consultationService.DeleteConsultationSessionAsync(sessionId, consultantId);
+            return Ok(result);
         }
     }
 } 

@@ -1,11 +1,12 @@
 ﻿using AutoMapper;
-using BusinessLayer.IService;
 using BusinessLayer.Dto.Common;
+using BusinessLayer.IService;
 using DataAccessLayer.Dto.Survey;
 using DataAccessLayer.IRepository;
 using DataAccessLayer.Model;
 using DataAccessLayer.Repository;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,7 +67,12 @@ namespace BusinessLayer.Service
         public async Task<List<SurveyViewDto>> GetAllSurveyByType(SurveyType? surveyType, string userRole)
         {
             var surveys = await _repository.GetAllByTypeAsync(surveyType, userRole);
-            return _mapper.Map<List<SurveyViewDto>>(surveys);
+            var surveyDtos = _mapper.Map<List<SurveyViewDto>>(surveys);
+            foreach (var surveyDto in surveyDtos)
+            {
+                surveyDto.HasRespondents = await _repository.HasRespondentsAsync(surveyDto.SurveyId);
+            }
+            return surveyDtos;
         }
 
         public async Task<List<SurveyAnswerResultDto>> GetSurveyAnswerResultAsync(int surveyResultId)

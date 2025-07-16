@@ -22,7 +22,7 @@ namespace DataAccessLayer.IRepository
         Task<bool> UpdateAnswerAsync(SurveyAnswer answer);
         Task<bool> DeleteAnswerAsync(int answerId);
         Task<SurveyAnswer> GetAnswerByIdAsync(int answerId);
-
+        Task<bool> HasRespondentsAsync(int surveyId);
 
         Task<SurveyQuestion> CreateQuestionAsync(SurveyQuestion question);
         Task<SurveyQuestion?> GetQuestionByIdAsync(int questionId);

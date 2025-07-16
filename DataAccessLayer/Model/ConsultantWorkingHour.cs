@@ -6,9 +6,11 @@ namespace DataAccessLayer.Model
     public enum WorkingHourStatus
     {
         Available,
+        Pending,    
         Booked,
         Completed,
-        Cancelled
+        Cancelled,
+        Rejected   
     }
 
     public class ConsultantWorkingHour
@@ -29,10 +31,6 @@ namespace DataAccessLayer.Model
         
         // Date for this specific working hour slot (for tracking specific dates)
         public DateTime? SlotDate { get; set; }
-        
-        // Reference to the consultation request if this slot is booked
-        public int? ConsultationRequestId { get; set; }
-        public ConsultationRequest? ConsultationRequest { get; set; }
         
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? UpdatedAt { get; set; }

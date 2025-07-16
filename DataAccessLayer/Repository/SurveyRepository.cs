@@ -101,6 +101,12 @@ namespace DataAccessLayer.Repository
             return await query.ToListAsync();
 
         }
+
+        public async Task<bool> HasRespondentsAsync(int surveyId)
+        {
+            return await _context.SurveyResults
+                                 .AnyAsync(sr => sr.SurveyId == surveyId); 
+        }
         public async Task<List<Survey>> GetAllByTypeAsync(SurveyType? surveyType, string userRole)
         {
             var query = _context.Surveys

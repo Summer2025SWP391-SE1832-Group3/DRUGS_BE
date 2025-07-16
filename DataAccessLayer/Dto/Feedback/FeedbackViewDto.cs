@@ -15,5 +15,8 @@ namespace DataAccessLayer.Dto.Feedback
         public string ReviewText { get; set; } 
         public DateTime CreatedAt { get; set; }
         public bool IsActive { get; set; }
+        public string ConsultantId { get; set; }
+        public string ConsultantName { get; set; }
+        public int? CourseId { get; set; }
     }
 }

@@ -9,7 +9,7 @@ namespace DataAccessLayer.Model
     public class Feedback
     {
         public int FeedbackId { get; set; }
-        public int CourseId { get; set; }
+        public int? CourseId { get; set; }
         public string UserId { get; set; }
         public int Rating { get; set; } 
         public string ReviewText { get; set; } 
@@ -18,7 +18,5 @@ namespace DataAccessLayer.Model
         public bool IsActive { get; set; }
         public Course Course { get; set; }
         public ApplicationUser User { get; set; }
-
-
     }
 }

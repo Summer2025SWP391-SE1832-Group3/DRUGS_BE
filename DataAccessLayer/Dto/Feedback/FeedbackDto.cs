@@ -10,5 +10,7 @@ namespace DataAccessLayer.Dto.Feedback
     {
         public int Rating { get; set; }
         public string ReviewText { get; set; }
+        public string ConsultantId { get; set; }
+        public int? CourseId { get; set; }
     }
 }
