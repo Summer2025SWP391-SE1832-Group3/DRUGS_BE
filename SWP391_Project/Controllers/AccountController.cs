@@ -145,7 +145,7 @@ namespace SWP391_Project.Controllers
         }
 
         [HttpGet("account/{userId}")]
-        [Authorize(Roles = "Admin, Manager")]
+        //[Authorize(Roles = "Member,Admin, Manager")]
         public async Task<IActionResult> GetAccountById(string userId)
         {
             var account = await _userService.GetAccountByIdAsync(userId);
@@ -175,7 +175,7 @@ namespace SWP391_Project.Controllers
 
         // --- ADMIN ACCOUNT MANAGEMENT ---
         [HttpPut("admin/update/{userId}")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         [ApiExplorerSettings(IgnoreApi = false)] 
         public async Task<IActionResult> AdminUpdate(string userId, [FromQuery] string? newRole)
         {

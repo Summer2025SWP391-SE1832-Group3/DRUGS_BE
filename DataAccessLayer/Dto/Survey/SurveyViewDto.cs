@@ -14,6 +14,7 @@ namespace DataAccessLayer.Dto.Survey
         public string SurveyName { get; set; } = null!;     
         public string? Description { get; set; }    
         public bool IsActive { get; set; }
-        public List<SurveyQuestionViewDto> SurveyQuestions { get; set; } = new List<SurveyQuestionViewDto>(); 
+        public List<SurveyQuestionViewDto> SurveyQuestions { get; set; } = new List<SurveyQuestionViewDto>();
+        public bool HasRespondents { get; set; }
     }
 }
