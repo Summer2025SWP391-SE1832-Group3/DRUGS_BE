@@ -101,7 +101,6 @@ namespace DataAccessLayer.Repository
             return await query.ToListAsync();
 
         }
-
         public async Task<bool> HasRespondentsAsync(int surveyId)
         {
             return await _context.SurveyResults
@@ -175,11 +174,6 @@ namespace DataAccessLayer.Repository
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> UpdateQuestionAsync(SurveyQuestion question)
-        {
-            _context.SurveyQuestions.Update(question);
-            return await _context.SaveChangesAsync() > 0;
-        }
 
         public async Task<List<SurveyResult>?> GetSurveyResultAsync(int surveyId, string userId)
         {

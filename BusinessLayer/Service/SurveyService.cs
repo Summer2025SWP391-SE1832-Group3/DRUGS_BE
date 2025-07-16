@@ -67,7 +67,7 @@ namespace BusinessLayer.Service
         public async Task<List<SurveyViewDto>> GetAllSurveyByType(SurveyType? surveyType, string userRole)
         {
             var surveys = await _repository.GetAllByTypeAsync(surveyType, userRole);
-            var surveyDtos = _mapper.Map<List<SurveyViewDto>>(surveys);
+            var surveyDtos= _mapper.Map<List<SurveyViewDto>>(surveys);
             foreach (var surveyDto in surveyDtos)
             {
                 surveyDto.HasRespondents = await _repository.HasRespondentsAsync(surveyDto.SurveyId);

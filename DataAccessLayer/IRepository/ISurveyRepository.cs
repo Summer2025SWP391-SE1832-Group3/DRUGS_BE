@@ -27,7 +27,6 @@ namespace DataAccessLayer.IRepository
         Task<SurveyQuestion> CreateQuestionAsync(SurveyQuestion question);
         Task<SurveyQuestion?> GetQuestionByIdAsync(int questionId);
         Task<List<SurveyQuestion>> GetAllQuestionsAsync(int surveyId);
-        Task<bool> UpdateQuestionAsync(SurveyQuestion question);
         Task<bool> DeleteQuestionAsync(int questionId);
 
         Task<SurveyResult> CreateSurveyResultAsync(SurveyResult result);
