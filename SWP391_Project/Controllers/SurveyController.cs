@@ -112,7 +112,7 @@ namespace SWP391_Project.Controllers
         }
 
         [HttpPut("{surveyId:int}/status")]
-        [Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Staff,Manager")]
         public async Task<IActionResult> ChangeSurveyStatus(int surveyId, [FromQuery] bool isActive)
         {
             var survey = await _surveyService.GetSurveyByIdAnyAsync(surveyId);
@@ -150,6 +150,25 @@ namespace SWP391_Project.Controllers
         [Authorize(Roles = "Staff,Manager")]
         public async Task<IActionResult> UpdateSurvey(int surveyId, [FromBody] SurveyUpdateWithQuesAndAnsDto surveyUpdateDto)
         {
+            var survey = await _surveyService.GetSurveyByIdAnyAsync(surveyId);
+            if (survey == null)
+            {
+                return NotFound(new { Message = "Survey not found." });
+            }
+            if (survey.SurveyType == SurveyType.CourseTest && survey.CourseId.HasValue)
+            {
+                var course = await _courseService.GetCourseByCourseId(survey.CourseId.Value);
+
+                if (course == null)
+                {
+                    return BadRequest(new { Message = "Associated course not found." });
+                }
+                if (course.Status == CourseStatus.Active)
+                {
+                    return BadRequest(new { Message = "Cannot update the survey because the associated course is already active." });
+                }
+            }
+
             var (success, message) = await _surveyService.UpdateSurveyAsync(surveyUpdateDto, surveyId);
             if (!success)
             {

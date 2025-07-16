@@ -23,13 +23,12 @@ namespace BusinessLayer.Service
 
         public async Task<IEnumerable<ConsultantListItemDto>> GetAllConsultantsAsync()
         {
-            
             var users = await _userManager.GetUsersInRoleAsync("Consultant");
             return users.Select(u => new ConsultantListItemDto
             {
                 Id = u.Id,
-                FullName = u.FullName,       
-                Rating = 0       
+                FullName = u.FullName,
+                Rating = 0
             });
         }
         public async Task<ConsultantDetailDto?> GetConsultantDetailAsync(string consultantId)
@@ -37,7 +36,6 @@ namespace BusinessLayer.Service
             var user = await _userManager.FindByIdAsync(consultantId);
             if (user == null)
                 return null;
-            // Lấy certificates từ bảng Certificates
             var certs = await _context.Certificates.Where(c => c.ApplicationUserId == user.Id).ToListAsync();
             return new ConsultantDetailDto
             {
@@ -46,7 +44,7 @@ namespace BusinessLayer.Service
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 Gender = user.Gender,
-                WorkingHours = user.WorkingHours,
+                WorkingHours = await _context.ConsultantWorkingHours.Where(w => w.ConsultantId == user.Id).ToListAsync(),
                 Certificates = certs.Select(c => new CertificateDto
                 {
                     Name = c.Name,
@@ -64,7 +62,6 @@ namespace BusinessLayer.Service
             if (!string.IsNullOrEmpty(dto.PhoneNumber)) user.PhoneNumber = dto.PhoneNumber;
             if (!string.IsNullOrEmpty(dto.Email)) user.Email = dto.Email;
             if (!string.IsNullOrEmpty(dto.Gender)) user.Gender = dto.Gender;
-            
             if (dto.Certifications != null)
             {
                 var oldCerts = _context.Certificates.Where(c => c.ApplicationUserId == user.Id);
@@ -74,7 +71,7 @@ namespace BusinessLayer.Service
                     _context.Certificates.Add(new Certificate
                     {
                         Name = cert.Name ?? string.Empty,
-                        IssuingOrganization = cert.Issuer ?? string.Empty,
+                        IssuingOrganization = cert.IssuingOrganization ?? string.Empty,
                         DateIssued = cert.DateIssued ?? DateTime.Now,
                         ApplicationUserId = user.Id
                     });
@@ -94,7 +91,6 @@ namespace BusinessLayer.Service
                 DateIssued = c.DateIssued
             });
         }
-
         public async Task<bool> AddCertificateAsync(string consultantId, CertificateDto dto)
         {
             var cert = new Certificate
@@ -108,7 +104,6 @@ namespace BusinessLayer.Service
             await _context.SaveChangesAsync();
             return true;
         }
-
         public async Task<bool> UpdateCertificateAsync(string consultantId, int certificateId, CertificateDto dto)
         {
             var cert = await _context.Certificates.FirstOrDefaultAsync(c => c.Id == certificateId && c.ApplicationUserId == consultantId);
@@ -119,7 +114,6 @@ namespace BusinessLayer.Service
             await _context.SaveChangesAsync();
             return true;
         }
-
         public async Task<bool> DeleteCertificateAsync(string consultantId, int certificateId)
         {
             var cert = await _context.Certificates.FirstOrDefaultAsync(c => c.Id == certificateId && c.ApplicationUserId == consultantId);
@@ -128,7 +122,6 @@ namespace BusinessLayer.Service
             await _context.SaveChangesAsync();
             return true;
         }
-
         public async Task<IEnumerable<ConsultantWorkingHourDto>> GetWorkingHoursAsync(string consultantId)
         {
             var hours = await _context.ConsultantWorkingHours.Where(w => w.ConsultantId == consultantId).ToListAsync();
@@ -139,7 +132,6 @@ namespace BusinessLayer.Service
                 EndTime = w.EndTime
             });
         }
-
         public async Task<bool> AddWorkingHourAsync(string consultantId, ConsultantWorkingHourDto dto)
         {
             var hour = new ConsultantWorkingHour
@@ -153,7 +145,6 @@ namespace BusinessLayer.Service
             await _context.SaveChangesAsync();
             return true;
         }
-
         public async Task<bool> UpdateWorkingHourAsync(string consultantId, int workingHourId, ConsultantWorkingHourDto dto)
         {
             var hour = await _context.ConsultantWorkingHours.FirstOrDefaultAsync(w => w.Id == workingHourId && w.ConsultantId == consultantId);
@@ -164,7 +155,6 @@ namespace BusinessLayer.Service
             await _context.SaveChangesAsync();
             return true;
         }
-
         public async Task<bool> DeleteWorkingHourAsync(string consultantId, int workingHourId)
         {
             var hour = await _context.ConsultantWorkingHours.FirstOrDefaultAsync(w => w.Id == workingHourId && w.ConsultantId == consultantId);

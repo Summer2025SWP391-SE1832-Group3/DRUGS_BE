@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using DataAccessLayer.Model;
 
 namespace DataAccessLayer.Dto.Account
 {
@@ -10,7 +9,7 @@ namespace DataAccessLayer.Dto.Account
         public string? Email { get; set; }
         public string? PhoneNumber { get; set; }
         public string? Gender { get; set; }
-        public IEnumerable<ConsultantWorkingHour>? WorkingHours { get; set; }
+        public IEnumerable<ConsultantWorkingHourDto>? WorkingHours { get; set; }
         public IEnumerable<CertificateDto>? Certificates { get; set; }
     }
 } 

@@ -20,10 +20,10 @@ namespace SWP391_Project.Controllers
         // GET: api/consultant
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> GetAllConsultants()
+        public async Task<ActionResult> GetAllConsultants([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var consultants = await _consultantService.GetAllConsultantsAsync();
-            return Ok(consultants);
+            var result = await _consultantService.GetAllConsultantsAsync();
+            return Ok(result);
         }
 
         // GET: api/consultant/{id}

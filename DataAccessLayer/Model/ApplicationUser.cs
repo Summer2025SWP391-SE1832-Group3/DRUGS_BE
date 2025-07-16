@@ -30,6 +30,9 @@ namespace DataAccessLayer.Model
         public ICollection<ConsultantWorkingHour> WorkingHours { get; set; }
         public ICollection<Certificate> Certificates { get; set; }
         public ICollection<Feedback> Feedbacks { get; set; }
-
+        public string Status { get; set; } // Active, Inactive, Busy, Offline
+        public int TotalConsultations { get; set; } = 0;
+        public double AverageRating { get; set; } = 0.0;
+        public int FeedbackCount { get; set; } = 0;
     }
 }

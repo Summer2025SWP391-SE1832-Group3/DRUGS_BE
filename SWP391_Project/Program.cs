@@ -135,7 +135,6 @@ builder.Services.AddScoped<IBlogImageRepository, BlogImageRepository>();
 builder.Services.AddScoped<IBlogService, BlogService>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentService, CommentService>();
-builder.Services.AddScoped<IBlogImageRepository, BlogImageRepository>();
 builder.Services.AddScoped<ISurveyService, SurveyService>();
 builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
 builder.Services.AddScoped<IConsultantService, ConsultantService>();
