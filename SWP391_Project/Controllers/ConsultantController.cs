@@ -124,18 +124,18 @@ namespace SWP391_Project.Controllers
             try
             {
                 // Kiểm tra trùng lịch cho tất cả các ngày trước khi thêm
-                var conflictDates = await _consultantService.CheckScheduleConflictForDateRangeAsync(
-                    consultantId, dto.FromDate, dto.ToDate, dto.StartTime.Value, dto.EndTime.Value);
+                //var conflictDates = await _consultantService.CheckScheduleConflictForDateRangeAsync(
+                //    consultantId, dto.FromDate, dto.ToDate, dto.StartTime.Value, dto.EndTime.Value);
                 
                 // Nếu có trùng lịch, trả về danh sách ngày bị trùng
-                if (conflictDates.Any())
-                {
-                    return BadRequest(new { 
-                        success = false, 
-                        message = "Schedule conflicts found on the following dates", 
-                        conflictDates = conflictDates.Select(d => d.ToString("dd/MM/yyyy")).ToList()
-                    });
-                }
+                //if (conflictDates.Any())
+                //{
+                //    return BadRequest(new { 
+                //        success = false, 
+                //        message = "Schedule conflicts found on the following dates", 
+                //        conflictDates = conflictDates.Select(d => d.ToString("dd/MM/yyyy")).ToList()
+                //    });
+                //}
                 
                 // Nếu không có trùng lịch, thực hiện thêm lịch
                 var days = (dto.ToDate - dto.FromDate).Days;
