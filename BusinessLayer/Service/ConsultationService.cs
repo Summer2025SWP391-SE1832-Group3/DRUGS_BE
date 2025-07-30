@@ -230,7 +230,7 @@ namespace BusinessLayer.Service
 
             var session = new ConsultationSession
             {
-                StartTime = dto.StartTime,
+                StartTime = new DateTime(2025, 7, 30, 9, 0, 0),
                 SessionNotes = dto.SessionNotes,
                 Recommendations = dto.Recommendations,
                 GoogleMeetLink = dto.GoogleMeetLink,
@@ -271,7 +271,7 @@ namespace BusinessLayer.Service
                 throw new UnauthorizedAccessException("Only the assigned consultant can update this session");
             }
 
-            session.StartTime = dto.StartTime;
+            //session.StartTime = dto.StartTime;
             session.SessionNotes = dto.SessionNotes;
             session.Recommendations = dto.Recommendations;
             session.GoogleMeetLink = dto.GoogleMeetLink;
@@ -420,7 +420,7 @@ namespace BusinessLayer.Service
             return result;
         }
 
-        // Xóa các request đã qua tuần hiện tại
+        // Delete requests older than current week
         public async Task<int> DeleteOldConsultationRequestsAsync()
         {
             var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
@@ -454,7 +454,7 @@ namespace BusinessLayer.Service
 
         public async Task<bool> IsConsultationRequestOverlappingAsync(string consultantId, DateTime requestedDate, int durationMinutes)
         {
-            // Kiểm tra xem có slot available cho thời gian yêu cầu không
+            // Check if there's an available slot for the requested time
             var availableSlot = await _context.ConsultantWorkingHours
                 .Where(slot => slot.ConsultantId == consultantId &&
                               slot.Status == WorkingHourStatus.Available &&
@@ -463,7 +463,7 @@ namespace BusinessLayer.Service
                               slot.EndTime >= requestedDate.AddMinutes(durationMinutes).TimeOfDay)
                 .FirstOrDefaultAsync();
 
-            // Nếu không có slot available thì coi như trùng lịch
+            // If no available slot, consider it as overlapping
             return availableSlot == null;
         }
 
@@ -514,6 +514,17 @@ namespace BusinessLayer.Service
             if (request == null || request.ConsultantId != currentUserId) return false;
             _context.ConsultationSessions.Remove(session);
             await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> CanCompleteSessionAsync(int sessionId, string consultantId)
+        {
+            var session = await _consultationRepository.GetConsultationSessionByIdAsync(sessionId);
+            if (session == null) return false;
+            if (session.ConsultationRequest == null || session.ConsultationRequest.ConsultantId != consultantId)
+                return false;
+            if (DateTime.Now <= session.StartTime)
+                return false;
             return true;
         }
 
@@ -584,8 +595,8 @@ namespace BusinessLayer.Service
             return new ConsultationSessionViewDto
             {
                 Id = session.Id,
-                StartTime = session.StartTime,
-                EndTime = session.EndTime,
+                //StartTime = session.StartTime,
+                //EndTime = session.EndTime,
                 SessionNotes = session.SessionNotes,
                 Recommendations = session.Recommendations,
                 IsCompleted = session.IsCompleted,
@@ -606,7 +617,7 @@ namespace BusinessLayer.Service
 
         public async Task<IEnumerable<AvailableSlotDto>> GetAvailableSlotsAsync(string consultantId, DateTime date)
         {
-            // Lấy tất cả slot đã tạo trong ngày
+            // Get all slots created for the day
             var slots = await _context.ConsultantWorkingHours
                 .Where(s => s.ConsultantId == consultantId && s.SlotDate == date.Date)
                 .OrderBy(s => s.StartTime)
@@ -633,7 +644,7 @@ namespace BusinessLayer.Service
                 Description = "Booking slot",
                 Category = "General",
                 RequestedDate = (slot.SlotDate ?? DateTime.MinValue).Date + slot.StartTime,
-                DurationMinutes = (int)(slot.EndTime - slot.StartTime).TotalMinutes,
+                DurationMinutes = (int)(slot.EndTime - slot.StartTime).TotalMinutes, // Use actual slot duration (2 hours = 120 minutes)
                 UserId = memberId,
                 ConsultantId = consultantId,
                 Status = ConsultationStatus.Pending,
@@ -642,10 +653,10 @@ namespace BusinessLayer.Service
             };
             _context.ConsultationRequests.Add(request);
 
-            // Lưu request trước để lấy Id thật
+            // Save request first to get real Id
             await _context.SaveChangesAsync();
 
-            // Cập nhật trạng thái slot và gán ConsultationRequestId đúng
+            // Update slot status and assign correct ConsultationRequestId
             slot.Status = WorkingHourStatus.Pending;
             slot.UpdatedAt = DateTime.Now;
 

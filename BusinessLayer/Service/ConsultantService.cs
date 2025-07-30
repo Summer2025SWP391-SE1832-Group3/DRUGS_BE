@@ -111,7 +111,7 @@ namespace BusinessLayer.Service
         public async Task<bool> AddCertificateAsync(string consultantId, CertificateDto dto)
         {
             if (dto.DateIssued > DateTime.Now)
-                throw new ArgumentException("Ngày cấp không được lớn hơn ngày hiện tại.");
+                throw new ArgumentException("Issue date cannot be greater than current date.");
             var cert = new Certificate
             {
                 Name = dto.Name ?? string.Empty,
@@ -126,7 +126,7 @@ namespace BusinessLayer.Service
         public async Task<bool> UpdateCertificateAsync(string consultantId, int certificateId, CertificateDto dto)
         {
             if (dto.DateIssued > DateTime.Now)
-                throw new ArgumentException("Ngày cấp không được lớn hơn ngày hiện tại.");
+                throw new ArgumentException("Issue date cannot be greater than current date.");
             var cert = await _context.Certificates.FirstOrDefaultAsync(c => c.Id == certificateId && c.ApplicationUserId == consultantId);
             if (cert == null) return false;
             cert.Name = dto.Name ?? cert.Name;
@@ -161,7 +161,8 @@ namespace BusinessLayer.Service
             var oldSlots = _context.ConsultantWorkingHours.Where(w => w.ConsultantId == consultantId && w.SlotDate == date);
             _context.ConsultantWorkingHours.RemoveRange(oldSlots);
            
-            for (var t = startTime.Value; t + TimeSpan.FromHours(1) <= endTime.Value; t += TimeSpan.FromHours(1))
+            // Thay đổi slot thành 2 tiếng thay vì 1 tiếng
+            for (var t = startTime.Value; t + TimeSpan.FromHours(2) <= endTime.Value; t += TimeSpan.FromHours(2))
             {
                 var slot = new ConsultantWorkingHour
                 {
@@ -169,7 +170,7 @@ namespace BusinessLayer.Service
                     SlotDate = date,
                     DayOfWeek = date.DayOfWeek,
                     StartTime = t,
-                    EndTime = t + TimeSpan.FromHours(1),
+                    EndTime = t + TimeSpan.FromHours(2), // Slot 2 tiếng
                     Status = WorkingHourStatus.Available,
                     CreatedAt = DateTime.Now
                 };
@@ -182,11 +183,12 @@ namespace BusinessLayer.Service
         {
             if (startTime == null || endTime == null || startTime >= endTime)
                 throw new ArgumentException("Start time must be less than end time.");
+            
             // Xóa toàn bộ slot cũ trong ngày này
             var oldSlots = _context.ConsultantWorkingHours.Where(w => w.ConsultantId == consultantId && w.SlotDate == date);
             _context.ConsultantWorkingHours.RemoveRange(oldSlots);
-            // Tạo lại từng slot 1 tiếng, mỗi slot 1 bản ghi
-            for (var t = startTime.Value; t + TimeSpan.FromHours(1) <= endTime.Value; t += TimeSpan.FromHours(1))
+            // Tạo lại từng slot 2 tiếng, mỗi slot 1 bản ghi
+            for (var t = startTime.Value; t + TimeSpan.FromHours(2) <= endTime.Value; t += TimeSpan.FromHours(2))
             {
                 var slot = new ConsultantWorkingHour
                 {
@@ -194,7 +196,7 @@ namespace BusinessLayer.Service
                     SlotDate = date,
                     DayOfWeek = date.DayOfWeek,
                     StartTime = t,
-                    EndTime = t + TimeSpan.FromHours(1),
+                    EndTime = t + TimeSpan.FromHours(2), // Slot 2 tiếng
                     Status = WorkingHourStatus.Available,
                     CreatedAt = DateTime.Now
                 };
@@ -202,6 +204,106 @@ namespace BusinessLayer.Service
             }
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        /// <summary>
+        /// Kiểm tra trùng lịch trước khi thêm/cập nhật
+        /// </summary>
+        private async Task<bool> CheckScheduleConflictInternalAsync(string consultantId, DateTime date, TimeSpan startTime, TimeSpan endTime)
+        {
+            // Kiểm tra trùng với slots hiện tại trong ngày
+            var existingSlots = await _context.ConsultantWorkingHours
+                .Where(w => w.ConsultantId == consultantId && 
+                           w.SlotDate == date.Date &&
+                           w.Status != WorkingHourStatus.Cancelled) // Không tính slots đã hủy
+                .ToListAsync();
+
+            foreach (var slot in existingSlots)
+            {
+                // Kiểm tra xem có overlap không
+                if (IsTimeOverlap(startTime, endTime, slot.StartTime, slot.EndTime))
+                {
+                    return true; // Có trùng lịch
+                }
+            }
+
+            // Kiểm tra trùng với consultation requests đã được approve
+            var existingConsultations = await _context.ConsultationRequests
+                .Where(c => c.ConsultantId == consultantId && 
+                           c.RequestedDate.Date == date.Date &&
+                           c.Status == ConsultationStatus.Approved)
+                .ToListAsync();
+
+            foreach (var consultation in existingConsultations)
+            {
+                var consultationStart = consultation.RequestedDate.TimeOfDay;
+                var consultationEnd = consultation.RequestedDate.AddMinutes(consultation.DurationMinutes).TimeOfDay;
+                
+                if (IsTimeOverlap(startTime, endTime, consultationStart, consultationEnd))
+                {
+                    return true; // Có trùng lịch
+                }
+            }
+
+            return false; // Không có trùng lịch
+        }
+
+        /// <summary>
+        /// Kiểm tra xem hai khoảng thời gian có overlap không
+        /// </summary>
+        private bool IsTimeOverlap(TimeSpan start1, TimeSpan end1, TimeSpan start2, TimeSpan end2)
+        {
+            // Hai khoảng thời gian overlap khi:
+            // start1 < end2 AND start2 < end1
+            return start1 < end2 && start2 < end1;
+        }
+
+        /// <summary>
+        /// Kiểm tra trùng lịch trước khi tạo (public method)
+        /// </summary>
+        public async Task<bool> CheckScheduleConflictAsync(string consultantId, DateTime date, TimeSpan startTime, TimeSpan endTime)
+        {
+            return await CheckScheduleConflictInternalAsync(consultantId, date, startTime, endTime);
+        }
+
+        /// <summary>
+        /// Lấy thông tin slots hiện tại của consultant trong ngày
+        /// </summary>
+        public async Task<IEnumerable<ConsultantWorkingHourDto>> GetWorkingHoursByDateAsync(string consultantId, DateTime date)
+        {
+            var hours = await _context.ConsultantWorkingHours
+                .Where(w => w.ConsultantId == consultantId && w.SlotDate == date.Date)
+                .OrderBy(w => w.StartTime)
+                .ToListAsync();
+            
+            return hours.Select(w => new ConsultantWorkingHourDto
+            {
+                Date = w.SlotDate ?? DateTime.MinValue,
+                StartTime = w.StartTime,
+                EndTime = w.EndTime,
+                Status = w.Status.ToString()
+            });
+        }
+
+        /// <summary>
+        /// Kiểm tra trùng lịch cho nhiều ngày
+        /// </summary>
+        public async Task<List<DateTime>> CheckScheduleConflictForDateRangeAsync(string consultantId, DateTime fromDate, DateTime toDate, TimeSpan startTime, TimeSpan endTime)
+        {
+            var conflictDates = new List<DateTime>();
+            var currentDate = fromDate.Date;
+            
+            while (currentDate <= toDate.Date)
+            {
+                var hasConflict = await CheckScheduleConflictAsync(consultantId, currentDate, startTime, endTime);
+                if (hasConflict)
+                {
+                    conflictDates.Add(currentDate);
+                }
+                currentDate = currentDate.AddDays(1);
+            }
+            
+            return conflictDates;
         }
     }
 } 

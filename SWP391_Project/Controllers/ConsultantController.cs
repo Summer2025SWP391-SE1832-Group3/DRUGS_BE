@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 namespace SWP391_Project.Controllers
 {
@@ -100,6 +101,18 @@ namespace SWP391_Project.Controllers
             return Ok(hours);
         }
 
+        // GET: api/consultant/workinghours/by-date
+        [HttpGet("workinghours/by-date")]
+        [Authorize(Roles = "Consultant")]
+        public async Task<IActionResult> GetWorkingHoursByDate([FromQuery] DateTime date)
+        {
+            var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (consultantId == null) return Unauthorized();
+            
+            var hours = await _consultantService.GetWorkingHoursByDateAsync(consultantId, date);
+            return Ok(hours);
+        }
+
         // POST: api/consultant/workinghours/range
         [HttpPost("workinghours/range")]
         [Authorize(Roles = "Consultant")]
@@ -107,13 +120,40 @@ namespace SWP391_Project.Controllers
         {
             var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (consultantId == null) return Unauthorized();
-            var days = (dto.ToDate - dto.FromDate).Days;
-            for (int i = 0; i <= days; i++)
+            
+            try
             {
-                var date = dto.FromDate.AddDays(i);
-                await _consultantService.AddWorkingHourByDateAsync(consultantId, date, dto.StartTime, dto.EndTime);
+                // Kiểm tra trùng lịch cho tất cả các ngày trước khi thêm
+                var conflictDates = await _consultantService.CheckScheduleConflictForDateRangeAsync(
+                    consultantId, dto.FromDate, dto.ToDate, dto.StartTime.Value, dto.EndTime.Value);
+                
+                // Nếu có trùng lịch, trả về danh sách ngày bị trùng
+                if (conflictDates.Any())
+                {
+                    return BadRequest(new { 
+                        success = false, 
+                        message = "Schedule conflicts found on the following dates", 
+                        conflictDates = conflictDates.Select(d => d.ToString("dd/MM/yyyy")).ToList()
+                    });
+                }
+                
+                // Nếu không có trùng lịch, thực hiện thêm lịch
+                var days = (dto.ToDate - dto.FromDate).Days;
+                for (int i = 0; i <= days; i++)
+                {
+                    var date = dto.FromDate.AddDays(i);
+                    await _consultantService.AddWorkingHourByDateAsync(consultantId, date, dto.StartTime, dto.EndTime);
+                }
+                return Ok(new { success = true, message = "Working hours created successfully" });
             }
-            return Ok(true);
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "An error occurred while creating working hours" });
+            }
         }
 
         // PUT: api/consultant/workinghours/{date}
@@ -123,21 +163,53 @@ namespace SWP391_Project.Controllers
         {
             var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (consultantId == null) return Unauthorized();
-            var result = await _consultantService.UpdateWorkingHourByDateAsync(consultantId, date, dto.StartTime, dto.EndTime);
-            return Ok(result);
+            
+            try
+            {
+                // Kiểm tra trùng lịch trước khi cập nhật
+                var hasConflict = await _consultantService.CheckScheduleConflictAsync(consultantId, date, dto.StartTime.Value, dto.EndTime.Value);
+                if (hasConflict)
+                {
+                    return BadRequest(new { 
+                        success = false, 
+                        message = $"Date {date.ToString("dd/MM/yyyy")} has existing consultations or conflicts with current schedule" 
+                    });
+                }
+                
+                var result = await _consultantService.UpdateWorkingHourByDateAsync(consultantId, date, dto.StartTime, dto.EndTime);
+                return Ok(new { success = true, message = "Working hours updated successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "An error occurred while updating working hours" });
+            }
         }
+
+        // GET: api/consultant/workinghours/check-conflict
+        // [HttpGet("workinghours/check-conflict")]
+        // [Authorize(Roles = "Consultant")]
+        // public async Task<IActionResult> CheckScheduleConflict([FromQuery] DateTime date, [FromQuery] TimeSpan startTime, [FromQuery] TimeSpan endTime)
+        // {
+        //     var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        //     if (consultantId == null) return Unauthorized();
+        //     
+        //     try
+        //     {
+        //         var hasConflict = await _consultantService.CheckScheduleConflictAsync(consultantId, date, startTime, endTime);
+        //         return Ok(new { 
+        //             hasConflict = hasConflict, 
+        //             message = hasConflict ? "This time slot has existing consultations or conflicts with current schedule" : "This time slot is available"
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new { success = false, message = "An error occurred while checking schedule conflicts" });
+        //     }
+        // }
     }
 
-    public class WorkingHourRangeDto
-    {
-        public DateTime FromDate { get; set; }
-        public DateTime ToDate { get; set; }
-        public TimeSpan? StartTime { get; set; }
-        public TimeSpan? EndTime { get; set; }
-    }
-    public class WorkingHourUpdateDto
-    {
-        public TimeSpan? StartTime { get; set; }
-        public TimeSpan? EndTime { get; set; }
-    }
 }

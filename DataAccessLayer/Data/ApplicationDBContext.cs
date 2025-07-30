@@ -45,7 +45,15 @@ namespace DataAccessLayer.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-         
+
+            builder.Entity<IdentityRole>().HasData(
+                new IdentityRole { Name = "Manager", NormalizedName = "MANAGER" },
+                new IdentityRole { Name = "Member", NormalizedName = "MEMBER" },
+                new IdentityRole { Name = "Staff", NormalizedName = "STAFF" },
+                new IdentityRole { Name = "Consultant", NormalizedName = "CONSULTANT" },
+                new IdentityRole { Name = "Admin", NormalizedName = "ADMIN" }
+            );
+
             builder.Entity<Blog>(entity =>
             {
                 entity.HasKey(b => b.BlogId);

@@ -148,7 +148,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("PostedById");
 
-                    b.ToTable("Blogs");
+                    b.ToTable("Blogs", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.BlogImage", b =>
@@ -170,7 +170,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("BlogId");
 
-                    b.ToTable("BlogImages");
+                    b.ToTable("BlogImages", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.Certificate", b =>
@@ -202,7 +202,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.ToTable("Certificates");
+                    b.ToTable("Certificates", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.Comment", b =>
@@ -235,7 +235,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Comments", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultantFeedback", b =>
@@ -276,7 +276,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ConsultantFeedbacks");
+                    b.ToTable("ConsultantFeedbacks", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultantProfile", b =>
@@ -299,7 +299,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasKey("ConsultantId");
 
-                    b.ToTable("ConsultantProfiles");
+                    b.ToTable("ConsultantProfiles", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultantWorkingHour", b =>
@@ -348,7 +348,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("ConsultantId");
 
-                    b.ToTable("ConsultantWorkingHours");
+                    b.ToTable("ConsultantWorkingHours", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationRequest", b =>
@@ -415,7 +415,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ConsultationRequests");
+                    b.ToTable("ConsultationRequests", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationReview", b =>
@@ -449,7 +449,7 @@ namespace SWP391_Project.Migrations
                     b.HasIndex("ConsultationSessionId")
                         .IsUnique();
 
-                    b.ToTable("ConsultationReviews");
+                    b.ToTable("ConsultationReviews", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.ConsultationSession", b =>
@@ -494,7 +494,7 @@ namespace SWP391_Project.Migrations
                     b.HasIndex("ConsultationRequestId")
                         .IsUnique();
 
-                    b.ToTable("ConsultationSessions");
+                    b.ToTable("ConsultationSessions", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.Course", b =>
@@ -531,7 +531,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Courses");
+                    b.ToTable("Courses", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.CourseEnrollment", b =>
@@ -570,7 +570,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("CourseEnrollments");
+                    b.ToTable("CourseEnrollments", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.Feedback", b =>
@@ -610,7 +610,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Feedbacks");
+                    b.ToTable("Feedbacks", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.Lesson", b =>
@@ -642,7 +642,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("Lessons");
+                    b.ToTable("Lessons", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.LessonProgress", b =>
@@ -671,7 +671,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("LessonId");
 
-                    b.ToTable("LessonProgresses");
+                    b.ToTable("LessonProgresses", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.Survey", b =>
@@ -714,7 +714,7 @@ namespace SWP391_Project.Migrations
                         .IsUnique()
                         .HasFilter("[CourseId] IS NOT NULL");
 
-                    b.ToTable("Surveys");
+                    b.ToTable("Surveys", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.SurveyAnswer", b =>
@@ -745,7 +745,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("QuestionId");
 
-                    b.ToTable("SurveyAnswers");
+                    b.ToTable("SurveyAnswers", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.SurveyAnswerResult", b =>
@@ -765,7 +765,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("QuestionId");
 
-                    b.ToTable("SurveyAnswerResults");
+                    b.ToTable("SurveyAnswerResults", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.SurveyQuestion", b =>
@@ -788,7 +788,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("SurveyId");
 
-                    b.ToTable("SurveyQuestions");
+                    b.ToTable("SurveyQuestions", (string)null);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Model.SurveyResult", b =>
@@ -828,7 +828,7 @@ namespace SWP391_Project.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SurveyResults");
+                    b.ToTable("SurveyResults", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
