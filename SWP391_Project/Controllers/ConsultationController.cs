@@ -95,6 +95,7 @@ namespace SWP391_Project.Controllers
             if (consultantId == null) return Unauthorized();
 
             var requests = await _context.ConsultationRequests
+                .Include(c => c.Consultant)
                 .Where(r => r.ConsultantId == consultantId)
                 .OrderByDescending(r => r.RequestedDate)
                 .ToListAsync();
@@ -104,6 +105,7 @@ namespace SWP391_Project.Controllers
                 Id = r.Id,
                 ConsultantId = r.ConsultantId,
                 MemberId = r.UserId,
+                ConsultantName=r.Consultant?.FullName?? "",
                 StartTime = r.RequestedDate,
                 EndTime = r.RequestedDate.AddMinutes(r.DurationMinutes),
                 Status = r.Status.ToString()
