@@ -132,7 +132,7 @@ namespace DataAccessLayer.Repository
                         var roleResult = await _userManager.AddToRoleAsync(createdUser, roleToAssign);
                         if (roleResult.Succeeded)
                         {
-                            Console.WriteLine($"[DEBUG] User '{model.UserName}' đã được tạo và gán role '{roleToAssign}' thành công.");
+                            Console.WriteLine($"[DEBUG] User '{model.UserName}' has been created and assigned role '{roleToAssign}' successfully.");
                         }
                         else
                         {
@@ -145,7 +145,7 @@ namespace DataAccessLayer.Repository
                     }
                     else
                     {
-                        Console.WriteLine($"[DEBUG] Role '{roleToAssign}' does not exist in database. Không gán role cho user!");
+                        Console.WriteLine($"[DEBUG] Role '{roleToAssign}' does not exist in database. Cannot assign role to user!");
                     }
                 }
                 

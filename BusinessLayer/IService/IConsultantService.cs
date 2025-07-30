@@ -17,5 +17,10 @@ namespace BusinessLayer.IService
         Task<IEnumerable<ConsultantWorkingHourDto>> GetWorkingHoursAsync(string consultantId);
         Task<bool> AddWorkingHourByDateAsync(string consultantId, DateTime date, TimeSpan? startTime, TimeSpan? endTime);
         Task<bool> UpdateWorkingHourByDateAsync(string consultantId, DateTime date, TimeSpan? startTime, TimeSpan? endTime);
+        
+        // Các method mới cho kiểm tra trùng lịch và quản lý slots
+        Task<bool> CheckScheduleConflictAsync(string consultantId, DateTime date, TimeSpan startTime, TimeSpan endTime);
+        Task<IEnumerable<ConsultantWorkingHourDto>> GetWorkingHoursByDateAsync(string consultantId, DateTime date);
+        Task<List<DateTime>> CheckScheduleConflictForDateRangeAsync(string consultantId, DateTime fromDate, DateTime toDate, TimeSpan startTime, TimeSpan endTime);
     }
 } 

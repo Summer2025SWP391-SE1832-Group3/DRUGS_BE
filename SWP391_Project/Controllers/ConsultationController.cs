@@ -119,6 +119,11 @@ namespace SWP391_Project.Controllers
         {
             var consultantId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (consultantId == null) return Unauthorized();
+
+            var canComplete = await _consultationService.CanCompleteSessionAsync(sessionId, consultantId);
+            if (!canComplete)
+                return BadRequest("Cannot complete session before its start time");
+
             var result = await _consultationService.CompleteConsultationSessionAsync(sessionId, consultantId);
             return Ok(result);
         }
