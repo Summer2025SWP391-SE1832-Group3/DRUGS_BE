@@ -12,6 +12,7 @@ namespace DataAccessLayer.Dto.Consultation
         public string? ConsultantId { get; set; }
         public string? ConsultantName { get; set; }
         public string? MemberId { get; set; }
+        public string? MemberName { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public string? Status { get; set; }

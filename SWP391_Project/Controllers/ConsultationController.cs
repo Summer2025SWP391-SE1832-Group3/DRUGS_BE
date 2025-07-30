@@ -96,6 +96,7 @@ namespace SWP391_Project.Controllers
 
             var requests = await _context.ConsultationRequests
                 .Include(c => c.Consultant)
+                .Include(c=>c.User)
                 .Where(r => r.ConsultantId == consultantId)
                 .OrderByDescending(r => r.RequestedDate)
                 .ToListAsync();
@@ -106,6 +107,7 @@ namespace SWP391_Project.Controllers
                 ConsultantId = r.ConsultantId,
                 MemberId = r.UserId,
                 ConsultantName=r.Consultant?.FullName?? "",
+                MemberName=r.User?.FullName?? "",
                 StartTime = r.RequestedDate,
                 EndTime = r.RequestedDate.AddMinutes(r.DurationMinutes),
                 Status = r.Status.ToString()
