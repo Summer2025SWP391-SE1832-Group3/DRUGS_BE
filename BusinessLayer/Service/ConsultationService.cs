@@ -666,6 +666,7 @@ namespace BusinessLayer.Service
         public async Task<IEnumerable<ConsultationBookingDto>> GetMyBookingsAsync(string memberId)
         {
             var requests = await _context.ConsultationRequests
+                .Include(c=>c.Consultant)
                 .Where(r => r.UserId == memberId)
                 .OrderByDescending(r => r.RequestedDate)
                 .ToListAsync();
@@ -673,6 +674,7 @@ namespace BusinessLayer.Service
             {
                 Id = r.Id,
                 ConsultantId = r.ConsultantId,
+                ConsultantName = r.Consultant?.FullName ?? "",
                 MemberId = r.UserId,
                 StartTime = r.RequestedDate,
                 EndTime = r.RequestedDate.AddMinutes(r.DurationMinutes),
