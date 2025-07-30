@@ -705,7 +705,20 @@ namespace BusinessLayer.Service
             await _context.SaveChangesAsync();
       
             var profile = await _context.ConsultantProfiles.FindAsync(request.ConsultantId);
-            if (profile != null)
+            if(profile == null)
+            {
+                ConsultantProfile prf = new ConsultantProfile
+                {
+                    ConsultantId = request.ConsultantId,
+                    Status = "Active",
+                    AverageRating = dto.Rating,
+                    FeedbackCount = 1,
+                    //TotalConsultations = 1,
+                };
+                _context.ConsultantProfiles.Add(prf);
+                await _context.SaveChangesAsync();
+            }
+            else
             {
                 var allFeedbacks = await _context.ConsultantFeedbacks.Where(f => f.ConsultantId == request.ConsultantId && f.IsActive).ToListAsync();
                 profile.FeedbackCount = allFeedbacks.Count;
