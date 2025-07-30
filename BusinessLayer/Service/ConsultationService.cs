@@ -619,7 +619,7 @@ namespace BusinessLayer.Service
         {
             // Get all slots created for the day
             var slots = await _context.ConsultantWorkingHours
-                .Where(s => s.ConsultantId == consultantId && s.SlotDate == date.Date)
+                .Where(s => s.ConsultantId == consultantId && s.SlotDate.Value.Date == date.Date)
                 .OrderBy(s => s.StartTime)
                 .ToListAsync();
             return slots.Select(s => new AvailableSlotDto
