@@ -33,29 +33,24 @@ namespace BusinessLayer.Service
             _context = context;
         }
 
-        // ConsultationRequest methods
         public async Task<ConsultationRequestViewDto> CreateConsultationRequestAsync(ConsultationRequestCreateDto dto, string userId)
         {
-            // Validate user exists
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
                 throw new InvalidOperationException("User not found");
             }
 
-            // Validate consultant exists and is a consultant
             if (!await IsConsultantAsync(dto.ConsultantId))
             {
                 throw new InvalidOperationException("Invalid consultant");
             }
 
-            // Kiểm tra trùng lịch tư vấn
             if (await IsConsultationRequestOverlappingAsync(dto.ConsultantId, dto.RequestedDate, dto.DurationMinutes))
             {
                 throw new InvalidOperationException("The requested time overlaps with consultant's schedule or another consultation.");
             }
 
-            // Tìm slot phù hợp cho thời gian yêu cầu
             var availableSlot = await _context.ConsultantWorkingHours
                 .Where(slot => slot.ConsultantId == dto.ConsultantId &&
                               slot.Status == WorkingHourStatus.Available &&
@@ -86,12 +81,10 @@ namespace BusinessLayer.Service
             var createdRequest = await _consultationRepository.CreateConsultationRequestAsync(request);
             _logger.LogInformation("Created request with ID: {RequestId}", createdRequest.Id);
 
-            // Book the slot
             availableSlot.Status = WorkingHourStatus.Pending;
             availableSlot.UpdatedAt = DateTime.Now;
             await _context.SaveChangesAsync();
 
-            // Reload with navigation properties to ensure we have User and Consultant data
             var requestWithDetails = await _consultationRepository.GetConsultationRequestByIdAsync(createdRequest.Id);
             if (requestWithDetails == null)
             {
@@ -148,7 +141,6 @@ namespace BusinessLayer.Service
 
         public async Task<IEnumerable<ConsultationRequestViewDto>> GetAllConsultationRequestsAsync(string currentUserId)
         {
-            // Only Admin can see all requests
             var user = await _userManager.FindByIdAsync(currentUserId);
             if (user == null || !await _userManager.IsInRoleAsync(user, "Admin"))
             {
@@ -174,7 +166,6 @@ namespace BusinessLayer.Service
                 throw new InvalidOperationException("Consultation request not found");
             }
 
-            // Only consultant or admin can update status
             var currentUser = await _userManager.FindByIdAsync(currentUserId);
             if (request.ConsultantId != currentUserId && (currentUser == null || !await _userManager.IsInRoleAsync(currentUser, "Admin")))
             {
@@ -187,7 +178,6 @@ namespace BusinessLayer.Service
             request.UpdatedAt = DateTime.Now;
 
             var updatedRequest = await _consultationRepository.UpdateConsultationRequestAsync(request);
-            // Reload with navigation properties
             var requestWithDetails = await _consultationRepository.GetConsultationRequestByIdAsync(updatedRequest.Id);
             return await MapToConsultationRequestViewDtoAsync(requestWithDetails);
         }
@@ -197,7 +187,6 @@ namespace BusinessLayer.Service
             var request = await _consultationRepository.GetConsultationRequestByIdAsync(id);
             if (request == null) return false;
 
-            // Only user who created the request, consultant, or admin can delete
             var currentUser = await _userManager.FindByIdAsync(currentUserId);
             if (request.UserId != currentUserId && 
                 request.ConsultantId != currentUserId && 
@@ -209,7 +198,6 @@ namespace BusinessLayer.Service
             return await _consultationRepository.DeleteConsultationRequestAsync(id);
         }
 
-        // ConsultationSession methods
         public async Task<ConsultationSessionViewDto> CreateConsultationSessionAsync(int requestId, ConsultationSessionCreateDto dto, string currentUserId)
         {
             var request = await _consultationRepository.GetConsultationRequestByIdAsync(requestId);
@@ -271,7 +259,6 @@ namespace BusinessLayer.Service
                 throw new UnauthorizedAccessException("Only the assigned consultant can update this session");
             }
 
-            //session.StartTime = dto.StartTime;
             session.SessionNotes = dto.SessionNotes;
             session.Recommendations = dto.Recommendations;
             session.GoogleMeetLink = dto.GoogleMeetLink;
@@ -298,7 +285,6 @@ namespace BusinessLayer.Service
             session.IsCompleted = true;
             session.UpdatedAt = DateTime.Now;
 
-            // Update request status to completed
             var request = session.ConsultationRequest;
             request.Status = ConsultationStatus.Completed;
             request.UpdatedAt = DateTime.Now;

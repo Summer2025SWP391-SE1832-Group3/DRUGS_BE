@@ -123,11 +123,9 @@ namespace SWP391_Project.Controllers
             
             try
             {
-                // Kiểm tra trùng lịch cho tất cả các ngày trước khi thêm
                 //var conflictDates = await _consultantService.CheckScheduleConflictForDateRangeAsync(
                 //    consultantId, dto.FromDate, dto.ToDate, dto.StartTime.Value, dto.EndTime.Value);
                 
-                // Nếu có trùng lịch, trả về danh sách ngày bị trùng
                 //if (conflictDates.Any())
                 //{
                 //    return BadRequest(new { 
